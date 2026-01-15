@@ -55,7 +55,7 @@ export default async function AdminDashboardPage({
     ]);
 
   return (
-    <DashboardShell>
+    <div>
       <DashboardHeader
         heading="Administrator Dashboard"
         text="Monitor your business performance in real-time"
@@ -88,6 +88,6 @@ export default async function AdminDashboardPage({
           orders={ordersResult.success ? ordersResult.data : null}
         />
       </div>
-    </DashboardShell>
+    </div>
   );
 }

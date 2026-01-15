@@ -1,0 +1,288 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum definitions
+
+enum UserRole {
+  ADMIN
+  SALES_REP
+  INVENTORY_MANAGER
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+  POSTPONED
+}
+
+enum OrderSource {
+  FACEBOOK
+  TIKTOK
+  WHATSAPP
+  WEBSITE
+}
+
+// User Model
+
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  name     String
+  password String? 
+  role     UserRole @default(SALES_REP)
+  isActive Boolean  @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailVerified Boolean   @default(false)
+  image         String?
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+// Product Model
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Float // Selling price
+  cost        Float // Cost per unit (for profit calculation)
+  sku         String?   @unique
+  isActive    Boolean   @default(true)
+  isDeleted   Boolean   @default(false) // Soft delete flag
+  deletedAt   DateTime? // When product was soft deleted
+
+  // Inventory tracking
+  openingStock Int @default(0)
+  currentStock Int @default(0)
+
+  orders     OrderItem[]
+  agentStock AgentStock[]
+  expenses   Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("products")
+}
+
+// Agent Model (No login - managed by Admin and Sales Reps)
+
+model Agent {
+  id       String  @id @default(cuid())
+  name     String
+  phone    String
+  location String // City/State
+  address  String?
+  isActive Boolean @default(true)
+
+  orders Order[]
+  stock  AgentStock[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("agents")
+}
+
+// Agent Stock Tracking
+
+model AgentStock {
+  id String @id @default(cuid())
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  quantity  Int @default(0)
+  defective Int @default(0) // Defective items count
+  missing   Int @default(0) // Missing items count
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agentId, productId])
+  @@map("agent_stock")
+}
+
+// Order Model
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique @default(cuid())
+
+  // Customer Information
+  customerName     String
+  customerPhone    String
+  customerWhatsapp String?
+  deliveryAddress  String
+  state            String
+  city             String
+
+  // Order Details
+  status      OrderStatus @default(NEW)
+  source      OrderSource
+  totalAmount Float       @default(0)
+
+  // Assignment (Round-robin)
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+
+  // Agent Assignment (for fulfillment)
+  agentId String?
+  agent   Agent?  @relation(fields: [agentId], references: [id])
+
+  // Order Items
+  items OrderItem[]
+
+  // Notes & Communication
+  notes OrderNote[]
+
+  // Timestamps
+  confirmedAt  DateTime?
+  dispatchedAt DateTime?
+  deliveredAt  DateTime?
+  cancelledAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+// Order Items
+
+model OrderItem {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  quantity Int
+  price    Float // Price at time of order
+  cost     Float // Cost at time of order (for profit calculation)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+// Order Notes (for sales rep communication tracking)
+
+model OrderNote {
+  id String @id @default(cuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  note         String
+  isFollowUp   Boolean   @default(false)
+  followUpDate DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@map("order_notes")
+}
+
+// Expenses (Ad spend, delivery costs, shipping, etc.)
+
+model Expense {
+  id String @id @default(cuid())
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  type        String // "ad_spend", "delivery", "shipping", "clearing", "other"
+  amount      Float
+  description String?
+  date        DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+// System Settings (for round-robin tracking)
+
+model SystemSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}

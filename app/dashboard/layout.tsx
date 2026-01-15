@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Rethink_Sans } from "next/font/google";
-import "./globals.css";
+
 
 const inter = Rethink_Sans({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Ordo – E-commerce CRM & Order Management System",
+  title: "Admin Dashboard – Ordo CRM",
   description:
-    "A centralized CRM for managing e-commerce orders, inventory, sales representatives, agents, expenses, revenue, and profit tracking in real time.",
+    "Admin dashboard for managing e-commerce orders, inventory, sales representatives, agents, expenses, revenue, and profit tracking in real time.",
 };
 
-export default function RootLayout({
+export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

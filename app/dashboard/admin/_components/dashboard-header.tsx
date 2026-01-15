@@ -2,8 +2,7 @@
 
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Download, Bell, HelpCircle } from "lucide-react";
+import { Bell, HelpCircle } from "lucide-react";
 
 interface DashboardHeaderProps {
   heading: string;
@@ -22,10 +21,10 @@ export function DashboardHeader({ heading, text }: DashboardHeaderProps) {
 
         <div className="flex items-center gap-4">
           {/* Search */}
-          <div className="relative w-64">
+          {/* <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-foreground/80" />
             <Input placeholder="Search data..." className="pl-10" />
-          </div>
+          </div> */}
 
           <Button variant="ghost" size="icon">
             <Bell className="size-5" />

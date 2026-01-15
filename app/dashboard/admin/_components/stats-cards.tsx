@@ -1,77 +1,114 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Wallet, DollarSign, ShoppingBag, TrendingUp } from "lucide-react";
+import { Wallet, DollarSign, ShoppingBag, TrendingUp, TrendingDown } from "lucide-react";
+import { formatCurrency, formatPercentage } from "@/lib/date-utils";
+import type { DashboardStats } from "@/lib/types";
 
-const stats = [
-  {
-    name: "Total Revenue",
-    value: "$128,430.00",
-    change: "+12.5%",
-    changeType: "positive" as const,
-    icon: Wallet,
-    iconColor: "text-blue-600",
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    previousValue: "vs. $114,160.00 last period",
-  },
-  {
-    name: "Net Profit",
-    value: "$43,210.50",
-    change: "+8.2%",
-    changeType: "positive" as const,
-    icon: DollarSign,
-    iconColor: "text-emerald-600",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
-    previousValue: "After tax & expenses",
-  },
-  {
-    name: "Orders Today",
-    value: "156",
-    change: "+15.0%",
-    changeType: "positive" as const,
-    icon: ShoppingBag,
-    iconColor: "text-orange-600",
-    iconBg: "bg-orange-100 dark:bg-orange-900/30",
-    previousValue: "Currently processing: 12",
-  },
-  {
-    name: "Fulfillment",
-    value: "94%",
-    change: "6% Cancelled",
-    changeType: "neutral" as const,
-    icon: TrendingUp,
-    iconColor: "text-primary",
-    iconBg: "bg-primary/10",
-    previousValue: "Delivered rate",
-  },
-];
+interface StatsCardsProps {
+  stats: DashboardStats | null;
+}
 
-export function StatsCards() {
+export function StatsCards({ stats }: StatsCardsProps) {
+  if (!stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="h-32 animate-pulse">
+                <div className="h-10 w-10 bg-muted rounded-lg mb-4" />
+                <div className="h-4 bg-muted rounded w-24 mb-2" />
+                <div className="h-8 bg-muted rounded w-32" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const statsData = [
+    {
+      name: "Total Revenue",
+      value: formatCurrency(stats.revenue),
+      change: stats.revenueChange,
+      icon: Wallet,
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      previousValue: "vs. previous period",
+    },
+    {
+      name: "Net Profit",
+      value: formatCurrency(stats.profit),
+      change: stats.profitChange,
+      icon: DollarSign,
+      iconColor: "text-emerald-600",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+      previousValue: "After costs & expenses",
+    },
+    {
+      name: "Total Orders",
+      value: stats.ordersCount.toString(),
+      change: stats.ordersChange,
+      icon: ShoppingBag,
+      iconColor: "text-orange-600",
+      iconBg: "bg-orange-100 dark:bg-orange-900/30",
+      previousValue: "vs. previous period",
+    },
+    {
+      name: "Fulfillment Rate",
+      value: `${stats.fulfillmentRate}%`,
+      change: stats.cancelledRate,
+      icon: TrendingUp,
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
+      previousValue: `${stats.cancelledRate}% cancelled`,
+      isNeutral: true,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => (
-        <Card key={stat.name}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <span
-                className={`p-2 ${stat.iconBg} ${stat.iconColor} rounded-lg`}
-              >
-                <stat.icon className="size-5" />
-              </span>
-              {stat.changeType !== "neutral" && (
-                <span className="text-xs font-bold text-green-500 flex items-center bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
-                  <TrendingUp className="size-3 mr-1" /> {stat.change}
+      {statsData.map((stat) => {
+        const isPositive = stat.change >= 0;
+        const showChange = !stat.isNeutral;
+
+        return (
+          <Card key={stat.name}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <span
+                  className={`p-2 ${stat.iconBg} ${stat.iconColor} rounded-lg`}
+                >
+                  <stat.icon className="size-5" />
                 </span>
-              )}
-            </div>
-            <p className="text-sm font-medium ">
-              {stat.name}
-            </p>
-            <h3 className="text-2xl font-bold mt-1 text-foreground/80">{stat.value}</h3>
-            <p className="text-xs text-foreground/80 mt-2 ">
-              {stat.previousValue}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+                {showChange && (
+                  <span
+                    className={`text-xs font-bold flex items-center px-2 py-1 rounded-full ${
+                      isPositive
+                        ? "text-green-600 bg-green-50 dark:bg-green-900/20"
+                        : "text-red-600 bg-red-50 dark:bg-red-900/20"
+                    }`}
+                  >
+                    {isPositive ? (
+                      <TrendingUp className="size-3 mr-1" />
+                    ) : (
+                      <TrendingDown className="size-3 mr-1" />
+                    )}
+                    {formatPercentage(stat.change)}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm font-medium">{stat.name}</p>
+              <h3 className="text-2xl font-bold mt-1 text-foreground/80">
+                {stat.value}
+              </h3>
+              <p className="text-xs text-foreground/80 mt-2">
+                {stat.previousValue}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

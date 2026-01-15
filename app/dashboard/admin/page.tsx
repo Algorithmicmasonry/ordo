@@ -7,11 +7,24 @@ import { StatsCards } from "./_components";
 import { RevenueChart } from "./_components";
 import { TopProducts } from "./_components";
 import { RecentOrders } from "./_components";
+import { PeriodFilter } from "./_components";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import {
+  getDashboardStats,
+  getRevenueTrend,
+  getTopProducts,
+  getRecentOrders,
+} from "@/app/actions/dashboard-stats";
+import type { TimePeriod } from "@/lib/types";
 
-export default async function AdminDashboardPage() {
+interface AdminDashboardPageProps {
+  searchParams: Promise<{ period?: string }>;
+}
+
+export default async function AdminDashboardPage({
+  searchParams,
+}: AdminDashboardPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -24,27 +37,33 @@ export default async function AdminDashboardPage() {
     redirect("/dashboard");
   }
 
+  // Get period from search params
+  const params = await searchParams;
+  const period = (params?.period || "today") as TimePeriod;
+
+  // Validate period
+  const validPeriods: TimePeriod[] = ["today", "week", "month", "year"];
+  const currentPeriod = validPeriods.includes(period) ? period : "today";
+
+  // Fetch all dashboard data in parallel
+  const [statsResult, revenueResult, productsResult, ordersResult] =
+    await Promise.all([
+      getDashboardStats(currentPeriod),
+      getRevenueTrend(currentPeriod),
+      getTopProducts(currentPeriod, 3),
+      getRecentOrders(5),
+    ]);
+
   return (
     <DashboardShell>
       <DashboardHeader
         heading="Administrator Dashboard"
         text="Monitor your business performance in real-time"
       />
+
       {/* Filters */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 items-center justify-center rounded-lg bg-card p-1 min-w-75 gap-2">
-            <button className="flex h-full grow items-center justify-center rounded-lg px-4 bg-foreground shadow-sm text-primary text-sm font-semibold cursor-pointer">
-              Today
-            </button>
-            <button className="flex h-full grow items-center justify-center rounded-lg px-4 text-foreground text-sm font-medium hover:bg-background dark:hover:bg-foreground/80 dark:hover:text-primary hover:shadow-sm cursor-pointer">
-              This Week
-            </button>
-            <button className="flex h-full grow items-center justify-center rounded-lg px-4 text-foreground text-sm font-medium hover:bg-background dark:hover:bg-foreground/80 dark:hover:text-primary hover:shadow-sm cursor-pointer">
-              This Month
-            </button>
-          </div>
-        </div>
+        <PeriodFilter currentPeriod={currentPeriod} />
 
         <Button>
           <Download className="size-4 mr-2" />
@@ -53,14 +72,21 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="space-y-8">
-        <StatsCards />
+        <StatsCards stats={statsResult.success ? statsResult.data : null} />
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <RevenueChart className="lg:col-span-2" />
-          <TopProducts />
+          <RevenueChart
+            data={revenueResult.success ? revenueResult.data : null}
+            className="lg:col-span-2"
+          />
+          <TopProducts
+            products={productsResult.success ? productsResult.data : null}
+          />
         </div>
 
-        <RecentOrders />
+        <RecentOrders
+          orders={ordersResult.success ? ordersResult.data : null}
+        />
       </div>
     </DashboardShell>
   );

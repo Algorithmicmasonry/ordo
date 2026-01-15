@@ -4,5 +4,14 @@ import { StatsCards } from "./stats-cards";
 import { RevenueChart } from "./revenue-chart";
 import { RecentOrders } from "./recent-orders";
 import { TopProducts } from "./top-products";
+import { PeriodFilter } from "./period-filter";
 
-export {DashboardShell, DashboardHeader, StatsCards, RevenueChart, TopProducts, RecentOrders};
+export {
+  DashboardShell,
+  DashboardHeader,
+  StatsCards,
+  RevenueChart,
+  TopProducts,
+  RecentOrders,
+  PeriodFilter,
+};

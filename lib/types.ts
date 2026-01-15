@@ -59,4 +59,42 @@ export type OrderFormData = {
 // Expense types
 export type ExpenseType = 'ad_spend' | 'delivery' | 'shipping' | 'clearing' | 'other'
 
+// Dashboard types
+export type TimePeriod = 'today' | 'week' | 'month' | 'year' 
+
+export interface DashboardStats {
+  revenue: number
+  revenueChange: number
+  profit: number
+  profitChange: number
+  ordersCount: number
+  ordersChange: number
+  fulfillmentRate: number
+  cancelledRate: number
+}
+
+export interface RevenueTrendData {
+  label: string
+  current: number
+  previous: number
+}
+
+export interface TopProduct {
+  id: string
+  name: string
+  description: string | null
+  revenue: number
+  ordersCount: number
+}
+
+export interface RecentOrder {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerPhone: string
+  createdAt: Date
+  totalAmount: number
+  status: OrderStatus
+}
+
 export { OrderStatus, OrderSource, UserRole }

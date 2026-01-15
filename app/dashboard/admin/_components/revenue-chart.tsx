@@ -8,34 +8,50 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import type { RevenueTrendData } from "@/lib/types";
+import { formatCurrency } from "@/lib/date-utils";
 
 interface RevenueChartProps {
+  data: RevenueTrendData[] | null;
   className?: string;
 }
 
-// Sample data - replace with real data later
-const chartData = [
-  { day: "Mon", current: 18600, previous: 13000 },
-  { day: "Tue", current: 30500, previous: 28000 },
-  { day: "Wed", current: 23700, previous: 21000 },
-  { day: "Thu", current: 7300, previous: 19000 },
-  { day: "Fri", current: 20900, previous: 12000 },
-  { day: "Sat", current: 21400, previous: 14000 },
-  { day: "Sun", current: 28500, previous: 22000 },
-];
-
 const chartConfig = {
   current: {
-    label: "Current Week",
-    color: "var(--chart-1)",
+    label: "Current Period",
+    color: "var(--chart-5)",
   },
   previous: {
-    label: "Previous Week",
-    color: "var(--chart-2)",
+    label: "Previous Period",
+    color: "var(--chart-4)",
   },
 } satisfies ChartConfig;
 
-export function RevenueChart({ className }: RevenueChartProps) {
+export function RevenueChart({ data, className }: RevenueChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Revenue Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 w-full flex items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">
+              Loading chart data...
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Transform data for recharts
+  const chartData = data.map((item) => ({
+    label: item.label,
+    current: item.current,
+    previous: item.previous,
+  }));
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -43,11 +59,11 @@ export function RevenueChart({ className }: RevenueChartProps) {
           <CardTitle>Revenue Performance</CardTitle>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="size-3 rounded-full bg-primary"></div>
+              <div className="size-3 rounded-full bg-[var(--chart-5)]"></div>
               <span className="text-xs text-muted-foreground">Current</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="size-3 rounded-full bg-muted"></div>
+              <div className="size-3 rounded-full bg-[var(--chart-4)]"></div>
               <span className="text-xs text-muted-foreground">Previous</span>
             </div>
           </div>
@@ -66,7 +82,7 @@ export function RevenueChart({ className }: RevenueChartProps) {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="day"
+              dataKey="label"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -75,25 +91,28 @@ export function RevenueChart({ className }: RevenueChartProps) {
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+              content={
+                <ChartTooltipContent
+                  indicator="dot"
+                  formatter={(value) => formatCurrency(Number(value))}
+                />
+              }
             />
             <Area
               dataKey="previous"
               type="natural"
-              fill="var(--color-current)"
+              fill="var(--color-previous)"
               fillOpacity={0.2}
-              stroke="var(--color-current)"
+              stroke="var(--color-previous)"
               strokeWidth={2}
-              stackId="a"
             />
             <Area
               dataKey="current"
               type="natural"
-              fill="var(--color-previous)"
+              fill="var(--color-current)"
               fillOpacity={0.3}
-              stroke="var(--color-previous)"
+              stroke="var(--color-current)"
               strokeWidth={2}
-              stackId="a"
             />
           </AreaChart>
         </ChartContainer>

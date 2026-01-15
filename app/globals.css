@@ -45,7 +45,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-}:root {
+}
+:root {
   --radius: 0.5rem;
 
   /* Light Mode - Shopify inspired */
@@ -80,8 +81,8 @@
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9); /* Purple */
+  --chart-5: oklch(0.645 0.246 16.439);
 
   --sidebar: oklch(1 0 0); /* White sidebar (clean look) */
   --sidebar-foreground: oklch(0.15 0 0);
@@ -124,7 +125,7 @@
 
   --chart-1: oklch(0.55 0.17 237); /* Primary blue */
   --chart-2: oklch(0.696 0.17 162.48); /* Teal */
-  --chart-3: oklch(0.769 0.188 70.08); /* Yellow */
+  --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.627 0.265 303.9); /* Purple */
   --chart-5: oklch(0.645 0.246 16.439); /* Orange */
 

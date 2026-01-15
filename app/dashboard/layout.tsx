@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Rethink_Sans } from "next/font/google";
-
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const inter = Rethink_Sans({ subsets: ["latin"], display: "swap" });
 
@@ -10,16 +12,25 @@ export const metadata: Metadata = {
     "Admin dashboard for managing e-commerce orders, inventory, sales representatives, agents, expenses, revenue, and profit tracking in real time.",
 };
 
-export default function DashboardLayout({
+// TODO:Create a fancy user not authenticated page
+
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session || !session.user) {
+    console.log("User is not authenticated");
+    redirect("/login");
+  }
+
   return (
-    <html lang="en">
-      <body className={inter.className} suppressHydrationWarning>
-        {children}
-      </body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

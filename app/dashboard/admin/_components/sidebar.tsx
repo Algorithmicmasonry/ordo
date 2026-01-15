@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn, getInitials, formatRole } from "@/lib/utils";
 import {
   ChartPie,
   HatGlasses,
@@ -25,7 +25,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getCurrentUser } from "@/app/actions/user";
+import type { UserRole } from "@prisma/client";
 
 const routes = [
   {
@@ -54,12 +56,12 @@ const routes = [
     href: "/dashboard/admin/expenses",
   },
   {
-    label: "Finance & Accounting ",
+    label: "Finance & Accounting",
     icon: ChartPie,
     href: "/dashboard/admin/reports",
   },
   {
-    label: "User Managment",
+    label: "User Management",
     icon: Users,
     href: "/dashboard/admin/users",
   },
@@ -70,9 +72,34 @@ const routes = [
   },
 ];
 
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  image: string | null;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <aside
@@ -93,7 +120,7 @@ export function Sidebar() {
         </div>
 
         {!isCollapsed && (
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold leading-none">Ordo CRM</h1>
             <p className="text-xs text-muted-foreground mt-1">
               Management System
@@ -101,25 +128,19 @@ export function Sidebar() {
           </div>
         )}
 
-        <div
-          className={cn("px-2 pb-2", isCollapsed && "flex justify-center px-2")}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="h-8 w-8"
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="h-8 w-8"
-          >
-            {isCollapsed ? (
-              <PanelLeftOpen className="size-6 text-primary" />
-            ) : (
-              <PanelLeftClose className="size-6 text-primary" />
-            )}
-          </Button>
-        </div>
+          {isCollapsed ? (
+            <PanelLeftOpen className="size-6 text-primary" />
+          ) : (
+            <PanelLeftClose className="size-6 text-primary" />
+          )}
+        </Button>
       </div>
-
-      {/* Toggle Button */}
 
       {/* Navigation */}
       <TooltipProvider delayDuration={0}>
@@ -161,31 +182,54 @@ export function Sidebar() {
 
       {/* User Profile */}
       <div className="p-4 border-t border-border">
-        <div
-          className={cn(
-            "flex items-center gap-3 p-2",
-            isCollapsed && "flex-col gap-2"
-          )}
-        >
-          <Avatar className="size-8 shrink-0">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>AH</AvatarFallback>
-          </Avatar>
-          {!isCollapsed && (
-            <>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate">Alex Henderson</p>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  System Admin
-                </p>
+        {isLoading ? (
+          <div className="flex items-center gap-3 p-2 animate-pulse">
+            <div className="size-8 rounded-full bg-muted" />
+            {!isCollapsed && (
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-muted rounded w-24" />
+                <div className="h-2 bg-muted rounded w-16" />
               </div>
-              <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-            </>
-          )}
-          {isCollapsed && (
-            <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "flex items-center gap-3 p-2",
+              isCollapsed && "flex-col gap-2"
+            )}
+          >
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage src={user?.image || undefined} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                {user?.name ? getInitials(user.name) : "??"}
+              </AvatarFallback>
+            </Avatar>
+            {!isCollapsed && user && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {formatRole(user.role)}
+                  </p>
+                </div>
+                <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+              </>
+            )}
+            {isCollapsed && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Settings</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -1,19 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
+  ChartPie,
+  HatGlasses,
   LayoutDashboard,
-  ShoppingCart,
-  Package,
-  DollarSign,
-  BarChart3,
-  Users,
-  Settings,
+  PackageOpen,
   Rocket,
+  Settings,
+  ShoppingBag,
+  Users,
+  UsersRound,
+  WalletCards
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const routes = [
   {
@@ -23,29 +25,39 @@ const routes = [
   },
   {
     label: "Orders",
-    icon: ShoppingCart,
+    icon: ShoppingBag,
     href: "/dashboard/admin/orders",
   },
   {
     label: "Inventory",
-    icon: Package,
+    icon: PackageOpen,
     href: "/dashboard/admin/inventory",
   },
   {
+    label : "Sales Reps",
+    icon: UsersRound,
+    href: "/dashboard/admin/sales-reps",
+  },
+  {
     label: "Expenses",
-    icon: DollarSign,
+    icon: WalletCards,
     href: "/dashboard/admin/expenses",
   },
   {
-    label: "Reports",
-    icon: BarChart3,
+    label: "Finance & Accounting ",
+    icon: ChartPie,
     href: "/dashboard/admin/reports",
   },
   {
-    label: "Users",
+    label: "User Managment",
     icon: Users,
     href: "/dashboard/admin/users",
-  },
+  }, 
+  {
+    label: "Agents",
+    icon:  HatGlasses,
+    href: "/dashboard/admin/agents",
+  }
 ];
 
 export function Sidebar() {
@@ -74,7 +86,7 @@ export function Sidebar() {
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
               pathname === route.href
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                : "text-foreground/80 hover:bg-primary hover:text-primary-foreground"
             )}
           >
             <route.icon className="size-5" />

@@ -62,11 +62,11 @@ export function StatsCards() {
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm font-medium ">
               {stat.name}
             </p>
-            <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
-            <p className="text-[10px] text-muted-foreground mt-2">
+            <h3 className="text-2xl font-bold mt-1 text-foreground/80">{stat.value}</h3>
+            <p className="text-xs text-foreground/80 mt-2 ">
               {stat.previousValue}
             </p>
           </CardContent>

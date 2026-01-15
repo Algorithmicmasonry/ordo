@@ -29,8 +29,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>{children}</body>
-    </html>
+    <div className={inter.className} suppressHydrationWarning>
+      {children}
+    </div>
   );
 }

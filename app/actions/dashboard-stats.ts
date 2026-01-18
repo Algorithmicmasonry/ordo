@@ -93,15 +93,15 @@ export async function getDashboardStats(period: TimePeriod = "today") {
     // Calculate percentage changes
     const revenueChange = calculatePercentageChange(
       currentRevenue,
-      previousRevenue
+      previousRevenue,
     );
     const profitChange = calculatePercentageChange(
       currentProfit,
-      previousProfit
+      previousProfit,
     );
     const ordersChange = calculatePercentageChange(
       currentOrdersCount,
-      previousOrdersCount
+      previousOrdersCount,
     );
 
     const stats: DashboardStats = {
@@ -185,7 +185,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
     // Helper function to group orders by time bucket
     const groupOrdersByBucket = (
       orders: typeof currentOrders,
-      buckets: Date[]
+      buckets: Date[],
     ) => {
       return buckets.map((bucket, index) => {
         const nextBucket =
@@ -201,7 +201,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
           .reduce((sum, order) => {
             const orderRevenue = order.items.reduce(
               (itemSum, item) => itemSum + item.price * item.quantity,
-              0
+              0,
             );
             return sum + orderRevenue;
           }, 0);
@@ -213,7 +213,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
     const currentRevenues = groupOrdersByBucket(currentOrders, currentBuckets);
     const previousRevenues = groupOrdersByBucket(
       previousOrders,
-      previousBuckets
+      previousBuckets,
     );
 
     // Format data for chart
@@ -242,7 +242,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
  */
 export async function getTopProducts(
   period: TimePeriod = "today",
-  limit: number = 3
+  limit: number = 3,
 ) {
   try {
     const { startDate, endDate } = getDateRange(period);
@@ -329,44 +329,31 @@ export async function getTopProducts(
 /**
  * Get recent orders for display
  */
-export async function getRecentOrders(limit: number = 5) {
-  try {
-    const orders = await db.order.findMany({
-      take: limit,
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        orderNumber: true,
-        customerName: true,
-        customerPhone: true,
-        createdAt: true,
-        totalAmount: true,
-        status: true,
-      },
-    });
+import type { OrderWithRelations } from "@/lib/types";
 
-    const recentOrders: RecentOrder[] = orders.map((order) => ({
-      id: order.id,
-      orderNumber: order.orderNumber,
-      customerName: order.customerName,
-      customerPhone: order.customerPhone,
-      createdAt: order.createdAt,
-      totalAmount: order.totalAmount,
-      status: order.status,
-    }));
+export async function getRecentOrders(
+  limit: number = 5,
+): Promise<OrderWithRelations[]> {
+  const orders = await db.order.findMany({
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      assignedTo: {
+        select: { id: true, name: true, email: true },
+      },
+      agent: {
+        select: { id: true, name: true, location: true },
+      },
+      items: {
+        include: {
+          product: {
+            select: { id: true, name: true, price: true },
+          },
+        },
+      },
+      notes: true,
+    },
+  });
 
-    return {
-      success: true,
-      data: recentOrders,
-    };
-  } catch (error) {
-    console.error("Error fetching recent orders:", error);
-    return {
-      success: false,
-      error: "Failed to fetch recent orders",
-      data: null,
-    };
-  }
+  return orders as OrderWithRelations[];
 }

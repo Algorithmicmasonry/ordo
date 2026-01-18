@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn, getInitials, formatRole } from "@/lib/utils";
 import {
+  BookUser,
   ChartPie,
   HatGlasses,
   LayoutDashboard,
@@ -49,6 +50,11 @@ const routes = [
     label: "Sales Reps",
     icon: UsersRound,
     href: "/dashboard/admin/sales-reps",
+  },
+  {
+    label: "Customers",
+    icon: BookUser,
+    href: "/dashboard/admin/customers",
   },
   {
     label: "Expenses",
@@ -105,14 +111,14 @@ export function Sidebar() {
     <aside
       className={cn(
         "shrink-0 border-r border-border bg-card flex flex-col transition-all duration-300",
-        isCollapsed ? "w-20" : "w-64"
+        isCollapsed ? "w-20" : "w-64",
       )}
     >
       {/* Logo */}
       <div
         className={cn(
           "p-6 flex items-center",
-          isCollapsed ? "justify-center flex-col gap-3" : "gap-3"
+          isCollapsed ? "justify-center flex-col gap-3" : "gap-3",
         )}
       >
         <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
@@ -156,7 +162,7 @@ export function Sidebar() {
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-foreground/80 hover:bg-primary hover:text-primary-foreground",
-                  isCollapsed && "justify-center"
+                  isCollapsed && "justify-center",
                 )}
               >
                 <route.icon className="size-5 shrink-0" />
@@ -196,7 +202,7 @@ export function Sidebar() {
           <div
             className={cn(
               "flex items-center gap-3 p-2",
-              isCollapsed && "flex-col gap-2"
+              isCollapsed && "flex-col gap-2",
             )}
           >
             <Avatar className="size-8 shrink-0">
@@ -208,9 +214,7 @@ export function Sidebar() {
             {!isCollapsed && user && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate">
-                    {user.name}
-                  </p>
+                  <p className="text-xs font-semibold truncate">{user.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate">
                     {formatRole(user.role)}
                   </p>

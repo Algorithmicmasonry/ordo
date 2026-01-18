@@ -41,7 +41,7 @@ import { OrdersTableFilters } from "./orders-table-filters";
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
-type OrderWithRelations = Order & {
+export type OrderWithRelations = Order & {
   assignedTo: Pick<User, "id" | "name" | "email"> | null;
   agent: Pick<Agent, "id" | "name" | "location"> | null;
   items: (OrderItem & {
@@ -62,7 +62,7 @@ interface OrdersTableProps {
 }
 
 const storeName = process.env.NEXT_PUBLIC_STORE_NAME;
-const statusStyles = {
+export const statusStyles = {
   NEW: "bg-amber-500/20 text-amber-500 border-amber-500/30",
   CONFIRMED: "bg-green-500/20 text-green-500 border-green-500/30",
   DISPATCHED: "bg-blue-500/20 text-blue-500 border-blue-500/30",
@@ -71,7 +71,7 @@ const statusStyles = {
   POSTPONED: "bg-orange-500/20 text-orange-500 border-orange-500/30",
 };
 
-const sourceNames = {
+export const sourceNames = {
   FACEBOOK: "Facebook",
   TIKTOK: "TikTok",
   WHATSAPP: "WhatsApp",
@@ -118,7 +118,11 @@ const statusTimelineConfig: Record<
   },
 };
 
-const OrderStatusTimeline = ({ order }: { order: OrderWithRelations }) => {
+export const OrderStatusTimeline = ({
+  order,
+}: {
+  order: OrderWithRelations;
+}) => {
   // Define the normal flow of statuses
   const normalFlow: OrderStatus[] = [
     "NEW",

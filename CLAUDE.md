@@ -204,3 +204,5 @@ DashboardShell (layout wrapper)
 - Consistent use of `text-primary`, `text-foreground`, `text-muted-foreground` for theming
 - Icon library: `lucide-react`
 - Component Library : ShadcnUI
+
+#Always reference the database schema before making changes to the codebase

@@ -15,10 +15,13 @@ export function DashboardHeader({ heading, text }: DashboardHeaderProps) {
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-primary">{heading}</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
+            {heading}
+          </h2>
           {text && <p className="text-foreground/90">{text}</p>}
         </div>
 
+        {/* TODO: Make the dashboard header functional */}
         <div className="flex items-center gap-4">
           {/* Search */}
           {/* <div className="relative w-64">
@@ -34,11 +37,9 @@ export function DashboardHeader({ heading, text }: DashboardHeaderProps) {
             <HelpCircle className="size-5" />
           </Button>
 
-          <ModeToggle/>
+          <ModeToggle />
         </div>
       </div>
-
-   
     </div>
   );
 }

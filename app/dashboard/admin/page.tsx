@@ -1,22 +1,23 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { DashboardShell } from "./_components";
-import { DashboardHeader } from "./_components";
-import { StatsCards } from "./_components";
-import { RevenueChart } from "./_components";
-import { TopProducts } from "./_components";
-import { RecentOrders } from "./_components";
-import { PeriodFilter } from "./_components";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 import {
   getDashboardStats,
+  getRecentOrders,
   getRevenueTrend,
   getTopProducts,
-  getRecentOrders,
 } from "@/app/actions/dashboard-stats";
+import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 import type { TimePeriod } from "@/lib/types";
+import { Download } from "lucide-react";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import {
+  DashboardHeader,
+  PeriodFilter,
+  RecentOrders,
+  RevenueChart,
+  StatsCards,
+  TopProducts,
+} from "./_components";
 
 interface AdminDashboardPageProps {
   searchParams: Promise<{ period?: string }>;

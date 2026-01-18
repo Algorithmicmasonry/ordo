@@ -32,3 +32,30 @@ export async function getCurrentUser() {
     return null;
   }
 }
+
+/**
+ * Get all active sales reps (for filtering/dropdown)
+ */
+export async function getAllSalesReps() {
+  try {
+    const salesReps = await db.user.findMany({
+      where: {
+        role: "SALES_REP",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return { success: true, salesReps };
+  } catch (error) {
+    console.error("Error fetching sales reps:", error);
+    return { success: false, error: "Failed to fetch sales reps" };
+  }
+}

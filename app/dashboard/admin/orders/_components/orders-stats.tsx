@@ -1,31 +1,54 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import type { TimePeriod } from "@/lib/types";
 
-const stats = [
-  {
-    label: "Total Handled",
-    value: "1,240",
-    change: "+12%",
-    trend: "up" as const,
-  },
-  {
-    label: "Delivery Rate",
-    value: "88.5%",
-    change: "+2.5%",
-    trend: "up" as const,
-  },
-  {
-    label: "Revenue Generated",
-    value: "$12,450.00",
-    change: "-5%",
-    trend: "down" as const,
-  },
-];
+type Stats = {
+  totalHandled: number;
+  deliveryRate: number;
+  revenue: number;
+  ordersChange: number;
+  deliveryRateChange: number;
+  revenueChange: number;
+};
 
-export function OrdersStats() {
+interface OrdersStatsProps {
+  stats: Stats;
+  period?: TimePeriod;
+}
+
+const periodLabels = {
+  today: "today",
+  week: "this week",
+  month: "this month",
+  year: "this year",
+};
+
+export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
+  const statsData = [
+    {
+      label: `Total Handled (${periodLabels[period]})`,
+      value: stats.totalHandled.toLocaleString(),
+      change: `${stats.ordersChange > 0 ? "+" : ""}${stats.ordersChange}%`,
+      trend: stats.ordersChange >= 0 ? ("up" as const) : ("down" as const),
+    },
+    {
+      label: "Delivery Rate",
+      value: `${stats.deliveryRate}%`,
+      change: `${stats.deliveryRateChange > 0 ? "+" : ""}${stats.deliveryRateChange}%`,
+      trend:
+        stats.deliveryRateChange >= 0 ? ("up" as const) : ("down" as const),
+    },
+    {
+      label: "Revenue Generated",
+      value: `₦ ${stats.revenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: `${stats.revenueChange > 0 ? "+" : ""}${stats.revenueChange}%`,
+      trend: stats.revenueChange >= 0 ? ("up" as const) : ("down" as const),
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {stats.map((stat) => (
+      {statsData.map((stat) => (
         <Card key={stat.label}>
           <CardContent className="p-6">
             <p className="text-sm font-medium text-muted-foreground mb-2">

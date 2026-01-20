@@ -331,9 +331,7 @@ export async function getTopProducts(
  */
 import type { OrderWithRelations } from "@/lib/types";
 
-export async function getRecentOrders(
-  limit: number = 5,
-): Promise<OrderWithRelations[]> {
+export async function getRecentOrders(limit: number = 5) {
   const orders = await db.order.findMany({
     take: limit,
     orderBy: { createdAt: "desc" },
@@ -355,5 +353,8 @@ export async function getRecentOrders(
     },
   });
 
-  return orders as OrderWithRelations[];
+  return {
+    success: true,
+    data: orders as OrderWithRelations[],
+  };
 }

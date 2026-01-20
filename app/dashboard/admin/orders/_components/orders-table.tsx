@@ -34,12 +34,18 @@ import type {
   User,
 } from "@prisma/client";
 import { format } from "date-fns";
-import { Check, Eye, Package, Timer, Truck, XCircle } from "lucide-react";
+import {
+  Check,
+  Eye,
+  Loader2,
+  Package,
+  Timer,
+  Truck,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { OrdersTableFilters } from "./orders-table-filters";
-import { useTransition } from "react";
-import { Loader2 } from "lucide-react";
 
 export type OrderWithRelations = Order & {
   assignedTo: Pick<User, "id" | "name" | "email"> | null;
@@ -347,10 +353,6 @@ const OrderDetailsModal = ({
                   <p className="font-medium">{order.customerWhatsapp}</p>
                 </div>
               )}
-              {/*<div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{order.customerEmail || "N/A"}</p>
-              </div>*/}
             </div>
           </div>
 
@@ -444,8 +446,9 @@ const OrderDetailsModal = ({
             </div>
           </div>
 
-          {/*Status Timeline*/}
+          {/* Status Timeline */}
           <OrderStatusTimeline order={order} />
+
           {/* Notes */}
           {order.notes && order.notes.length > 0 && (
             <div>
@@ -488,13 +491,12 @@ export function OrdersTable({
     orderNumber: string,
     items: OrderWithRelations["items"],
   ) => {
-    console.log(orderNumber);
     const itemsList = items
       .map((item) => `${item.quantity}x ${item.product.name}`)
       .join(", ");
 
     const message = encodeURIComponent(
-      `Hi ${customerName}, this is regarding your order with us at ${storeName} .\n\nItems: ${itemsList}\n\nHow can I assist you?`,
+      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nItems: ${itemsList}\n\nHow can I assist you?`,
     );
     const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`;
     window.open(whatsappUrl, "_blank");
@@ -502,6 +504,19 @@ export function OrdersTable({
 
   const handleViewDetails = (order: OrderWithRelations) => {
     setSelectedOrder(order);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    startTransition(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+      params.delete("page"); // Reset to page 1 when filtering
+      router.push(`?${params.toString()}`);
+    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -514,10 +529,11 @@ export function OrdersTable({
 
   return (
     <>
-      <Card>
+      <Card className="relative">
         <CardContent className="p-0">
+          {/* Global Loading Overlay */}
           {isPending && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-50 flex items-center justify-center rounded-lg">
               <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-lg shadow-lg border">
                 <Loader2 className="size-4 animate-spin text-primary" />
                 <span className="text-sm font-medium">Loading orders...</span>
@@ -527,16 +543,15 @@ export function OrdersTable({
 
           {/* Filters */}
           <div className="p-4 border-b">
-            <OrdersTableFilters locations={locations} />
+            <OrdersTableFilters
+              locations={locations}
+              isPending={isPending}
+              onFilterChange={handleFilterChange}
+            />
           </div>
 
           {/* Table */}
-          <div
-            className={cn(
-              "overflow-x-auto transition-opacity",
-              isPending && "opacity-50",
-            )}
-          >
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -646,12 +661,7 @@ export function OrdersTable({
           </div>
 
           {/* Pagination */}
-          <div
-            className={cn(
-              "flex items-center justify-between px-6 py-4 border-t bg-muted/50 transition-opacity",
-              isPending && "opacity-50",
-            )}
-          >
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/50">
             <div className="text-sm text-muted-foreground">
               Showing{" "}
               <span className="font-medium text-foreground">
@@ -674,23 +684,19 @@ export function OrdersTable({
               <Button
                 variant="outline"
                 size="sm"
-                disabled={pagination.page === 1}
+                disabled={pagination.page === 1 || isPending}
                 onClick={() => handlePageChange(pagination.page - 1)}
               >
-                {isPending ? (
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                ) : null}
+                {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
                 Previous
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={pagination.page >= pagination.totalPages}
+                disabled={pagination.page >= pagination.totalPages || isPending}
                 onClick={() => handlePageChange(pagination.page + 1)}
               >
-                {isPending ? (
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                ) : null}
+                {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
                 Next
               </Button>
             </div>

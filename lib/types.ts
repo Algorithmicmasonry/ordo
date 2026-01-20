@@ -123,4 +123,52 @@ export type OrderWithRelations = Order & {
   notes: OrderNote[];
 };
 
-// ... other shared types and constants
+// Inventory route
+
+// types/inventory.ts
+
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  sku: string;
+  unitCost: number;
+  globalBalance: number;
+  reorderPoint: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  region: string;
+  avatar?: string;
+  status: "active" | "inactive";
+  stockCapacity: number; // percentage
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AgentInventory {
+  id: string;
+  agentId: string;
+  productId: string;
+  quantity: number;
+  lastUpdated: Date;
+}
+
+export interface InventoryStats {
+  totalValue: number;
+  totalUnits: number;
+  activeAgents: number;
+  distributionRate: number;
+}
+
+export interface LowStockAlert {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  reorderPoint: number;
+}

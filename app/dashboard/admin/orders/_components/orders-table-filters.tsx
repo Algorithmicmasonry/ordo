@@ -8,35 +8,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OrdersTableFiltersProps {
   locations: { value: string; label: string }[];
+  isPending: boolean;
+  onFilterChange: (key: string, value: string) => void;
 }
 
-export function OrdersTableFilters({ locations }: OrdersTableFiltersProps) {
-  const router = useRouter();
+export function OrdersTableFilters({
+  locations,
+  isPending,
+  onFilterChange,
+}: OrdersTableFiltersProps) {
   const searchParams = useSearchParams();
 
-  const handleFilterChange = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (value === "all") {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-
-    params.delete("page"); // Reset to page 1 when filtering
-    router.push(`?${params.toString()}`);
-  };
-
   return (
-    <div className="flex gap-3 flex-wrap">
+    <div className="flex gap-3 flex-wrap relative">
+      {/* Loading Overlay */}
+      {isPending && (
+        <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10">
+          <div className="flex items-center gap-2 bg-background/95 px-4 py-2 rounded-lg shadow-lg border">
+            <Loader2 className="size-4 animate-spin text-primary" />
+            <span className="text-sm font-medium">Applying filters...</span>
+          </div>
+        </div>
+      )}
+
       <Select
         defaultValue={searchParams.get("status") || "all"}
-        onValueChange={(value) => handleFilterChange("status", value)}
+        onValueChange={(value) => onFilterChange("status", value)}
+        disabled={isPending}
       >
-        <SelectTrigger className="w-37.5">
+        <SelectTrigger
+          className={cn("w-[150px]", isPending && "pointer-events-none")}
+        >
           <SelectValue placeholder="All Orders" />
         </SelectTrigger>
         <SelectContent>
@@ -52,9 +59,12 @@ export function OrdersTableFilters({ locations }: OrdersTableFiltersProps) {
 
       <Select
         defaultValue={searchParams.get("source") || "all"}
-        onValueChange={(value) => handleFilterChange("source", value)}
+        onValueChange={(value) => onFilterChange("source", value)}
+        disabled={isPending}
       >
-        <SelectTrigger className="w-45">
+        <SelectTrigger
+          className={cn("w-[180px]", isPending && "pointer-events-none")}
+        >
           <SelectValue placeholder="Source" />
         </SelectTrigger>
         <SelectContent>
@@ -68,9 +78,12 @@ export function OrdersTableFilters({ locations }: OrdersTableFiltersProps) {
 
       <Select
         defaultValue={searchParams.get("location") || "all"}
-        onValueChange={(value) => handleFilterChange("location", value)}
+        onValueChange={(value) => onFilterChange("location", value)}
+        disabled={isPending}
       >
-        <SelectTrigger className="w-45">
+        <SelectTrigger
+          className={cn("w-[180px]", isPending && "pointer-events-none")}
+        >
           <SelectValue placeholder="Agent Location" />
         </SelectTrigger>
         <SelectContent>

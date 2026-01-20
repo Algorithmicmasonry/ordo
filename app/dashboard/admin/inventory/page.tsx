@@ -1,7 +1,149 @@
-import React from "react";
+import { Suspense } from "react";
+import { AdminInventoryClient, AgentInventoryBreakdown } from "./_components";
+import { Skeleton } from "@/components/ui/skeleton";
+import { db } from "@/lib/db";
 
-const AdminInventoryPage = () => {
-  return <div>AdminInventoryPage</div>;
-};
+async function getInventoryData() {
+  // Fetch products with agent stock
+  // When using `include`, Prisma automatically includes all base model fields
+  // So reorderPoint, currentStock, and all other Product fields will be available
+  const products = await db.product.findMany({
+    where: {
+      isDeleted: false,
+      isActive: true,
+    },
+    include: {
+      agentStock: {
+        include: {
+          agent: {
+            select: {
+              id: true,
+              name: true,
+              location: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          orders: true,
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
 
-export default AdminInventoryPage;
+  // Fetch agents with their stock
+  const agents = await db.agent.findMany({
+    where: {
+      isActive: true,
+    },
+    include: {
+      stock: {
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              cost: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  // Calculate stats
+  const totalValue = products.reduce(
+    (sum, product) => sum + product.currentStock * product.price,
+    0,
+  );
+  const totalUnits = products.reduce(
+    (sum, product) => sum + product.currentStock,
+    0,
+  );
+  const activeAgents = agents.length;
+
+  // Calculate distribution rate (percentage of products distributed to agents)
+  const totalAgentStock = agents.reduce(
+    (sum, agent) =>
+      sum + agent.stock.reduce((stockSum, item) => stockSum + item.quantity, 0),
+    0,
+  );
+  const distributionRate =
+    totalUnits > 0 ? Math.round((totalAgentStock / totalUnits) * 100) : 0;
+
+  // Get low stock products (at or below reorder point)
+  // This should work now because all Product fields are included by default
+  const lowStockProducts = products.filter(
+    (product) => product.currentStock <= product.reorderPoint,
+  );
+
+  return {
+    products,
+    agents,
+    stats: {
+      totalValue,
+      totalUnits,
+      activeAgents,
+      distributionRate,
+    },
+    lowStockProducts,
+  };
+}
+
+export default async function InventoryManagementPage() {
+  const data = await getInventoryData();
+
+  return (
+    <div className="space-y-8">
+      <Suspense fallback={<InventoryPageSkeleton />}>
+        <AdminInventoryClient
+          products={data.products}
+          stats={data.stats}
+          lowStockProducts={data.lowStockProducts}
+        />
+      </Suspense>
+
+      <Suspense fallback={<AgentBreakdownSkeleton />}>
+        <AgentInventoryBreakdown agents={data.agents} />
+      </Suspense>
+    </div>
+  );
+}
+
+function InventoryPageSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-4 w-96" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32" />
+        ))}
+      </div>
+      <Skeleton className="h-96" />
+    </div>
+  );
+}
+
+function AgentBreakdownSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[1, 2].map((i) => (
+          <Skeleton key={i} className="h-80" />
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -39,7 +39,7 @@ model User {
   id       String   @id @default(cuid())
   email    String   @unique
   name     String
-  password String? 
+  password String?
   role     UserRole @default(SALES_REP)
   isActive Boolean  @default(true)
 
@@ -72,6 +72,7 @@ model Product {
   // Inventory tracking
   openingStock Int @default(0)
   currentStock Int @default(0)
+  reorderPoint Int @default(0)
 
   orders     OrderItem[]
   agentStock AgentStock[]

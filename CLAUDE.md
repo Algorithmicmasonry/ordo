@@ -205,4 +205,4 @@ DashboardShell (layout wrapper)
 - Icon library: `lucide-react`
 - Component Library : ShadcnUI
 
-#Always reference the database schema before making changes to the codebase
+#Always read the prisma database schema before making changes to the codebase

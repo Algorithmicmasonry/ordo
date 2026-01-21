@@ -1,33 +1,38 @@
-"use server"
+"use server";
 
-import { db } from "@/lib/db"
-import { revalidatePath } from "next/cache"
+import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 /**
  * Create a new product (Admin only)
  */
 export async function createProduct(data: {
-  name: string
-  description?: string
-  price: number
-  cost: number
-  sku?: string
-  openingStock: number
+  name: string;
+  description?: string;
+  price: number;
+  cost: number;
+  sku?: string;
+  openingStock: number;
+  reorderPoint?: number;
+  isActive?: boolean;
 }) {
   try {
     const product = await db.product.create({
       data: {
         ...data,
         currentStock: data.openingStock,
+        reorderPoint: data.reorderPoint ?? 0,
+        isActive: data.isActive ?? true,
       },
-    })
+    });
 
-    revalidatePath("/admin/products")
+    revalidatePath("/admin/products");
+    revalidatePath("/dashboard/admin/inventory");
 
-    return { success: true, product }
+    return { success: true, product };
   } catch (error) {
-    console.error("Error creating product:", error)
-    return { success: false, error: "Failed to create product" }
+    console.error("Error creating product:", error);
+    return { success: false, error: "Failed to create product" };
   }
 }
 
@@ -37,26 +42,26 @@ export async function createProduct(data: {
 export async function updateProduct(
   productId: string,
   data: {
-    name?: string
-    description?: string
-    price?: number
-    cost?: number
-    sku?: string
-    isActive?: boolean
-  }
+    name?: string;
+    description?: string;
+    price?: number;
+    cost?: number;
+    sku?: string;
+    isActive?: boolean;
+  },
 ) {
   try {
     const product = await db.product.update({
       where: { id: productId },
       data,
-    })
+    });
 
-    revalidatePath("/admin/products")
+    revalidatePath("/admin/products");
 
-    return { success: true, product }
+    return { success: true, product };
   } catch (error) {
-    console.error("Error updating product:", error)
-    return { success: false, error: "Failed to update product" }
+    console.error("Error updating product:", error);
+    return { success: false, error: "Failed to update product" };
   }
 }
 
@@ -72,15 +77,15 @@ export async function addStock(productId: string, quantity: number) {
           increment: quantity,
         },
       },
-    })
+    });
 
-    revalidatePath("/admin/products")
-    revalidatePath("/admin/inventory")
+    revalidatePath("/admin/products");
+    revalidatePath("/dashboard/admin/inventory");
 
-    return { success: true, product }
+    return { success: true, product };
   } catch (error) {
-    console.error("Error adding stock:", error)
-    return { success: false, error: "Failed to add stock" }
+    console.error("Error adding stock:", error);
+    return { success: false, error: "Failed to add stock" };
   }
 }
 
@@ -93,12 +98,12 @@ export async function getAllProducts() {
       orderBy: {
         createdAt: "desc",
       },
-    })
+    });
 
-    return { success: true, products }
+    return { success: true, products };
   } catch (error) {
-    console.error("Error fetching products:", error)
-    return { success: false, error: "Failed to fetch products" }
+    console.error("Error fetching products:", error);
+    return { success: false, error: "Failed to fetch products" };
   }
 }
 
@@ -114,11 +119,11 @@ export async function getActiveProducts() {
       orderBy: {
         name: "asc",
       },
-    })
+    });
 
-    return { success: true, products }
+    return { success: true, products };
   } catch (error) {
-    console.error("Error fetching products:", error)
-    return { success: false, error: "Failed to fetch products" }
+    console.error("Error fetching products:", error);
+    return { success: false, error: "Failed to fetch products" };
   }
 }

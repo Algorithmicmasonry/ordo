@@ -3,7 +3,8 @@
     "allow": [
       "Bash(pnpm install:*)",
       "Bash(tasklist:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(pnpm dlx:*)"
     ]
   }
 }

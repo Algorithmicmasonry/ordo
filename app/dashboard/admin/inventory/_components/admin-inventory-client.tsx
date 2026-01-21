@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { DashboardHeader } from "../../_components";
+import { AddProductModal } from "./add-product-modal";
+import { UpdateStockModal } from "./update-stock-modal";
 
 type ProductWithStock = Product & {
   agentStock: (AgentStock & {
@@ -62,6 +64,8 @@ export default function AdminInventoryClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] =
     useState<ProductWithStock | null>(null);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [isUpdateStockModalOpen, setIsUpdateStockModalOpen] = useState(false);
 
   const filteredProducts = products.filter(
     (product) =>
@@ -71,6 +75,24 @@ export default function AdminInventoryClient({
 
   return (
     <div className="space-y-8">
+      {/* Add Product Modal */}
+      <AddProductModal
+        open={isAddProductModalOpen}
+        onOpenChange={setIsAddProductModalOpen}
+      />
+
+      {/* Update Stock Modal */}
+      <UpdateStockModal
+        open={isUpdateStockModalOpen}
+        onOpenChange={setIsUpdateStockModalOpen}
+        products={products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          currentStock: p.currentStock,
+        }))}
+      />
+
       {/* Page Header */}
       <DashboardHeader
         heading="Inventory Dashboard"
@@ -90,11 +112,14 @@ export default function AdminInventoryClient({
           />
         </div>
         <div className="flex gap-2">
-          <Button>
+          <Button onClick={() => setIsAddProductModalOpen(true)}>
             <Plus className="size-4 mr-2" />
             Add Product
           </Button>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => setIsUpdateStockModalOpen(true)}
+          >
             <RefreshCw className="size-4 mr-2" />
             Update Stock
           </Button>
@@ -281,7 +306,6 @@ export default function AdminInventoryClient({
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
-                              variant="ghost"
                               size="sm"
                               onClick={() => setSelectedProduct(product)}
                             >

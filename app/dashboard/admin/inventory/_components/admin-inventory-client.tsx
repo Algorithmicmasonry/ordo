@@ -22,17 +22,33 @@ import type { Agent, AgentStock, Product } from "@prisma/client";
 import {
   AlertTriangle,
   ChevronDown,
+  ChevronUp,
   Download,
   Filter,
+  Loader2,
   Package,
   Plus,
   RefreshCw,
   Search,
+  Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { DashboardHeader } from "../../_components";
 import { AddProductModal } from "./add-product-modal";
 import { UpdateStockModal } from "./update-stock-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { softDeleteProduct } from "@/app/actions/products";
+import toast from "react-hot-toast";
 
 type ProductWithStock = Product & {
   agentStock: (AgentStock & {
@@ -64,12 +80,54 @@ export default function AdminInventoryClient({
     useState<ProductWithStock | null>(null);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [isUpdateStockModalOpen, setIsUpdateStockModalOpen] = useState(false);
+  const [preselectedProductId, setPreselectedProductId] = useState<
+    string | undefined
+  >();
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(
+    null,
+  );
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const displayedProducts = showAllProducts
+    ? filteredProducts
+    : filteredProducts.slice(0, 10);
+
+  const hasMoreProducts = filteredProducts.length > 10;
+  // onChange = {(e) => setSearchQuery(e.target.value);
+
+  // if (e.target.value) {
+  //   setShowAllProducts(true)
+  // }}
+
+  const handleDeleteProduct = async (
+    productId: string,
+    productName: string,
+  ) => {
+    setDeletingProductId(productId);
+
+    try {
+      const result = await softDeleteProduct(productId);
+
+      if (result.success) {
+        toast.success(`${productName} has been deleted successfully`);
+      } else {
+        toast.error(result.error || "Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setDeletingProductId(null);
+    }
+  };
+
+  console.log("This is the selected product: ", selectedProduct);
 
   return (
     <div className="space-y-8">
@@ -82,13 +140,19 @@ export default function AdminInventoryClient({
       {/* Update Stock Modal */}
       <UpdateStockModal
         open={isUpdateStockModalOpen}
-        onOpenChange={setIsUpdateStockModalOpen}
+        onOpenChange={(open) => {
+          setIsUpdateStockModalOpen(open);
+          if (!open) {
+            setPreselectedProductId(undefined);
+          }
+        }}
         products={products.map((p) => ({
           id: p.id,
           name: p.name,
           sku: p.sku,
           currentStock: p.currentStock,
         }))}
+        preselectedProductId={preselectedProductId}
       />
 
       {/* Page Header */}
@@ -146,7 +210,14 @@ export default function AdminInventoryClient({
                         {product.currentStock} units left
                       </p>
                     </div>
-                    <Button size="sm" variant="destructive">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        setPreselectedProductId(product.id);
+                        setIsUpdateStockModalOpen(true);
+                      }}
+                    >
                       Restock
                     </Button>
                   </CardContent>
@@ -222,9 +293,6 @@ export default function AdminInventoryClient({
             </CardTitle>
             <div className="flex gap-2">
               <Button variant="outline" size="icon">
-                <Filter className="size-4" />
-              </Button>
-              <Button variant="outline" size="icon">
                 <Download className="size-4" />
               </Button>
             </div>
@@ -244,7 +312,7 @@ export default function AdminInventoryClient({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.length === 0 ? (
+                {displayedProducts.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -254,7 +322,7 @@ export default function AdminInventoryClient({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProducts.map((product) => (
+                  displayedProducts.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -290,24 +358,73 @@ export default function AdminInventoryClient({
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              onClick={() => setSelectedProduct(product)}
-                            >
-                              Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl">
-                            <DialogHeader>
-                              <DialogTitle>
-                                Product Details - {product.name}
-                              </DialogTitle>
-                            </DialogHeader>
-                            <ProductDetailsModal product={product} />
-                          </DialogContent>
-                        </Dialog>
+                        <div className="flex items-center justify-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedProduct(product)}
+                              >
+                                Details
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Product Details - {product.name}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <ProductDetailsModal product={product} />
+                            </DialogContent>
+                          </Dialog>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={deletingProductId === product.id}
+                              >
+                                {deletingProductId === product.id ? (
+                                  <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="size-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete Product?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete{" "}
+                                  <strong className="text-semibold text-foreground">
+                                    {product.name}
+                                  </strong>
+                                  ? This action will mark the product as deleted
+                                  and it will no longer appear in the inventory.
+                                  This action cannot be easily undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleDeleteProduct(
+                                      product.id,
+                                      product.name,
+                                    )
+                                  }
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -315,10 +432,23 @@ export default function AdminInventoryClient({
               </TableBody>
             </Table>
           </div>
-          {filteredProducts.length > 0 && (
+          {hasMoreProducts && (
             <div className="mt-4 flex justify-center">
-              <Button variant="ghost" className="text-primary">
-                View All Products <ChevronDown className="ml-1 size-4" />
+              <Button
+                variant="ghost"
+                className="text-primary"
+                onClick={() => setShowAllProducts(!showAllProducts)}
+              >
+                {showAllProducts ? (
+                  <>
+                    Show Less <ChevronUp className="ml-1 size-4" />
+                  </>
+                ) : (
+                  <>
+                    View All Products ({filteredProducts.length - 10} more) {""}{" "}
+                    <ChevronDown className="ml-1 size-4" />
+                  </>
+                )}
               </Button>
             </div>
           )}

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Package } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
@@ -49,12 +49,14 @@ interface UpdateStockModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Pick<Product, "id" | "name" | "sku" | "currentStock">[];
+  preselectedProductId?: string;
 }
 
 export function UpdateStockModal({
   open,
   onOpenChange,
   products,
+  preselectedProductId,
 }: UpdateStockModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<
@@ -64,12 +66,22 @@ export function UpdateStockModal({
   const form = useForm<UpdateStockFormValues>({
     resolver: zodResolver(updateStockSchema),
     defaultValues: {
-      productId: "",
+      productId: preselectedProductId || "",
       quantity: 0,
     },
   });
 
-  const watchedProductId = form.watch("productId");
+  // Handle preselected product
+  useEffect(() => {
+    if (open && preselectedProductId) {
+      const product = products.find((p) => p.id === preselectedProductId);
+      if (product) {
+        form.setValue("productId", preselectedProductId);
+        setSelectedProduct(product);
+      }
+    }
+  }, [open, preselectedProductId, products, form]);
+
   const watchedQuantity = form.watch("quantity");
 
   // Update selected product when productId changes

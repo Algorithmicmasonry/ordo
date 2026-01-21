@@ -110,7 +110,7 @@ export async function assignStockToAgent(
     })
 
     revalidatePath("/admin/agents")
-    revalidatePath("/admin/inventory")
+    revalidatePath("/dashboard/admin/inventory")
 
     return { success: true, agentStock }
   } catch (error) {
@@ -150,7 +150,7 @@ export async function updateAgentStockIssues(
     })
 
     revalidatePath("/admin/agents")
-    revalidatePath("/admin/inventory")
+    revalidatePath("/dashboard/admin/inventory")
 
     return { success: true, agentStock }
   } catch (error) {

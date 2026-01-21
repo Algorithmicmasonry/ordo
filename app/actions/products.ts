@@ -1,6 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { UnknownKeysParam } from "zod";
 
 /**
  * Create a new product (Admin only)
@@ -168,5 +169,43 @@ export async function getActiveProducts() {
   } catch (error) {
     console.error("Error fetching products:", error);
     return { success: false, error: "Failed to fetch products" };
+  }
+}
+
+/**
+ * Soft delete a product (Admin only)
+ */
+export async function softDeleteProduct(productId: string) {
+  try {
+    // Check if product exists
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      include: {
+        orders: {
+          take: 1,
+        },
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    // Soft delete the product
+    const updatedProduct = await db.product.update({
+      where: { id: productId },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/dashboard/admin/inventory");
+
+    return { success: true, product: updatedProduct };
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return { success: false, error: "Failed to delete product" };
   }
 }

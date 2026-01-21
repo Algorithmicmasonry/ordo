@@ -20,10 +20,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Agent, AgentStock, Product } from "@prisma/client";
-import { AlertCircle, HatGlasses, MapPin } from "lucide-react";
+import { AlertCircle, HatGlasses, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import toast from "react-hot-toast";
+import { assignStockToAgent } from "@/app/actions/agents";
 
 type AgentWithStock = Agent & {
   stock: (AgentStock & {
@@ -35,45 +56,31 @@ interface AgentInventoryBreakdownProps {
   agents: AgentWithStock[];
 }
 
+const assignStockSchema = z.object({
+  productId: z.string().min(1, "Please select a product"),
+  quantity: z.coerce
+    .number()
+    .int("Quantity must be a whole number")
+    .positive("Quantity must be positive"),
+});
+
+type AssignStockFormValues = z.infer<typeof assignStockSchema>;
+
 export function AgentInventoryBreakdown({
   agents,
 }: AgentInventoryBreakdownProps) {
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <HatGlasses className="size-5 text-primary" />
-          Agent Inventory Breakdown
-        </h2>
-        <Tabs
-          value={viewMode}
-          onValueChange={(v) => setViewMode(v as "list" | "map")}
-        >
-          <TabsList>
-            <TabsTrigger value="list">List View</TabsTrigger>
-            <TabsTrigger value="map">Map View</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <h2 className="text-xl font-bold flex items-center gap-2">
+        <HatGlasses className="size-5 text-primary" />
+        Agent Inventory Breakdown
+      </h2>
 
-      {viewMode === "list" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {agents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
-          ))}
-        </div>
-      ) : (
-        <Card className="p-6">
-          <div className="flex items-center justify-center h-96 text-muted-foreground">
-            <div className="text-center">
-              <MapPin className="size-12 mx-auto mb-2 opacity-50" />
-              <p>Map view coming soon</p>
-            </div>
-          </div>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {agents.map((agent) => (
+          <AgentCard key={agent.id} agent={agent} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -89,7 +96,6 @@ function AgentCard({ agent }: { agent: AgentWithStock }) {
   const capacityPercentage = Math.min((totalStock / maxCapacity) * 100, 100);
 
   // Get low stock items
-  const lowStockItems = agent.stock.filter((item) => item.quantity < 10);
 
   return (
     <Card>
@@ -189,19 +195,7 @@ function AgentCard({ agent }: { agent: AgentWithStock }) {
 
         {/* Action Buttons */}
         <div className="p-3 border-t flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="flex-1" size="sm">
-                Assign Stock
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Assign Stock to {agent.name}</DialogTitle>
-              </DialogHeader>
-              <AssignStockForm agent={agent} />
-            </DialogContent>
-          </Dialog>
+          <AssignStockDialog agent={agent} />
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex-1" size="sm">
@@ -341,18 +335,223 @@ function AgentDetailsModal({ agent }: { agent: AgentWithStock }) {
   );
 }
 
-function AssignStockForm({ agent }: { agent: AgentWithStock }) {
+function AssignStockDialog({ agent }: { agent: AgentWithStock }) {
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<
+    Pick<Product, "id" | "name" | "currentStock">[]
+  >([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  const form = useForm<AssignStockFormValues>({
+    resolver: zodResolver(assignStockSchema),
+    defaultValues: {
+      productId: "",
+      quantity: 0,
+    },
+  });
+
+  const selectedProductId = form.watch("productId");
+  const selectedProduct = availableProducts.find(
+    (p) => p.id === selectedProductId,
+  );
+  const watchedQuantity = form.watch("quantity");
+
+  // Fetch available products when dialog opens
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const response = await fetch("/api/products/available");
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableProducts(data.products || []);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      fetchProducts();
+    } else {
+      form.reset();
+    }
+  };
+
+  const onSubmit = async (values: AssignStockFormValues) => {
+    setIsSubmitting(true);
+
+    try {
+      const result = await assignStockToAgent(
+        agent.id,
+        values.productId,
+        values.quantity,
+      );
+
+      if (result.success) {
+        toast.success(
+          `Successfully assigned ${values.quantity} units to ${agent.name}`,
+        );
+        form.reset();
+        setOpen(false);
+      } else {
+        toast.error(result.error || "Failed to assign stock");
+      }
+    } catch (error) {
+      console.error("Error assigning stock:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Assign stock form will be implemented here. This will allow you to:
-      </p>
-      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-        <li>Select products to assign</li>
-        <li>Specify quantities for each product</li>
-        <li>Update agent stock levels</li>
-        <li>Track stock movement history</li>
-      </ul>
-    </div>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button className="flex-1" size="sm">
+          Assign Stock
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Assign Stock to {agent.name}</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Product Selection */}
+            <FormField
+              control={form.control}
+              name="productId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Product *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isLoadingProducts}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isLoadingProducts
+                              ? "Loading products..."
+                              : "Choose a product..."
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px]">
+                      {availableProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium">{product.name}</span>
+                            <span className="ml-4 text-xs text-muted-foreground">
+                              Stock: {product.currentStock}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Available Stock Display */}
+            {selectedProduct && (
+              <div className="rounded-lg border bg-muted/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Available in Warehouse
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {selectedProduct.currentStock}
+                    </p>
+                  </div>
+                  {watchedQuantity > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Remaining After
+                      </p>
+                      <p
+                        className={`text-2xl font-bold ${
+                          selectedProduct.currentStock - watchedQuantity < 0
+                            ? "text-destructive"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {selectedProduct.currentStock - watchedQuantity}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity Input */}
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity to Assign *</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g., 50" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Stock will be deducted from warehouse
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Warning for insufficient stock */}
+            {selectedProduct &&
+              watchedQuantity > selectedProduct.currentStock && (
+                <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
+                  <p className="text-sm text-destructive font-medium">
+                    ⚠️ Warning: Insufficient warehouse stock (only{" "}
+                    {selectedProduct.currentStock} available)
+                  </p>
+                </div>
+              )}
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  (selectedProduct &&
+                    watchedQuantity > selectedProduct.currentStock)
+                }
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
+                {isSubmitting ? "Assigning..." : "Assign Stock"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }

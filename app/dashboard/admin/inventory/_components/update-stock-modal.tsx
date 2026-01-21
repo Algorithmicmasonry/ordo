@@ -105,7 +105,11 @@ export function UpdateStockModal({
 
   const calculateNewStock = () => {
     if (!selectedProduct || !watchedQuantity) return null;
-    return selectedProduct.currentStock + watchedQuantity;
+
+    const quantityNumber = Number(watchedQuantity); // <-- force numeric
+    if (isNaN(quantityNumber)) return selectedProduct.currentStock;
+
+    return selectedProduct.currentStock + quantityNumber;
   };
 
   const newStock = calculateNewStock();

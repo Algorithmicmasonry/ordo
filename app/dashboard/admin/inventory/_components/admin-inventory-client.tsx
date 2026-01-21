@@ -460,7 +460,7 @@ export default function AdminInventoryClient({
 
 function ProductDetailsModal({ product }: { product: ProductWithStock }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* Product Info */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -490,14 +490,14 @@ function ProductDetailsModal({ product }: { product: ProductWithStock }) {
       </div>
 
       {/* Agent Distribution */}
-      <div>
+      <div className="space-y-6 w-full">
         <h3 className="font-semibold mb-3">Agent Distribution</h3>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg w-full">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Agent</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead className="max-w-[180px]">Location</TableHead>
                 <TableHead className="text-right">Quantity</TableHead>
                 <TableHead className="text-right">Defective</TableHead>
                 <TableHead className="text-right">Missing</TableHead>
@@ -519,9 +519,10 @@ function ProductDetailsModal({ product }: { product: ProductWithStock }) {
                     <TableCell className="font-medium">
                       {stock.agent.name}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="max-w-45 truncate text-muted-foreground">
                       {stock.agent.location}
                     </TableCell>
+
                     <TableCell className="text-right font-semibold">
                       {stock.quantity}
                     </TableCell>

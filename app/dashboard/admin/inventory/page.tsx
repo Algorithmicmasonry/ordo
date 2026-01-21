@@ -60,22 +60,42 @@ async function getInventoryData() {
   });
 
   // Calculate stats
-  const totalValue = products.reduce(
+  // Total value includes both warehouse and agent stock
+  const warehouseValue = products.reduce(
     (sum, product) => sum + product.currentStock * product.price,
     0,
   );
-  const totalUnits = products.reduce(
+  const agentValue = agents.reduce(
+    (sum, agent) =>
+      sum +
+      agent.stock.reduce(
+        (stockSum, item) => stockSum + item.quantity * item.product.price,
+        0,
+      ),
+    0,
+  );
+  const totalValue = warehouseValue + agentValue;
+
+  const activeAgents = agents.length;
+
+  // Calculate stock distribution
+  // Warehouse stock (not with agents)
+  const warehouseStock = products.reduce(
     (sum, product) => sum + product.currentStock,
     0,
   );
-  const activeAgents = agents.length;
 
-  // Calculate distribution rate (percentage of products distributed to agents)
+  // Total agent stock across all agents
   const totalAgentStock = agents.reduce(
     (sum, agent) =>
       sum + agent.stock.reduce((stockSum, item) => stockSum + item.quantity, 0),
     0,
   );
+
+  // Total units includes both warehouse and agent stock
+  const totalUnits = warehouseStock + totalAgentStock;
+
+  // Calculate distribution rate (percentage of total inventory with agents)
   const distributionRate =
     totalUnits > 0 ? Math.round((totalAgentStock / totalUnits) * 100) : 0;
 

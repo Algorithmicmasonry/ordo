@@ -1,5 +1,4 @@
 "use server";
-
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -17,6 +16,22 @@ export async function createProduct(data: {
   isActive?: boolean;
 }) {
   try {
+    // Check if SKU is provided and already exists
+    if (data.sku) {
+      const existingProduct = await db.product.findUnique({
+        where: { sku: data.sku },
+        select: { id: true, name: true, sku: true },
+      });
+
+      if (existingProduct) {
+        return {
+          success: false,
+          error: `SKU "${data.sku}" is already in use by "${existingProduct.name}". Please use a different SKU.`,
+        };
+      }
+    }
+
+    // Create the product
     const product = await db.product.create({
       data: {
         ...data,
@@ -30,12 +45,40 @@ export async function createProduct(data: {
     revalidatePath("/dashboard/admin/inventory");
 
     return { success: true, product };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating product:", error);
-    return { success: false, error: "Failed to create product" };
+
+    // Handle Prisma unique constraint errors
+    if (error.code === "P2002") {
+      const target = error.meta?.target;
+
+      if (target?.includes("sku")) {
+        return {
+          success: false,
+          error: "This SKU is already in use. Please choose a different one.",
+        };
+      }
+
+      if (target?.includes("name")) {
+        return {
+          success: false,
+          error: "A product with this name already exists.",
+        };
+      }
+
+      return {
+        success: false,
+        error: "A product with these details already exists.",
+      };
+    }
+
+    // Handle other potential errors
+    return {
+      success: false,
+      error: "Failed to create product. Please try again.",
+    };
   }
 }
-
 /**
  * Update product (Admin only)
  */

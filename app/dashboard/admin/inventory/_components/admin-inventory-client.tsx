@@ -28,8 +28,6 @@ import {
   Plus,
   RefreshCw,
   Search,
-  TrendingDown,
-  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { DashboardHeader } from "../../_components";
@@ -166,15 +164,12 @@ export default function AdminInventoryClient({
             <p className="text-muted-foreground text-sm font-medium">
               Total Inventory Value
             </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-3xl font-bold">
-                ₦{stats.totalValue.toLocaleString()}
-              </p>
-              <span className="text-green-500 text-sm font-bold flex items-center">
-                <TrendingUp className="size-3 mr-1" />
-                +2.5%
-              </span>
-            </div>
+            <p className="text-3xl font-bold mt-2">
+              ₦{stats.totalValue.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Warehouse + Agent stock
+            </p>
           </CardContent>
         </Card>
 
@@ -183,15 +178,12 @@ export default function AdminInventoryClient({
             <p className="text-muted-foreground text-sm font-medium">
               Total Units in Stock
             </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-3xl font-bold">
-                {stats.totalUnits.toLocaleString()}
-              </p>
-              <span className="text-destructive text-sm font-bold flex items-center">
-                <TrendingDown className="size-3 mr-1" />
-                -1.2%
-              </span>
-            </div>
+            <p className="text-3xl font-bold mt-2">
+              {stats.totalUnits.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Warehouse + Agent stock
+            </p>
           </CardContent>
         </Card>
 
@@ -200,12 +192,10 @@ export default function AdminInventoryClient({
             <p className="text-muted-foreground text-sm font-medium">
               Active Agents
             </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-3xl font-bold">{stats.activeAgents}</p>
-              <span className="text-muted-foreground text-sm font-bold">
-                0%
-              </span>
-            </div>
+            <p className="text-3xl font-bold mt-2">{stats.activeAgents}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Currently active
+            </p>
           </CardContent>
         </Card>
 
@@ -214,13 +204,10 @@ export default function AdminInventoryClient({
             <p className="text-muted-foreground text-sm font-medium">
               Distribution Rate
             </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-3xl font-bold">{stats.distributionRate}%</p>
-              <span className="text-green-500 text-sm font-bold flex items-center">
-                <TrendingUp className="size-3 mr-1" />
-                +5.1%
-              </span>
-            </div>
+            <p className="text-3xl font-bold mt-2">{stats.distributionRate}%</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Of inventory with agents
+            </p>
           </CardContent>
         </Card>
       </div>

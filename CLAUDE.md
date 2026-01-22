@@ -70,13 +70,19 @@ The `/app/dashboard/page.tsx` acts as a role-based router:
 - INVENTORY_MANAGER → `/dashboard/inventory`
 - All dashboard routes are protected via `app/dashboard/layout.tsx`
 
+**Dynamic Routes:**
+- `/dashboard/admin/sales-reps/[id]` - Individual sales rep performance page with detailed stats, charts, and order history
+- Uses Next.js dynamic params (must be awaited in Next.js 16)
+- Includes `generateMetadata()` for SEO optimization
+
 **Server Actions Pattern:**
 All data mutations use Next.js Server Actions in `app/actions/`:
 - `orders.ts` - Order CRUD, status updates, agent assignment
 - `products.ts` - Product management, inventory updates
 - `agents.ts` - Agent and agent stock management
 - `expenses.ts` - Expense tracking
-- `stats.ts` - Dashboard statistics and analytics
+- `dashboard-stats.ts` - Dashboard statistics and analytics with period comparison
+- `user.ts` - User management and current user fetching
 
 **Core Libraries:**
 - `lib/auth.ts` - Better Auth configuration with role/isActive fields
@@ -84,8 +90,9 @@ All data mutations use Next.js Server Actions in `app/actions/`:
 - `lib/db.ts` - Prisma client singleton
 - `lib/round-robin.ts` - Sales rep round-robin order assignment
 - `lib/calculations.ts` - Revenue, profit, and performance calculations
-- `lib/types.ts` - Shared TypeScript types
-- `lib/utils.ts` - cn() utility for Tailwind class merging
+- `lib/date-utils.ts` - Date range calculations and period comparisons
+- `lib/types.ts` - Shared TypeScript types (extended types with relations, dashboard types, form types)
+- `lib/utils.ts` - cn() utility for Tailwind class merging, getInitials, formatRole helpers
 
 **UI Components:**
 - `components/ui/` - Radix UI primitives (shadcn/ui style)
@@ -145,6 +152,14 @@ When orders are created via the public form, they're automatically assigned to t
 Server actions use `revalidatePath()` to update cached data after mutations. Common paths:
 - `/dashboard` - Revalidate after order updates
 - `/admin` - Revalidate after admin actions
+- `/dashboard/admin/orders` - Revalidate after order CRUD operations
+- `/dashboard/admin/inventory` - Revalidate after inventory updates
+
+**6. Performance Optimization**
+- Parallel data fetching using `Promise.all()` in server components
+- Suspense boundaries with skeleton loading states for better UX
+- Optimistic UI updates with revalidation after mutations
+- Date range utilities (`lib/date-utils.ts`) for efficient period-based queries
 
 ### Environment Setup
 
@@ -160,6 +175,27 @@ BETTER_AUTH_SECRET="..."  # For session encryption
 - Prisma generates types automatically - run `pnpm db:generate` after schema changes
 - Better Auth types are inferred: `Session` type exported from `lib/auth.ts`
 - Form schemas use Zod validation
+- Extended types with relations defined in `lib/types.ts` (e.g., `OrderWithDetails`, `OrderWithRelations`)
+- Type re-exports from `@prisma/client` for consistency (OrderStatus, OrderSource, UserRole)
+
+### Important Next.js 16 Patterns
+
+**Async Params:**
+In Next.js 16, route params and searchParams must be awaited:
+```typescript
+// Page components
+export default async function Page({ params, searchParams }: Props) {
+  const { id } = await params;
+  const query = await searchParams;
+  // ...
+}
+
+// generateMetadata
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  // ...
+}
+```
 
 ### Component Patterns
 
@@ -185,10 +221,11 @@ DashboardShell (layout wrapper)
 ```
 
 **Current Implementation Status:**
-- UI structure is complete with placeholder data
-- All dashboard components are in place but need to be connected to real data
-- Server actions exist for data operations but need integration with dashboard components
-- Time period filters are UI-only (need state management and data fetching integration)
+- Admin dashboard is fully functional with real data from `dashboard-stats.ts` server actions
+- Time period filters work via URL search params (`?period=today|week|month|year`)
+- Sales rep detail pages are fully implemented with performance tracking
+- Dashboard uses parallel data fetching with Promise.all() for optimal performance
+- Components handle loading states with Suspense boundaries and skeleton loaders
 
 **Server Actions:**
 - Always marked with `"use server"` directive
@@ -203,6 +240,22 @@ DashboardShell (layout wrapper)
 - Components follow shadcn/ui conventions
 - Consistent use of `text-primary`, `text-foreground`, `text-muted-foreground` for theming
 - Icon library: `lucide-react`
-- Component Library : ShadcnUI
+- Component Library: ShadcnUI
 
-#Always read the prisma database schema before making changes to the codebase
+**Component Organization:**
+- Components co-located with pages in `_components/` folders (Next.js convention)
+- Barrel exports via `index.ts` files for clean imports
+- Example: `app/dashboard/admin/_components/index.ts` exports all dashboard components
+- Page-specific server actions can be in `actions.ts` alongside the page (e.g., `app/dashboard/admin/orders/actions.ts`)
+
+## Development Notes
+
+**Always read the Prisma schema before making database-related changes:**
+- Schema location: `prisma/schema.prisma`
+- Run `pnpm db:generate` after schema modifications
+- Use `pnpm db:push` for quick development iterations (no migrations)
+- Use `pnpm db:migrate` for production-ready schema changes
+
+**API Routes:**
+- `/api/auth/[...all]` - Better Auth API routes (catch-all)
+- `/api/products/available` - Public endpoint for available products (used by order form)

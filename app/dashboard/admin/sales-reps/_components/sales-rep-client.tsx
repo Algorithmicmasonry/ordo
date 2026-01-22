@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { User } from "@prisma/client";
+import { DashboardHeader, PeriodFilter } from "../../_components";
+import { useRouter } from "next/navigation";
 
 type SalesRepWithStats = User & {
   stats: {
@@ -59,6 +61,7 @@ export default function SalesRepsClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const router = useRouter();
 
   // Sort reps by revenue for leaderboard
   const topPerformers = [...salesReps]
@@ -90,15 +93,12 @@ export default function SalesRepsClient({
   return (
     <div className="space-y-8">
       {/* Header Section */}
+      <DashboardHeader
+        heading="Sales Representative"
+        text="Manage and monitor your sales team performance"
+      />
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Sales Representatives
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Manage and monitor your sales team performance
-          </p>
-        </div>
+        <PeriodFilter />
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm">
             <Filter className="size-4 mr-2" />
@@ -112,15 +112,6 @@ export default function SalesRepsClient({
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -271,6 +262,16 @@ export default function SalesRepsClient({
         </div>
       </section>
 
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name, email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Sales Reps Table */}
       <Card>
         <div className="px-6 py-4 border-b flex items-center justify-between bg-muted/30">
@@ -353,7 +354,11 @@ export default function SalesRepsClient({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button
+                        onClick={() =>
+                          router.push(`/dashboard/admin/sales-reps/${rep.id}`)
+                        }
+                      >
                         <Eye className="size-4" />
                       </Button>
                       <Button variant="ghost" size="icon">

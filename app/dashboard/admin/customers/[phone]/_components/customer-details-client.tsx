@@ -44,10 +44,16 @@ import {
   MapPin,
   Package,
   CheckCircle,
+  ArrowLeft,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { OrderStatus } from "@prisma/client";
+import {
+  OrderDetailsModal,
+  type OrderWithRelations,
+} from "../../../orders/_components/orders-table";
 
 interface CustomerDetailsClientProps {
   data: {
@@ -91,11 +97,11 @@ interface CustomerDetailsClientProps {
   };
 }
 
-const statusConfig: Record<
-  OrderStatus,
-  { label: string; color: string }
-> = {
-  NEW: { label: "New", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+const statusConfig: Record<OrderStatus, { label: string; color: string }> = {
+  NEW: {
+    label: "New",
+    color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  },
   CONFIRMED: {
     label: "Confirmed",
     color: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
@@ -132,6 +138,9 @@ export default function CustomerDetailsClient({
 }: CustomerDetailsClientProps) {
   const { customer, stats, insights, charts, orders } = data;
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithRelations | null>(
+    null
+  );
   const itemsPerPage = 10;
 
   const getInitials = (name: string) => {
@@ -170,6 +179,10 @@ export default function CustomerDetailsClient({
     toast("Export feature coming soon!", { icon: "ℹ️" });
   };
 
+  const handleViewDetails = (order: any) => {
+    setSelectedOrder(order as OrderWithRelations);
+  };
+
   // Prepare chart data
   const monthlyOrdersData = Object.entries(charts.ordersByMonth)
     .sort((a, b) => a[0].localeCompare(b[0]))
@@ -189,25 +202,39 @@ export default function CustomerDetailsClient({
         name: statusInfo?.label || status,
         value: count,
       };
-    }
+    },
   );
 
   const sourceChartData = Object.entries(charts.sourceDistribution).map(
     ([source, count]) => ({
       name: source,
       value: count,
-    })
+    }),
   );
 
   // Pagination
   const totalPages = Math.ceil(orders.length / itemsPerPage);
   const paginatedOrders = orders.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   return (
     <div className="space-y-8">
+      {/* Breadcrumbs */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm">
+          <Link
+            href="/dashboard/admin/customers"
+            className="text-muted-foreground hover:text-primary flex items-center gap-1"
+          >
+            <ArrowLeft className="size-4" />
+            Customers
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-semibold">{customer.name} Performance</span>
+        </div>
+      </div>
       {/* Customer Profile Header */}
       <Card>
         <CardContent className="p-6">
@@ -348,9 +375,7 @@ export default function CustomerDetailsClient({
               </span>
               <ShoppingCart className="size-5 text-primary" />
             </div>
-            <span className="text-3xl font-extrabold">
-              {stats.totalOrders}
-            </span>
+            <span className="text-3xl font-extrabold">{stats.totalOrders}</span>
           </CardContent>
         </Card>
 
@@ -620,10 +645,12 @@ export default function CustomerDetailsClient({
                       {order.assignedTo?.name || "Unassigned"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/dashboard/admin/orders/${order.id}`}>
-                          View
-                        </Link>
+                      <Button
+                        size="sm"
+                        onClick={() => handleViewDetails(order)}
+                      >
+                        <Eye className="size-4 mr-2" />
+                        Details
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -657,6 +684,15 @@ export default function CustomerDetailsClient({
           </div>
         </div>
       </Card>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          isOpen={!!selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </div>
   );
 }

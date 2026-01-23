@@ -82,6 +82,7 @@ export const sourceNames = {
   TIKTOK: "TikTok",
   WHATSAPP: "WhatsApp",
   WEBSITE: "Website",
+  UNKNOWN: "Unknown",
 };
 
 const statusTimelineConfig: Record<
@@ -253,7 +254,7 @@ export const OrderStatusTimeline = ({
   );
 };
 
-const SourceIcon = ({ source }: { source: string }) => {
+export const SourceIcon = ({ source }: { source: string }) => {
   switch (source) {
     case "FACEBOOK":
       return (
@@ -313,7 +314,7 @@ const SourceIcon = ({ source }: { source: string }) => {
   }
 };
 
-const OrderDetailsModal = ({
+export const OrderDetailsModal = ({
   order,
   isOpen,
   onClose,

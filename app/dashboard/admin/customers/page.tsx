@@ -34,6 +34,7 @@ async function getCustomersData(period: TimePeriod = "month") {
       createdAt: true,
       city: true,
       state: true,
+      source: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -69,6 +70,7 @@ async function getCustomersData(period: TimePeriod = "month") {
         lastOrderDate: order.createdAt,
         location:
           order.city && order.state ? `${order.city}, ${order.state}` : null,
+        sources: {} as Record<string, number>,
       });
     }
 
@@ -76,6 +78,11 @@ async function getCustomersData(period: TimePeriod = "month") {
     customer.orders.push(order);
     customer.totalSpent += order.totalAmount;
     customer.lastOrderDate = order.createdAt; // Most recent
+
+    // Track sources
+    if (order.source) {
+      customer.sources[order.source] = (customer.sources[order.source] || 0) + 1;
+    }
 
     if (order.status === "DELIVERED") {
       customer.successfulOrders++;
@@ -99,11 +106,19 @@ async function getCustomersData(period: TimePeriod = "month") {
       reliability = "low";
     }
 
+    // Find most common source
+    const sourceEntries = Object.entries(customer.sources) as [string, number][];
+    const preferredSource =
+      sourceEntries.length > 0
+        ? sourceEntries.sort((a, b) => b[1] - a[1])[0][0]
+        : null;
+
     return {
       ...customer,
       totalOrders,
       reliabilityRate,
       reliability,
+      preferredSource,
     };
   });
 

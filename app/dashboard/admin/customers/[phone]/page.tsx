@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { CustomerDetailsClient } from "./_components";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Metadata } from "next";
 
 interface CustomerDetailPageProps {
   params: Promise<{ phone: string }>;
@@ -49,7 +50,7 @@ async function getCustomerDetails(phone: string) {
   const deliveredOrders = orders.filter((o) => o.status === "DELIVERED").length;
   const cancelledOrders = orders.filter((o) => o.status === "CANCELLED").length;
   const pendingOrders = orders.filter(
-    (o) => !["DELIVERED", "CANCELLED"].includes(o.status)
+    (o) => !["DELIVERED", "CANCELLED"].includes(o.status),
   ).length;
 
   const totalSpent = orders
@@ -58,11 +59,12 @@ async function getCustomerDetails(phone: string) {
 
   const avgOrderValue = deliveredOrders > 0 ? totalSpent / deliveredOrders : 0;
 
-  const conversionRate = totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 0;
+  const conversionRate =
+    totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 0;
 
   // Days since last order
   const daysSinceLastOrder = Math.floor(
-    (new Date().getTime() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)
+    (new Date().getTime() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   // Calculate if customer is active (ordered in last 30 days)
@@ -77,7 +79,7 @@ async function getCustomerDetails(phone: string) {
       acc[loc] = (acc[loc] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
   const mostCommonLocation =
     Object.keys(locationFrequency).length > 0
@@ -91,7 +93,7 @@ async function getCustomerDetails(phone: string) {
       acc[source] = (acc[source] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   const preferredSource =
@@ -100,7 +102,10 @@ async function getCustomerDetails(phone: string) {
       : "UNKNOWN";
 
   // Get top products
-  const productFrequency = new Map<string, { name: string; count: number; spent: number }>();
+  const productFrequency = new Map<
+    string,
+    { name: string; count: number; spent: number }
+  >();
   orders.forEach((order) => {
     order.items.forEach((item) => {
       const productName = item.product.name;
@@ -126,12 +131,13 @@ async function getCustomerDetails(phone: string) {
     for (let i = 0; i < orders.length - 1; i++) {
       const daysDiff = Math.floor(
         (orders[i].createdAt.getTime() - orders[i + 1].createdAt.getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       );
       daysBetweenOrders.push(daysDiff);
     }
     purchaseFrequency =
-      daysBetweenOrders.reduce((sum, days) => sum + days, 0) / daysBetweenOrders.length;
+      daysBetweenOrders.reduce((sum, days) => sum + days, 0) /
+      daysBetweenOrders.length;
   }
 
   // Customer badges/flags
@@ -150,7 +156,7 @@ async function getCustomerDetails(phone: string) {
       acc[monthKey] = (acc[monthKey] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   // Status distribution for chart
@@ -159,7 +165,7 @@ async function getCustomerDetails(phone: string) {
       acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   return {
@@ -248,4 +254,24 @@ function CustomerDetailsSkeleton() {
       <Skeleton className="h-96" />
     </div>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ phone: string }>;
+}): Promise<Metadata> {
+  const { phone } = await params;
+  const decodedPhone = decodeURIComponent(phone);
+
+  const customerData = await getCustomerDetails(decodedPhone);
+
+  return {
+    title: customerData
+      ? `${customerData.customer.name} - Customer Details`
+      : "Customer Details",
+    description: customerData
+      ? `Order history and statistics for ${customerData.customer.name} (${customerData.customer.phone})`
+      : "Customer details and order history",
+  };
 }

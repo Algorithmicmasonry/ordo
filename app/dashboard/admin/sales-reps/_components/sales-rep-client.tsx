@@ -1,8 +1,19 @@
 "use client";
 
+import { toggleSalesRepStatus } from "@/app/actions/user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -11,40 +22,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { Progress } from "@/components/ui/progress";
+import { TimePeriod } from "@/lib/types";
+import type { User } from "@prisma/client";
 import {
-  Users,
-  CheckCircle2,
-  ShoppingBag,
-  TrendingUp,
-  ArrowUpRight,
   ArrowDownRight,
-  Search,
+  ArrowUpRight,
+  CheckCircle2,
+  Edit,
+  Eye,
   Filter,
   Plus,
-  Eye,
-  Edit,
   RefreshCw,
-  MoreVertical,
+  Search,
+  ShoppingBag,
+  TrendingUp,
+  Users,
 } from "lucide-react";
-import { useState } from "react";
-import type { User } from "@prisma/client";
-import { DashboardHeader, PeriodFilter } from "../../_components";
-import { useRouter } from "next/navigation";
-import { TimePeriod } from "@/lib/types";
-import { AddSalesRepModal, EditSalesRepModal } from "./";
-import { toggleSalesRepStatus } from "@/app/actions/user";
-import toast from "react-hot-toast";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { DashboardHeader, PeriodFilter } from "../../_components";
+import { AddSalesRepModal, EditSalesRepModal } from "./";
 
 type SalesRepWithStats = User & {
   stats: {

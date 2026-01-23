@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState<"all" | "today" | OrderStatus>("all")
 
   useEffect(() => {
-    if (!isPending && (!session || session.user.role !== "ADMIN")) {
+    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
       router.push("/login")
     } else if (session?.user) {
       loadData()

@@ -34,6 +34,17 @@ import { useState } from "react";
 import type { User } from "@prisma/client";
 import { DashboardHeader, PeriodFilter } from "../../_components";
 import { useRouter } from "next/navigation";
+import { TimePeriod } from "@/lib/types";
+import { AddSalesRepModal, EditSalesRepModal } from "./";
+import { toggleSalesRepStatus } from "@/app/actions/user";
+import toast from "react-hot-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 type SalesRepWithStats = User & {
   stats: {
@@ -41,7 +52,13 @@ type SalesRepWithStats = User & {
     deliveredOrders: number;
     conversionRate: number;
     revenue: number;
+    trends: {
+      orders: number;
+      delivered: number;
+      revenue: number;
+    };
   };
+  orders: any[]; // Keep orders for previous period calculations
 };
 
 interface SalesRepsPageProps {
@@ -51,15 +68,30 @@ interface SalesRepsPageProps {
     activeReps: number;
     totalOrders: number;
     avgConversion: number;
+    trends: {
+      totalReps: number;
+      orders: number;
+      avgConversion: number;
+    };
   };
+  currentPeriod: TimePeriod;
 }
 
 export default function SalesRepsClient({
   salesReps,
   stats,
+  currentPeriod,
 }: SalesRepsPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedRep, setSelectedRep] = useState<SalesRepWithStats | null>(
+    null,
+  );
   const itemsPerPage = 10;
   const router = useRouter();
 
@@ -69,11 +101,20 @@ export default function SalesRepsClient({
     .slice(0, 5);
 
   // Filter and paginate
-  const filteredReps = salesReps.filter(
-    (rep) =>
+  const filteredReps = salesReps.filter((rep) => {
+    const matchesSearch =
       rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rep.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      rep.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "active"
+          ? rep.isActive
+          : !rep.isActive;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const totalPages = Math.ceil(filteredReps.length / itemsPerPage);
   const paginatedReps = filteredReps.slice(
@@ -98,17 +139,11 @@ export default function SalesRepsClient({
         text="Manage and monitor your sales team performance"
       />
       <div className="flex items-center justify-between">
-        <PeriodFilter />
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Filter className="size-4 mr-2" />
-            Filter by Status
-          </Button>
-          <Button size="sm">
-            <Plus className="size-4 mr-2" />
-            Add Sales Rep
-          </Button>
-        </div>
+        <PeriodFilter currentPeriod={currentPeriod} />
+        <Button size="sm" onClick={() => setAddModalOpen(true)}>
+          <Plus className="size-4 mr-2" />
+          Add Sales Rep
+        </Button>
       </div>
 
       {/* Search Bar */}
@@ -125,7 +160,7 @@ export default function SalesRepsClient({
             </div>
             <div className="flex items-end gap-2">
               <span className="text-3xl font-extrabold">{stats.totalReps}</span>
-              <span className="text-emerald-500 text-xs font-bold flex items-center mb-1">
+              <span className="text-muted-foreground text-xs font-bold flex items-center mb-1">
                 <ArrowUpRight className="size-3" /> 0%
               </span>
             </div>
@@ -144,8 +179,8 @@ export default function SalesRepsClient({
               <span className="text-3xl font-extrabold">
                 {stats.activeReps}
               </span>
-              <span className="text-emerald-500 text-xs font-bold flex items-center mb-1">
-                <ArrowUpRight className="size-3" /> 2%
+              <span className="text-muted-foreground text-xs font-bold flex items-center mb-1">
+                <ArrowUpRight className="size-3" /> 0%
               </span>
             </div>
           </CardContent>
@@ -163,8 +198,19 @@ export default function SalesRepsClient({
               <span className="text-3xl font-extrabold">
                 {stats.totalOrders.toLocaleString()}
               </span>
-              <span className="text-rose-500 text-xs font-bold flex items-center mb-1">
-                <ArrowDownRight className="size-3" /> 5%
+              <span
+                className={`text-xs font-bold flex items-center mb-1 ${
+                  stats.trends.orders >= 0
+                    ? "text-emerald-500"
+                    : "text-rose-500"
+                }`}
+              >
+                {stats.trends.orders >= 0 ? (
+                  <ArrowUpRight className="size-3" />
+                ) : (
+                  <ArrowDownRight className="size-3" />
+                )}{" "}
+                {Math.abs(stats.trends.orders)}%
               </span>
             </div>
           </CardContent>
@@ -182,8 +228,19 @@ export default function SalesRepsClient({
               <span className="text-3xl font-extrabold">
                 {stats.avgConversion}%
               </span>
-              <span className="text-emerald-500 text-xs font-bold flex items-center mb-1">
-                <ArrowUpRight className="size-3" /> 12%
+              <span
+                className={`text-xs font-bold flex items-center mb-1 ${
+                  stats.trends.avgConversion >= 0
+                    ? "text-emerald-500"
+                    : "text-rose-500"
+                }`}
+              >
+                {stats.trends.avgConversion >= 0 ? (
+                  <ArrowUpRight className="size-3" />
+                ) : (
+                  <ArrowDownRight className="size-3" />
+                )}{" "}
+                {Math.abs(stats.trends.avgConversion)}%
               </span>
             </div>
           </CardContent>
@@ -194,9 +251,6 @@ export default function SalesRepsClient({
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold">Performance Leaderboard (Top 5)</h3>
-          <Button variant="link" size="sm" className="text-primary">
-            View Full Ranking
-          </Button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {topPerformers.map((rep, index) => {
@@ -262,14 +316,38 @@ export default function SalesRepsClient({
         </div>
       </section>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex items-center justify-between ">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="size-4 mr-2" />
+                Filter by Status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                All Reps
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("active")}>
+                Active Only
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>
+                Inactive Only
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Sales Reps Table */}
@@ -277,11 +355,12 @@ export default function SalesRepsClient({
         <div className="px-6 py-4 border-b flex items-center justify-between bg-muted/30">
           <h3 className="font-bold">All Sales Representatives</h3>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.refresh()}
+            >
               <RefreshCw className="size-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="size-4" />
             </Button>
           </div>
         </div>
@@ -354,17 +433,42 @@ export default function SalesRepsClient({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-2">
-                      <Button
-                        onClick={() =>
-                          router.push(`/dashboard/admin/sales-reps/${rep.id}`)
-                        }
+                      <Link
+                        href={`/dashboard/admin/sales-reps/${rep.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        <Eye className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
+                        <Button>
+                          <Eye className="size-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedRep(rep);
+                          setEditModalOpen(true);
+                        }}
+                      >
                         <Edit className="size-4" />
                       </Button>
-                      <Switch checked={rep.isActive} />
+                      <Switch
+                        checked={rep.isActive}
+                        onCheckedChange={async (checked) => {
+                          const result = await toggleSalesRepStatus(
+                            rep.id,
+                            checked,
+                          );
+                          if (result.success) {
+                            toast.success("Status updated successfully");
+                            router.refresh();
+                          } else {
+                            toast.error(
+                              result.error || "Failed to update status",
+                            );
+                          }
+                        }}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -409,6 +513,14 @@ export default function SalesRepsClient({
           </div>
         </div>
       </Card>
+
+      {/* Modals */}
+      <AddSalesRepModal open={addModalOpen} onOpenChange={setAddModalOpen} />
+      <EditSalesRepModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        salesRep={selectedRep}
+      />
     </div>
   );
 }

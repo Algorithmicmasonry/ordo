@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,10 @@ import {
 import { format } from "date-fns";
 import Link from "next/link";
 import type { User, Order, OrderStatus, OrderSource } from "@prisma/client";
+import { PeriodFilter } from "../../../_components";
+import { TimePeriod } from "@/lib/types";
+import { EditSalesRepModal } from "../../_components";
+import toast from "react-hot-toast";
 
 type SalesRepWithDetails = User & {
   orders: (Order & {
@@ -58,6 +63,7 @@ type SalesRepWithDetails = User & {
 
 interface SalesRepDetailsProps {
   salesRep: SalesRepWithDetails;
+  currentPeriod: TimePeriod;
 }
 
 const statusColors = {
@@ -78,7 +84,10 @@ const sourceNames = {
 
 export default function SalesRepDetailsClient({
   salesRep,
+  currentPeriod,
 }: SalesRepDetailsProps) {
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
   const recentOrders = salesRep.orders.slice(0, 10);
 
   // Calculate percentages for donut chart
@@ -96,19 +105,28 @@ export default function SalesRepDetailsClient({
     ...Object.values(salesRep.stats.ordersBySource),
   );
 
+  const handleExportReport = () => {
+    toast("Export feature coming soon!", {
+      icon: "ℹ️",
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm">
-        <Link
-          href="/dashboard/admin/sales-reps"
-          className="text-muted-foreground hover:text-primary flex items-center gap-1"
-        >
-          <ArrowLeft className="size-4" />
-          Sales Reps
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <span className="font-semibold">{salesRep.name} Performance</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm">
+          <Link
+            href="/dashboard/admin/sales-reps"
+            className="text-muted-foreground hover:text-primary flex items-center gap-1"
+          >
+            <ArrowLeft className="size-4" />
+            Sales Reps
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-semibold">{salesRep.name} Performance</span>
+        </div>
+        <PeriodFilter currentPeriod={currentPeriod} />
       </div>
 
       {/* Profile Header */}
@@ -150,11 +168,18 @@ export default function SalesRepDetailsClient({
               </div>
             </div>
             <div className="flex gap-3 w-full md:w-auto">
-              <Button variant="outline" className="flex-1 md:flex-none">
+              <Button
+                variant="outline"
+                className="flex-1 md:flex-none"
+                onClick={() => setEditModalOpen(true)}
+              >
                 <Edit className="size-4 mr-2" />
                 Edit Profile
               </Button>
-              <Button className="flex-1 md:flex-none">
+              <Button
+                className="flex-1 md:flex-none"
+                onClick={handleExportReport}
+              >
                 <Download className="size-4 mr-2" />
                 Export Report
               </Button>
@@ -240,7 +265,7 @@ export default function SalesRepDetailsClient({
         <Card className="border-l-4 border-l-orange-500">
           <CardContent className="p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Profit
+              Gross Profit
             </p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold">
@@ -270,9 +295,17 @@ export default function SalesRepDetailsClient({
               <p className="text-2xl font-black text-primary">
                 {salesRep.stats.conversionRate}%
               </p>
-              <p className="text-primary/60 text-sm font-medium">
-                +{salesRep.stats.trends.conversion}%
-              </p>
+              {salesRep.stats.trends.conversion >= 0 ? (
+                <p className="text-green-500 text-sm font-medium flex items-center">
+                  <TrendingUp className="size-3" />+
+                  {salesRep.stats.trends.conversion}%
+                </p>
+              ) : (
+                <p className="text-red-500 text-sm font-medium flex items-center">
+                  <TrendingDown className="size-3" />
+                  {salesRep.stats.trends.conversion}%
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -345,8 +378,10 @@ export default function SalesRepDetailsClient({
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Recent Orders</CardTitle>
-            <Button variant="link" className="text-primary">
-              View All Orders
+            <Button variant="link" className="text-primary" asChild>
+              <Link href={`/dashboard/admin/orders?salesRep=${salesRep.id}`}>
+                View All Orders
+              </Link>
             </Button>
           </div>
         </CardHeader>
@@ -405,6 +440,13 @@ export default function SalesRepDetailsClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Modal */}
+      <EditSalesRepModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        salesRep={salesRep}
+      />
     </div>
   );
 }

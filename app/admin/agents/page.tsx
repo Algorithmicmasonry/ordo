@@ -62,7 +62,7 @@ export default function AgentsPage() {
   })
 
   useEffect(() => {
-    if (!isPending && (!session || session.user.role !== "ADMIN")) {
+    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
       router.push("/login")
     } else if (session?.user) {
       loadData()

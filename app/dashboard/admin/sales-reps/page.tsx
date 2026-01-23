@@ -2,19 +2,35 @@ import { Suspense } from "react";
 import { SalesRepsClient } from "./_components";
 import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/lib/db";
+import { TimePeriod } from "@/lib/types";
+import {
+  getDateRange,
+  getPreviousPeriodRange,
+  calculatePercentageChange,
+} from "@/lib/date-utils";
 
-async function getSalesRepsData() {
-  // Fetch all sales reps with their orders
+async function getSalesRepsData(period: TimePeriod = "month") {
+  const { startDate, endDate } = getDateRange(period);
+  const previousRange = getPreviousPeriodRange(period);
+
+  // Fetch all sales reps with their orders in BOTH periods
   const salesReps = await db.user.findMany({
     where: {
       role: "SALES_REP",
     },
     include: {
       orders: {
+        where: {
+          createdAt: {
+            gte: previousRange.startDate,
+            lte: endDate,
+          },
+        },
         select: {
           id: true,
           status: true,
           totalAmount: true,
+          createdAt: true,
         },
       },
     },
@@ -23,17 +39,45 @@ async function getSalesRepsData() {
     },
   });
 
-  // Calculate stats for each rep
+  // Calculate stats for each rep with trends
   const salesRepsWithStats = salesReps.map((rep) => {
-    const totalOrders = rep.orders.length;
-    const deliveredOrders = rep.orders.filter(
-      (order) => order.status === "DELIVERED",
+    // Split orders into current and previous periods
+    const currentOrders = rep.orders.filter(
+      (o) => o.createdAt >= startDate && o.createdAt <= endDate,
+    );
+    const previousOrders = rep.orders.filter(
+      (o) =>
+        o.createdAt >= previousRange.startDate &&
+        o.createdAt <= previousRange.endDate,
+    );
+
+    // Calculate current period stats
+    const totalOrders = currentOrders.length;
+    const deliveredOrders = currentOrders.filter(
+      (o) => o.status === "DELIVERED",
     ).length;
     const conversionRate =
       totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0;
-    const revenue = rep.orders
-      .filter((order) => order.status === "DELIVERED")
-      .reduce((sum, order) => sum + order.totalAmount, 0);
+    const revenue = currentOrders
+      .filter((o) => o.status === "DELIVERED")
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+
+    // Calculate previous period stats
+    const prevTotalOrders = previousOrders.length;
+    const prevDeliveredOrders = previousOrders.filter(
+      (o) => o.status === "DELIVERED",
+    ).length;
+    const prevRevenue = previousOrders
+      .filter((o) => o.status === "DELIVERED")
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+
+    // Calculate percentage changes
+    const ordersChange = calculatePercentageChange(totalOrders, prevTotalOrders);
+    const deliveredChange = calculatePercentageChange(
+      deliveredOrders,
+      prevDeliveredOrders,
+    );
+    const revenueChange = calculatePercentageChange(revenue, prevRevenue);
 
     return {
       ...rep,
@@ -42,15 +86,22 @@ async function getSalesRepsData() {
         deliveredOrders,
         conversionRate,
         revenue,
+        trends: {
+          orders: ordersChange,
+          delivered: deliveredChange,
+          revenue: revenueChange,
+        },
       },
     };
   });
 
-  // Calculate overall stats
+  // Calculate overall stats with trends
   const totalReps = salesReps.length;
   const activeReps = salesReps.filter((rep) => rep.isActive).length;
-  const totalOrders = salesReps.reduce(
-    (sum, rep) => sum + rep.orders.length,
+
+  // Current period totals
+  const totalOrders = salesRepsWithStats.reduce(
+    (sum, rep) => sum + rep.stats.totalOrders,
     0,
   );
   const avgConversion =
@@ -63,6 +114,37 @@ async function getSalesRepsData() {
         )
       : 0;
 
+  // Previous period totals for trends
+  const prevTotalOrders = salesRepsWithStats.reduce((sum, rep) => {
+    const prevOrders = rep.orders.filter(
+      (o) =>
+        o.createdAt >= previousRange.startDate &&
+        o.createdAt <= previousRange.endDate,
+    );
+    return sum + prevOrders.length;
+  }, 0);
+
+  const prevAvgConversion =
+    salesRepsWithStats.length > 0
+      ? Math.round(
+          salesRepsWithStats.reduce((sum, rep) => {
+            const prevOrders = rep.orders.filter(
+              (o) =>
+                o.createdAt >= previousRange.startDate &&
+                o.createdAt <= previousRange.endDate,
+            );
+            const prevDelivered = prevOrders.filter(
+              (o) => o.status === "DELIVERED",
+            ).length;
+            const prevConv =
+              prevOrders.length > 0
+                ? (prevDelivered / prevOrders.length) * 100
+                : 0;
+            return sum + prevConv;
+          }, 0) / salesRepsWithStats.length,
+        )
+      : 0;
+
   return {
     salesReps: salesRepsWithStats,
     stats: {
@@ -70,16 +152,34 @@ async function getSalesRepsData() {
       activeReps,
       totalOrders,
       avgConversion,
+      trends: {
+        totalReps: 0, // Rep count doesn't change with period
+        orders: calculatePercentageChange(totalOrders, prevTotalOrders),
+        avgConversion: calculatePercentageChange(avgConversion, prevAvgConversion),
+      },
     },
   };
 }
 
-export default async function SalesRepsPage() {
-  const data = await getSalesRepsData();
+interface SalesRepsPageProps {
+  searchParams: Promise<{ period?: string }>;
+}
+
+export default async function SalesRepsPage({
+  searchParams,
+}: SalesRepsPageProps) {
+  const params = await searchParams;
+  const period = (params?.period || "month") as TimePeriod;
+
+  const data = await getSalesRepsData(period);
 
   return (
     <Suspense fallback={<SalesRepsPageSkeleton />}>
-      <SalesRepsClient salesReps={data.salesReps} stats={data.stats} />
+      <SalesRepsClient
+        salesReps={data.salesReps}
+        stats={data.stats}
+        currentPeriod={period}
+      />
     </Suspense>
   );
 }

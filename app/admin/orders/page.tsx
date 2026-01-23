@@ -65,7 +65,7 @@ export default function OrdersPage() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   useEffect(() => {
-    if (!isPending && (!session || session.user.role !== "ADMIN")) {
+    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
       router.push("/login")
     } else if (session?.user) {
       loadData()

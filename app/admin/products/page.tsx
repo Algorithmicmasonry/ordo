@@ -42,7 +42,7 @@ export default function ProductsPage() {
   })
 
   useEffect(() => {
-    if (!isPending && (!session || session.user.role !== "ADMIN")) {
+    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
       router.push("/login")
     } else if (session?.user) {
       loadProducts()

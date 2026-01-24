@@ -17,6 +17,7 @@ import {
   PackageOpen,
   PanelLeftClose,
   PanelLeftOpen,
+  Repeat,
   Rocket,
   Settings,
   ShoppingBag,
@@ -75,6 +76,11 @@ const routes = [
     label: "User Management",
     icon: Users,
     href: "/dashboard/admin/users",
+  },
+  {
+    label: "Round-Robin",
+    icon: Repeat,
+    href: "/dashboard/admin/round-robin",
   },
 ];
 

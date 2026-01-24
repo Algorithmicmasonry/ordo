@@ -131,6 +131,7 @@ export async function createSalesRep(data: CreateSalesRepData) {
 
     // Revalidate paths
     revalidatePath("/dashboard/admin/sales-reps");
+    revalidatePath("/dashboard/admin/users");
     revalidatePath("/dashboard/admin");
 
     return { success: true, user };
@@ -219,6 +220,7 @@ export async function updateSalesRep(
     // Revalidate paths
     revalidatePath("/dashboard/admin/sales-reps");
     revalidatePath(`/dashboard/admin/sales-reps/${userId}`);
+    revalidatePath("/dashboard/admin/users");
     revalidatePath("/dashboard/admin");
 
     return { success: true, user };
@@ -276,6 +278,7 @@ export async function toggleSalesRepStatus(
     // Revalidate paths
     revalidatePath("/dashboard/admin/sales-reps");
     revalidatePath(`/dashboard/admin/sales-reps/${userId}`);
+    revalidatePath("/dashboard/admin/users");
 
     return { success: true, user };
   } catch (error: any) {
@@ -286,3 +289,8 @@ export async function toggleSalesRepStatus(
     };
   }
 }
+
+// Aliases for User Management page (more generic naming)
+export const createUser = createSalesRep;
+export const updateUser = updateSalesRep;
+export const toggleUserStatus = toggleSalesRepStatus;

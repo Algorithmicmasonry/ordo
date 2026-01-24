@@ -59,3 +59,14 @@ export async function resetRoundRobin(): Promise<void> {
     },
   })
 }
+
+/**
+ * Get the current round-robin index without incrementing it
+ */
+export async function getCurrentRoundRobinIndex(): Promise<number> {
+  const setting = await db.systemSetting.findUnique({
+    where: { key: ROUND_ROBIN_KEY },
+  })
+
+  return setting ? parseInt(setting.value) : 0
+}

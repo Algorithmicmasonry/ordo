@@ -28,6 +28,7 @@ import {
   Trash2,
   Search,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 import {
   BarChart,
@@ -62,6 +63,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Expense {
   id: string;
@@ -177,17 +186,26 @@ export default function ExpensesClient({
   const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(
     new Set(),
   );
+  const [hoveredMonthIndex, setHoveredMonthIndex] = useState<number | null>(
+    null,
+  );
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(
+    new Set(Object.keys(expenseTypeConfig)),
+  );
   const itemsPerPage = 10;
   const router = useRouter();
 
-  // Filter expenses by search query
+  // Filter expenses by search query and type
   const filteredExpenses = expenses.filter((expense) => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       expense.description?.toLowerCase().includes(searchLower) ||
       expense.type.toLowerCase().includes(searchLower) ||
-      expense.product?.name.toLowerCase().includes(searchLower)
-    );
+      expense.product?.name.toLowerCase().includes(searchLower);
+
+    const matchesType = selectedTypes.has(expense.type);
+
+    return matchesSearch && matchesType;
   });
 
   // Pagination
@@ -257,6 +275,25 @@ export default function ExpensesClient({
 
   const handleExport = () => {
     toast("Export feature coming soon!", { icon: "ℹ️" });
+  };
+
+  const handleTypeToggle = (type: string) => {
+    const newTypes = new Set(selectedTypes);
+    if (newTypes.has(type)) {
+      newTypes.delete(type);
+    } else {
+      newTypes.add(type);
+    }
+    setSelectedTypes(newTypes);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handleSelectAllTypes = () => {
+    setSelectedTypes(new Set(Object.keys(expenseTypeConfig)));
+  };
+
+  const handleClearAllTypes = () => {
+    setSelectedTypes(new Set());
   };
 
   // Prepare chart data
@@ -575,7 +612,7 @@ export default function ExpensesClient({
               </div>
             </div>
 
-            <div className="flex items-end justify-between h-48 px-4 border-b pb-2">
+            <div className="relative flex items-end justify-between h-48 px-4 border-b pb-2">
               {monthlyComparison.map((month, index) => {
                 const operatingHeight =
                   maxMonthlyValue > 0
@@ -590,15 +627,17 @@ export default function ExpensesClient({
                 return (
                   <div
                     key={index}
-                    className="flex flex-col items-center gap-3 w-12"
+                    className="flex flex-col items-center gap-3 w-12 relative"
+                    onMouseEnter={() => setHoveredMonthIndex(index)}
+                    onMouseLeave={() => setHoveredMonthIndex(null)}
                   >
                     <div className="flex items-end gap-1 h-32">
                       <div
-                        className="w-4 bg-primary rounded-t-sm transition-all"
+                        className="w-4 bg-primary rounded-t-sm transition-all cursor-pointer hover:opacity-80"
                         style={{ height: `${operatingHeight}%` }}
                       />
                       <div
-                        className="w-4 bg-slate-300 dark:bg-slate-700 rounded-t-sm transition-all"
+                        className="w-4 bg-slate-300 dark:bg-slate-700 rounded-t-sm transition-all cursor-pointer hover:opacity-80"
                         style={{ height: `${marketingHeight}%` }}
                       />
                     </div>
@@ -611,6 +650,50 @@ export default function ExpensesClient({
                     >
                       {month.month}
                     </span>
+
+                    {/* Tooltip */}
+                    {hoveredMonthIndex === index && (
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-popover border border-border rounded-lg shadow-lg p-3 w-48 z-10 pointer-events-none">
+                        <p className="font-semibold text-sm mb-2">
+                          {month.month}
+                        </p>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="size-2 rounded bg-primary" />
+                              <span className="text-muted-foreground">
+                                Operating
+                              </span>
+                            </div>
+                            <span className="font-semibold">
+                              ₦{Math.round(month.operating).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="size-2 rounded bg-slate-300 dark:bg-slate-700" />
+                              <span className="text-muted-foreground">
+                                Marketing
+                              </span>
+                            </div>
+                            <span className="font-semibold">
+                              ₦{Math.round(month.marketing).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="pt-1.5 mt-1.5 border-t border-border">
+                            <div className="flex justify-between items-center text-xs font-semibold">
+                              <span>Total</span>
+                              <span>
+                                ₦
+                                {Math.round(
+                                  month.operating + month.marketing,
+                                ).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -719,10 +802,52 @@ export default function ExpensesClient({
                 <Download className="size-4 mr-2" />
                 Export
               </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="size-4 mr-2" />
-                Filter
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="size-4 mr-2" />
+                    Filter
+                    {selectedTypes.size < Object.keys(expenseTypeConfig).length && (
+                      <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                        {selectedTypes.size}
+                      </span>
+                    )}
+                    <ChevronDown className="size-3 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {Object.entries(expenseTypeConfig).map(([type, config]) => (
+                    <DropdownMenuCheckboxItem
+                      key={type}
+                      checked={selectedTypes.has(type)}
+                      onCheckedChange={() => handleTypeToggle(type)}
+                    >
+                      {config.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <div className="flex gap-2 p-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSelectAllTypes}
+                      className="flex-1 h-8"
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAllTypes}
+                      className="flex-1 h-8"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardContent>

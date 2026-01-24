@@ -37,6 +37,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { PeriodFilter } from "@/app/dashboard/admin/_components";
+import type { TimePeriod } from "@/lib/types";
 
 interface ProductAnalyticsClientProps {
   product: {
@@ -74,6 +76,7 @@ interface ProductAnalyticsClientProps {
     date: Date;
   }>;
   totalExpenseCount: number;
+  currentPeriod: TimePeriod;
 }
 
 const expenseTypeConfig: Record<string, { label: string; color: string }> = {
@@ -93,6 +96,7 @@ export default function ProductAnalyticsClient({
   monthlyBreakdown,
   recentExpenses,
   totalExpenseCount,
+  currentPeriod,
 }: ProductAnalyticsClientProps) {
   const handleExport = () => {
     toast("Export feature coming soon!", { icon: "ℹ️" });
@@ -135,6 +139,11 @@ export default function ProductAnalyticsClient({
           <Download className="size-4 mr-2" />
           Export Report
         </Button>
+      </div>
+
+      {/* Period Filter */}
+      <div className="flex justify-between items-center">
+        <PeriodFilter currentPeriod={currentPeriod} />
       </div>
 
       {/* Key Stats Cards */}

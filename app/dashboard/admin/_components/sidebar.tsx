@@ -52,6 +52,11 @@ const routes = [
     href: "/dashboard/admin/sales-reps",
   },
   {
+    label: "Agents",
+    icon: HatGlasses,
+    href: "/dashboard/admin/agents",
+  },
+  {
     label: "Customers",
     icon: BookUser,
     href: "/dashboard/admin/customers",
@@ -70,11 +75,6 @@ const routes = [
     label: "User Management",
     icon: Users,
     href: "/dashboard/admin/users",
-  },
-  {
-    label: "Agents",
-    icon: HatGlasses,
-    href: "/dashboard/admin/agents",
   },
 ];
 

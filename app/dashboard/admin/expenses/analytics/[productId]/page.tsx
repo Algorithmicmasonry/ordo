@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { OrderStatus } from "@prisma/client";
 import ProductAnalyticsClient from "./_components/product-analytics-client";
+import { getDateRange } from "@/lib/date-utils";
+import type { TimePeriod } from "@/lib/types";
 
 export async function generateMetadata({ params }: { params: Promise<{ productId: string }> }) {
   const { productId } = await params;
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ productId
   };
 }
 
-async function getProductAnalytics(productId: string) {
+async function getProductAnalytics(productId: string, period: TimePeriod = "month") {
   // Verify product exists
   const product = await db.product.findUnique({
     where: { id: productId },
@@ -41,12 +43,15 @@ async function getProductAnalytics(productId: string) {
     return null;
   }
 
-  // Get date 6 months ago
+  // Get date range for current period
+  const { startDate, endDate } = getDateRange(period);
+
+  // Get date 6 months ago for historical chart data
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  // Fetch all delivered orders containing this product
-  const orderItems = await db.orderItem.findMany({
+  // Fetch all delivered orders containing this product (6 months for chart)
+  const allOrderItems = await db.orderItem.findMany({
     where: {
       productId: productId,
       order: {
@@ -68,8 +73,8 @@ async function getProductAnalytics(productId: string) {
     },
   });
 
-  // Fetch all expenses for this product
-  const expenses = await db.expense.findMany({
+  // Fetch all expenses for this product (6 months for chart)
+  const allExpenses = await db.expense.findMany({
     where: {
       productId: productId,
       date: {
@@ -81,26 +86,37 @@ async function getProductAnalytics(productId: string) {
     },
   });
 
-  // Calculate revenue and COGS from order items
+  // Filter for current period only (for stats)
+  const currentOrderItems = allOrderItems.filter(
+    (item) => item.order.deliveredAt &&
+    item.order.deliveredAt >= startDate &&
+    item.order.deliveredAt <= endDate
+  );
+
+  const currentExpenses = allExpenses.filter(
+    (expense) => expense.date >= startDate && expense.date <= endDate
+  );
+
+  // Calculate revenue and COGS from current period order items
   let totalRevenue = 0;
   let totalCOGS = 0;
   let totalUnitsSold = 0;
 
-  orderItems.forEach((item) => {
+  currentOrderItems.forEach((item) => {
     totalRevenue += item.price * item.quantity;
     totalCOGS += item.cost * item.quantity;
     totalUnitsSold += item.quantity;
   });
 
-  // Calculate total expenses
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // Calculate total expenses from current period
+  const totalExpenses = currentExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   // Calculate net profit
   const netProfit = totalRevenue - totalCOGS - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-  // Group expenses by type
-  const expensesByType = expenses.reduce(
+  // Group expenses by type (current period)
+  const expensesByType = currentExpenses.reduce(
     (acc, expense) => {
       acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
       return acc;
@@ -137,8 +153,8 @@ async function getProductAnalytics(productId: string) {
     });
   }
 
-  // Populate monthly revenue and COGS
-  orderItems.forEach((item) => {
+  // Populate monthly revenue and COGS (using all data for 6-month chart)
+  allOrderItems.forEach((item) => {
     if (item.order.deliveredAt) {
       const deliveryDate = new Date(item.order.deliveredAt);
       const monthKey = `${deliveryDate.getFullYear()}-${String(deliveryDate.getMonth() + 1).padStart(2, "0")}`;
@@ -152,8 +168,8 @@ async function getProductAnalytics(productId: string) {
     }
   });
 
-  // Populate monthly expenses
-  expenses.forEach((expense) => {
+  // Populate monthly expenses (using all data for 6-month chart)
+  allExpenses.forEach((expense) => {
     const expenseDate = new Date(expense.date);
     const monthKey = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, "0")}`;
     const data = monthlyData.get(monthKey);
@@ -179,8 +195,8 @@ async function getProductAnalytics(productId: string) {
   ]);
   const maxMonthlyValue = Math.max(...allMonthlyValues, 1);
 
-  // Expense breakdown for recent expenses table
-  const recentExpenses = expenses.slice(0, 10);
+  // Expense breakdown for recent expenses table (current period)
+  const recentExpenses = currentExpenses.slice(0, 10);
 
   return {
     product,
@@ -198,14 +214,16 @@ async function getProductAnalytics(productId: string) {
     monthlyBreakdown,
     maxMonthlyValue,
     recentExpenses,
-    totalExpenseCount: expenses.length,
+    totalExpenseCount: currentExpenses.length,
   };
 }
 
 export default async function ProductAnalyticsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ productId: string }>;
+  searchParams: Promise<{ period?: string }>;
 }) {
   const session = await auth.api.getSession({
     headers: await import("next/headers").then((m) => m.headers()),
@@ -216,11 +234,14 @@ export default async function ProductAnalyticsPage({
   }
 
   const { productId } = await params;
-  const data = await getProductAnalytics(productId);
+  const query = await searchParams;
+  const period = (query?.period || "month") as TimePeriod;
+
+  const data = await getProductAnalytics(productId, period);
 
   if (!data) {
     notFound();
   }
 
-  return <ProductAnalyticsClient {...data} />;
+  return <ProductAnalyticsClient {...data} currentPeriod={period} />;
 }

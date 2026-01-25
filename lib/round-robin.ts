@@ -14,7 +14,7 @@ export async function getNextSalesRep(): Promise<string | null> {
       isActive: true,
     },
     orderBy: {
-      createdAt: 'asc', // Consistent ordering
+      name: 'asc', // Alphabetical ordering to match UI
     },
   })
 

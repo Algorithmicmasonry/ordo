@@ -3,8 +3,9 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { RoundRobinClient } from "./_components";
 import { getCurrentRoundRobinIndex } from "@/lib/round-robin";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Round-Robin Management | Ordo CRM",
   description: "Configure the lead distribution sequence for your sales team",
 };
@@ -44,7 +45,7 @@ async function getRoundRobinData() {
     ...rep,
     totalOrders: rep.orders.length,
     deliveredOrders: rep.orders.filter((o) => o.status === "DELIVERED").length,
-    // Determine online status (for demo purposes - in production, use real-time data)
+    // isOnline indicates availability: active reps are available, inactive are on break
     isOnline: rep.isActive,
   }));
 
@@ -58,7 +59,6 @@ async function getRoundRobinData() {
       : null,
     totalActive: activeSalesReps.length,
     totalExcluded: excludedSalesReps.length,
-    totalInactive: 0, // Could be expanded to track leave/vacation status
   };
 }
 

@@ -8,13 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import {
-  GripVertical,
   RotateCcw,
   Search,
-  Bell,
-  Settings,
   Info,
-  Save,
   SkipForward,
   Eye,
 } from "lucide-react";
@@ -22,10 +18,7 @@ import { User } from "@prisma/client";
 import { getInitials } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import {
-  skipCurrentRep,
-  toggleRepInclusion,
-} from "@/app/actions/round-robin";
+import { skipCurrentRep, toggleRepInclusion } from "@/app/actions/round-robin";
 import { ResetModal } from "./reset-modal";
 
 interface SalesRepWithStats extends User {
@@ -42,7 +35,6 @@ interface RoundRobinClientProps {
   nextRep: SalesRepWithStats | null;
   totalActive: number;
   totalExcluded: number;
-  totalInactive: number;
 }
 
 type TabType = "active" | "excluded" | "inactive";
@@ -55,7 +47,6 @@ export default function RoundRobinClient({
   nextRep,
   totalActive,
   totalExcluded,
-  totalInactive,
 }: RoundRobinClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>("active");
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,7 +63,7 @@ export default function RoundRobinClient({
 
   const handleToggleInclusion = async (
     userId: string,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     const result = await toggleRepInclusion(userId, !currentStatus);
     if (result.success) {
@@ -89,8 +80,6 @@ export default function RoundRobinClient({
       reps = activeSalesReps;
     } else if (activeTab === "excluded") {
       reps = excludedSalesReps;
-    } else {
-      reps = []; // Inactive/Leave - to be implemented
     }
 
     // Apply search filter
@@ -98,7 +87,7 @@ export default function RoundRobinClient({
       reps = reps.filter(
         (rep) =>
           rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          rep.email.toLowerCase().includes(searchQuery.toLowerCase())
+          rep.email.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -128,10 +117,6 @@ export default function RoundRobinClient({
             >
               <RotateCcw className="size-4 mr-2" />
               Reset Sequence
-            </Button>
-            <Button>
-              <Save className="size-4 mr-2" />
-              Save Changes
             </Button>
           </div>
         </div>
@@ -208,18 +193,6 @@ export default function RoundRobinClient({
                 Temporarily Excluded ({totalExcluded})
               </p>
             </button>
-            <button
-              onClick={() => setActiveTab("inactive")}
-              className={`flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 ${
-                activeTab === "inactive"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <p className="text-sm font-bold tracking-[0.015em]">
-                Inactive / Leave
-              </p>
-            </button>
           </div>
         </div>
 
@@ -239,9 +212,6 @@ export default function RoundRobinClient({
         {/* Section Header */}
         <div className="flex items-center justify-between px-4 pb-4">
           <h2 className="text-xl font-bold">Assignment Sequence</h2>
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            Drag items to reorder
-          </span>
         </div>
 
         {/* Rep List */}
@@ -266,13 +236,6 @@ export default function RoundRobinClient({
                         : "bg-muted/30 border border-dashed border-border opacity-60"
                   }`}
                 >
-                  {/* Drag Handle */}
-                  <div
-                    className={`flex items-center ${rep.isActive ? "text-muted-foreground cursor-grab" : "text-muted-foreground/30 cursor-not-allowed"}`}
-                  >
-                    <GripVertical className="size-5" />
-                  </div>
-
                   {/* Position Badge */}
                   <div
                     className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
@@ -304,13 +267,13 @@ export default function RoundRobinClient({
 
                   {/* Status & Actions */}
                   <div className="flex items-center gap-6">
-                    {/* Online Status */}
+                    {/* Availability Status */}
                     <div className="flex items-center gap-2">
                       <span
                         className={`size-2 rounded-full ${rep.isOnline ? "bg-green-500" : "bg-amber-500"}`}
                       />
                       <span className="text-xs font-medium text-muted-foreground uppercase">
-                        {rep.isOnline ? "Online" : "On Break"}
+                        {rep.isOnline ? "Available" : "On Break"}
                       </span>
                     </div>
 

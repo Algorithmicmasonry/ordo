@@ -290,6 +290,296 @@ export async function toggleSalesRepStatus(
   }
 }
 
+/**
+ * Delete a user (hard delete with validation)
+ * Only accessible by ADMIN users
+ * Prevents deletion if user has associated orders
+ */
+export async function deleteUser(userId: string) {
+  try {
+    // Check authorization
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized - Please log in" };
+    }
+
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, id: true },
+    });
+
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized - Admin access required" };
+    }
+
+    // Prevent deleting yourself
+    if (currentUser.id === userId) {
+      return { success: false, error: "You cannot delete your own account" };
+    }
+
+    // Check if user exists
+    const existingUser = await db.user.findUnique({
+      where: { id: userId },
+      include: {
+        orders: {
+          take: 1, // Just need to know if any exist
+        },
+      },
+    });
+
+    if (!existingUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Check if user has orders
+    if (existingUser.orders.length > 0) {
+      return {
+        success: false,
+        error:
+          "Cannot delete user with existing orders. Consider deactivating instead.",
+      };
+    }
+
+    // Delete user (also deletes sessions and accounts via cascade)
+    await db.user.delete({
+      where: { id: userId },
+    });
+
+    // Revalidate paths
+    revalidatePath("/dashboard/admin/sales-reps");
+    revalidatePath("/dashboard/admin/users");
+    revalidatePath("/dashboard/admin");
+
+    return { success: true, message: "User deleted successfully" };
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to delete user",
+    };
+  }
+}
+
+/**
+ * Reset user password to a temporary password
+ * Only accessible by ADMIN users
+ * Returns the temporary password for the admin to share with the user
+ */
+export async function resetUserPassword(userId: string) {
+  try {
+    // Check authorization
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized - Please log in" };
+    }
+
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized - Admin access required" };
+    }
+
+    // Check if user exists
+    const existingUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+
+    if (!existingUser) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Generate temporary password
+    const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Update user password
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    // Revalidate paths
+    revalidatePath("/dashboard/admin/users");
+
+    return {
+      success: true,
+      tempPassword,
+      message: `Password reset successfully for ${existingUser.name}`,
+    };
+  } catch (error: any) {
+    console.error("Error resetting password:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to reset password",
+    };
+  }
+}
+
+/**
+ * Bulk deactivate users
+ * Only accessible by ADMIN users
+ */
+export async function bulkDeactivateUsers(userIds: string[]) {
+  try {
+    // Check authorization
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized - Please log in" };
+    }
+
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, id: true },
+    });
+
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized - Admin access required" };
+    }
+
+    // Prevent deactivating yourself
+    if (userIds.includes(currentUser.id)) {
+      return {
+        success: false,
+        error: "You cannot deactivate your own account",
+      };
+    }
+
+    // Bulk update users to inactive
+    const result = await db.user.updateMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      data: {
+        isActive: false,
+      },
+    });
+
+    // Revalidate paths
+    revalidatePath("/dashboard/admin/sales-reps");
+    revalidatePath("/dashboard/admin/users");
+    revalidatePath("/dashboard/admin");
+
+    return {
+      success: true,
+      count: result.count,
+      message: `${result.count} user${result.count === 1 ? "" : "s"} deactivated successfully`,
+    };
+  } catch (error: any) {
+    console.error("Error bulk deactivating users:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to deactivate users",
+    };
+  }
+}
+
+/**
+ * Bulk reset passwords for multiple users
+ * Only accessible by ADMIN users
+ * Returns the temporary passwords for the admin to share with the users
+ */
+export async function bulkResetPasswords(userIds: string[]) {
+  try {
+    // Check authorization
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized - Please log in" };
+    }
+
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "Unauthorized - Admin access required" };
+    }
+
+    // Fetch users to reset
+    const users = await db.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
+
+    if (users.length === 0) {
+      return { success: false, error: "No valid users found" };
+    }
+
+    // Generate temporary passwords for each user
+    const passwordResets: Array<{
+      userId: string;
+      name: string;
+      email: string;
+      tempPassword: string;
+    }> = [];
+
+    // Use a transaction to update all passwords
+    await db.$transaction(
+      users.map((user) => {
+        const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
+        const hashedPassword = bcrypt.hashSync(tempPassword, 10);
+
+        passwordResets.push({
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          tempPassword,
+        });
+
+        return db.user.update({
+          where: { id: user.id },
+          data: {
+            password: hashedPassword,
+          },
+        });
+      })
+    );
+
+    // Revalidate paths
+    revalidatePath("/dashboard/admin/users");
+
+    return {
+      success: true,
+      passwordResets,
+      message: `${passwordResets.length} password${passwordResets.length === 1 ? "" : "s"} reset successfully`,
+    };
+  } catch (error: any) {
+    console.error("Error bulk resetting passwords:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to reset passwords",
+    };
+  }
+}
+
 // Aliases for User Management page (more generic naming)
 export const createUser = createSalesRep;
 export const updateUser = updateSalesRep;

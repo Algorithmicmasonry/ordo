@@ -1,61 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+    bulkDeactivateUsers,
+    bulkResetPasswords,
+    deleteUser,
+    resetUserPassword,
+    toggleUserStatus,
+} from "@/app/actions/user";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Users,
-  UserCheck,
-  Mail,
-  UserPlus,
-  Upload,
-  Download,
-  Settings,
-  Search,
-  TrendingUp,
-  Edit,
-  Trash2,
-  KeyRound,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { formatRole, getInitials } from "@/lib/utils";
 import { User, UserRole } from "@prisma/client";
-import { getInitials, formatRole } from "@/lib/utils";
-import { AddUserModal } from "./add-user-modal";
-import { EditUserModal } from "./edit-user-modal";
-import { toggleUserStatus } from "@/app/actions/user";
+import {
+    ChevronLeft,
+    ChevronRight,
+    Copy,
+    Edit,
+    KeyRound,
+    Loader2,
+    Search,
+    Trash2,
+    TrendingUp,
+    Upload,
+    UserCheck,
+    UserPlus,
+    Users
+} from "lucide-react";
+import { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+    CartesianGrid,
+    Cell,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
+import { DashboardHeader } from "../../_components";
+import { AddUserModal } from "./add-user-modal";
+import { EditUserModal } from "./edit-user-modal";
 
 interface UsersClientProps {
   users: User[];
@@ -75,7 +98,8 @@ interface UsersClientProps {
 }
 
 const roleColors: Record<UserRole, string> = {
-  ADMIN: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  ADMIN:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
   SALES_REP: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   INVENTORY_MANAGER:
     "bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400",
@@ -97,6 +121,22 @@ export default function UsersClient({
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string>("");
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(
+    null,
+  );
+  const [bulkPasswordResetDialogOpen, setBulkPasswordResetDialogOpen] =
+    useState(false);
+  const [bulkPasswordResets, setBulkPasswordResets] = useState<
+    Array<{ userId: string; name: string; email: string; tempPassword: string }>
+  >([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -106,8 +146,7 @@ export default function UsersClient({
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesRole =
-      roleFilter === "all" ? true : user.role === roleFilter;
+    const matchesRole = roleFilter === "all" ? true : user.role === roleFilter;
 
     const matchesStatus =
       statusFilter === "all"
@@ -124,7 +163,7 @@ export default function UsersClient({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedUsers = filteredUsers.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
   );
 
   // Prepare pie chart data
@@ -141,7 +180,7 @@ export default function UsersClient({
       name: "Admins",
       value: roleDistribution.admin,
       percentage: ((roleDistribution.admin / stats.totalUsers) * 100).toFixed(
-        0
+        0,
       ),
     },
     {
@@ -173,27 +212,93 @@ export default function UsersClient({
   };
 
   const handleToggleStatus = async (userId: string, isActive: boolean) => {
-    const result = await toggleUserStatus(userId, isActive);
-    if (result.success) {
-      toast.success(`User ${isActive ? "activated" : "deactivated"}`);
-    } else {
-      toast.error(result.error || "Failed to update user status");
-    }
+    setTogglingUserId(userId);
+    startTransition(async () => {
+      const result = await toggleUserStatus(userId, isActive);
+      if (result.success) {
+        toast.success(`User ${isActive ? "activated" : "deactivated"}`);
+      } else {
+        toast.error(result.error || "Failed to update user status");
+      }
+      setTogglingUserId(null);
+    });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeletingUserId(userToDelete.id);
+    startTransition(async () => {
+      const result = await deleteUser(userToDelete.id);
+      if (result.success) {
+        toast.success("User deleted successfully");
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      } else {
+        toast.error(result.error || "Failed to delete user");
+      }
+      setDeletingUserId(null);
+    });
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    setResetPasswordUserId(userId);
+    startTransition(async () => {
+      const result = await resetUserPassword(userId);
+      if (result.success && result.tempPassword) {
+        setTempPassword(result.tempPassword);
+        setPasswordResetDialogOpen(true);
+        toast.success(result.message || "Password reset successfully");
+      } else {
+        toast.error(result.error || "Failed to reset password");
+      }
+      setResetPasswordUserId(null);
+    });
+  };
+
+  const handleBulkDeactivate = async () => {
+    if (selectedUsers.size === 0) return;
+
+    setBulkActionLoading(true);
+    startTransition(async () => {
+      const result = await bulkDeactivateUsers(Array.from(selectedUsers));
+      if (result.success) {
+        toast.success(result.message || "Users deactivated successfully");
+        setSelectedUsers(new Set());
+      } else {
+        toast.error(result.error || "Failed to deactivate users");
+      }
+      setBulkActionLoading(false);
+    });
+  };
+
+  const handleBulkPasswordReset = async () => {
+    if (selectedUsers.size === 0) return;
+
+    setBulkActionLoading(true);
+    startTransition(async () => {
+      const result = await bulkResetPasswords(Array.from(selectedUsers));
+      if (result.success && result.passwordResets) {
+        setBulkPasswordResets(result.passwordResets);
+        setBulkPasswordResetDialogOpen(true);
+        toast.success(result.message || "Passwords reset successfully");
+        setSelectedUsers(new Set());
+      } else {
+        toast.error(result.error || "Failed to reset passwords");
+      }
+      setBulkActionLoading(false);
+    });
   };
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-wrap justify-between items-end gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-black tracking-tight">
-            User Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage company-wide user roles, permissions, and security settings.
-          </p>
-        </div>
-        <div className="flex gap-3">
+      <DashboardHeader
+        heading="User Management"
+        text=" Manage company-wide user roles, permissions, and security settings."
+      />
+      <div className="flex flex-wrap justify-end items-end gap-4">
+        <div className="flex gap-3 flex-end">
           <Button variant="outline">
             <Upload className="size-4 mr-2" />
             Export Data
@@ -206,7 +311,7 @@ export default function UsersClient({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -248,25 +353,6 @@ export default function UsersClient({
               </span>
               <span className="text-xs text-muted-foreground mt-2">
                 {stats.inactiveUsers} inactive
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Pending Invites
-              </span>
-              <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-500">
-                <Mail className="size-5" />
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-3xl font-extrabold">0</span>
-              <span className="text-xs text-muted-foreground mt-2">
-                No pending invites
               </span>
             </div>
           </CardContent>
@@ -435,14 +521,6 @@ export default function UsersClient({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2 border-l border-border pl-4">
-              <Button variant="ghost" size="icon" title="Download report">
-                <Download className="size-4" />
-              </Button>
-              <Button variant="ghost" size="icon" title="Settings">
-                <Settings className="size-4" />
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -462,10 +540,27 @@ export default function UsersClient({
               </span>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="text-red-600">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600"
+                onClick={handleBulkDeactivate}
+                disabled={bulkActionLoading}
+              >
+                {bulkActionLoading ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : null}
                 Deactivate
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkPasswordReset}
+                disabled={bulkActionLoading}
+              >
+                {bulkActionLoading ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : null}
                 Bulk Password Reset
               </Button>
             </div>
@@ -527,18 +622,27 @@ export default function UsersClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={roleColors[user.role]}>
+                      <Badge
+                        variant="outline"
+                        className={roleColors[user.role]}
+                      >
                         {formatRole(user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Switch
-                          checked={user.isActive}
-                          onCheckedChange={(checked) =>
-                            handleToggleStatus(user.id, checked)
-                          }
-                        />
+                        <div className="relative">
+                          <Switch
+                            checked={user.isActive}
+                            disabled={togglingUserId === user.id}
+                            onCheckedChange={(checked) =>
+                              handleToggleStatus(user.id, checked)
+                            }
+                          />
+                          {togglingUserId === user.id && isPending && (
+                            <Loader2 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-3 animate-spin text-primary" />
+                          )}
+                        </div>
                         <span
                           className={`text-sm font-medium ${user.isActive ? "text-emerald-600" : "text-muted-foreground"}`}
                         >
@@ -570,16 +674,31 @@ export default function UsersClient({
                           variant="ghost"
                           size="icon"
                           title="Reset Password"
+                          onClick={() => handleResetPassword(user.id)}
+                          disabled={resetPasswordUserId === user.id}
                         >
-                          <KeyRound className="size-4" />
+                          {resetPasswordUserId === user.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <KeyRound className="size-4" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-red-500 hover:text-red-600"
                           title="Delete"
+                          onClick={() => {
+                            setUserToDelete(user);
+                            setDeleteDialogOpen(true);
+                          }}
+                          disabled={deletingUserId === user.id}
                         >
-                          <Trash2 className="size-4" />
+                          {deletingUserId === user.id ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-4" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
@@ -635,6 +754,135 @@ export default function UsersClient({
         onOpenChange={setEditModalOpen}
         user={selectedUser}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {userToDelete?.name}? This action
+              cannot be undone. Users with existing orders cannot be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingUserId !== null}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteUser();
+              }}
+              disabled={deletingUserId !== null}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deletingUserId ? (
+                <>
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Password Reset Dialog */}
+      <Dialog
+        open={passwordResetDialogOpen}
+        onOpenChange={setPasswordResetDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Password Reset Successful</DialogTitle>
+            <DialogDescription>
+              A temporary password has been generated for the user. Please share
+              this password securely with them.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">
+                Temporary Password:
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-lg font-mono font-bold bg-background px-3 py-2 rounded border">
+                  {tempPassword}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(tempPassword);
+                    toast.success("Password copied to clipboard");
+                  }}
+                  title="Copy to clipboard"
+                >
+                  <Copy className="size-4" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              The user should change this password immediately after logging in.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Password Reset Dialog */}
+      <Dialog
+        open={bulkPasswordResetDialogOpen}
+        onOpenChange={setBulkPasswordResetDialogOpen}
+      >
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Password Reset Successful</DialogTitle>
+            <DialogDescription>
+              Temporary passwords have been generated for {bulkPasswordResets.length} user
+              {bulkPasswordResets.length === 1 ? "" : "s"}. Please share these
+              passwords securely with them.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4 space-y-3">
+            {bulkPasswordResets.map((reset) => (
+              <div key={reset.userId} className="p-4 bg-muted rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-bold">{reset.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {reset.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-sm font-mono font-bold bg-background px-3 py-2 rounded border">
+                    {reset.tempPassword}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(reset.tempPassword);
+                      toast.success(
+                        `Password for ${reset.name} copied to clipboard`
+                      );
+                    }}
+                    title="Copy to clipboard"
+                  >
+                    <Copy className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground mt-3">
+              Users should change these passwords immediately after logging in.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

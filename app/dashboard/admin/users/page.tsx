@@ -2,10 +2,12 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UsersClient } from "./_components";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "User Management | Ordo CRM",
-  description: "Manage company-wide user roles, permissions, and security settings",
+  description:
+    "Manage company-wide user roles, permissions, and security settings",
 };
 
 async function getUsersData() {
@@ -25,7 +27,7 @@ async function getUsersData() {
   const adminCount = allUsers.filter((u) => u.role === "ADMIN").length;
   const salesRepCount = allUsers.filter((u) => u.role === "SALES_REP").length;
   const inventoryMgrCount = allUsers.filter(
-    (u) => u.role === "INVENTORY_MANAGER"
+    (u) => u.role === "INVENTORY_MANAGER",
   ).length;
 
   // Calculate new users this month
@@ -34,7 +36,7 @@ async function getUsersData() {
   thisMonthStart.setHours(0, 0, 0, 0);
 
   const newUsersThisMonth = allUsers.filter(
-    (u) => u.createdAt >= thisMonthStart
+    (u) => u.createdAt >= thisMonthStart,
   ).length;
 
   // Calculate previous month for trend
@@ -42,13 +44,13 @@ async function getUsersData() {
   lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
 
   const newUsersLastMonth = allUsers.filter(
-    (u) => u.createdAt >= lastMonthStart && u.createdAt < thisMonthStart
+    (u) => u.createdAt >= lastMonthStart && u.createdAt < thisMonthStart,
   ).length;
 
   const newUsersTrend =
     newUsersLastMonth > 0
       ? Math.round(
-          ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100
+          ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100,
         )
       : 0;
 
@@ -62,7 +64,7 @@ async function getUsersData() {
     const monthLabel = date.toLocaleDateString("en-US", { month: "short" });
 
     const usersInMonth = allUsers.filter(
-      (u) => u.createdAt >= monthStart && u.createdAt <= monthEnd
+      (u) => u.createdAt >= monthStart && u.createdAt <= monthEnd,
     ).length;
 
     monthlyData.push({

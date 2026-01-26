@@ -204,3 +204,160 @@ export async function getActiveAgents() {
     return { success: false, error: "Failed to fetch agents" }
   }
 }
+
+/**
+ * Delete agent (Admin only)
+ * Validates that agent has no active orders or stock holdings
+ */
+export async function deleteAgent(agentId: string) {
+  try {
+    // 1. Check for active orders
+    const activeOrders = await db.order.count({
+      where: {
+        agentId,
+        status: { in: ["CONFIRMED", "DISPATCHED"] },
+      },
+    })
+
+    if (activeOrders > 0) {
+      return {
+        success: false,
+        error: `Cannot delete agent with ${activeOrders} active order(s). Please reassign orders first.`,
+      }
+    }
+
+    // 2. Check for stock holdings
+    const stockHoldings = await db.agentStock.count({
+      where: { agentId, quantity: { gt: 0 } },
+    })
+
+    if (stockHoldings > 0) {
+      return {
+        success: false,
+        error:
+          "Agent has stock holdings. Please reconcile stock before deletion.",
+      }
+    }
+
+    // 3. Delete agent
+    await db.agent.delete({ where: { id: agentId } })
+
+    revalidatePath("/dashboard/admin/agents")
+
+    return { success: true, message: "Agent deleted successfully" }
+  } catch (error: any) {
+    console.error("Error deleting agent:", error)
+    return { success: false, error: error.message || "Failed to delete agent" }
+  }
+}
+
+/**
+ * Reconcile agent stock (return, defective, missing tracking)
+ */
+export async function reconcileAgentStock(data: {
+  agentId: string
+  productId: string
+  returnedQuantity?: number
+  defective?: number
+  missing?: number
+  notes?: string
+}) {
+  try {
+    return await db.$transaction(async (tx) => {
+      const agentStock = await tx.agentStock.findUnique({
+        where: {
+          agentId_productId: {
+            agentId: data.agentId,
+            productId: data.productId,
+          },
+        },
+      })
+
+      if (!agentStock) {
+        throw new Error("Stock record not found")
+      }
+
+      // Validate quantities
+      const totalReconciled =
+        (data.returnedQuantity || 0) + (data.defective || 0) + (data.missing || 0)
+
+      if (totalReconciled > agentStock.quantity) {
+        throw new Error("Reconciled quantities exceed current stock")
+      }
+
+      // Update agent stock
+      await tx.agentStock.update({
+        where: {
+          agentId_productId: {
+            agentId: data.agentId,
+            productId: data.productId,
+          },
+        },
+        data: {
+          quantity:
+            data.returnedQuantity !== undefined
+              ? { decrement: data.returnedQuantity }
+              : undefined,
+          defective: data.defective ?? agentStock.defective,
+          missing: data.missing ?? agentStock.missing,
+        },
+      })
+
+      // Return stock to warehouse
+      if (data.returnedQuantity && data.returnedQuantity > 0) {
+        await tx.product.update({
+          where: { id: data.productId },
+          data: {
+            currentStock: { increment: data.returnedQuantity },
+          },
+        })
+      }
+
+      revalidatePath("/dashboard/admin/agents")
+      revalidatePath("/dashboard/admin/inventory")
+
+      return { success: true, message: "Stock reconciled successfully" }
+    })
+  } catch (error: any) {
+    console.error("Error reconciling stock:", error)
+    return { success: false, error: error.message || "Failed to reconcile stock" }
+  }
+}
+
+/**
+ * Create settlement record for agent
+ */
+export async function createSettlement(data: {
+  agentId: string
+  stockValue: number
+  cashCollected: number
+  cashReturned: number
+  adjustments: number
+  notes?: string
+  settledBy: string
+}) {
+  try {
+    const balanceDue =
+      data.stockValue + data.cashCollected - data.cashReturned + data.adjustments
+
+    const settlement = await db.settlement.create({
+      data: {
+        agentId: data.agentId,
+        stockValue: data.stockValue,
+        cashCollected: data.cashCollected,
+        cashReturned: data.cashReturned,
+        adjustments: data.adjustments,
+        balanceDue,
+        notes: data.notes,
+        settledBy: data.settledBy,
+      },
+    })
+
+    revalidatePath("/dashboard/admin/agents")
+
+    return { success: true, settlement }
+  } catch (error: any) {
+    console.error("Error creating settlement:", error)
+    return { success: false, error: error.message || "Failed to create settlement" }
+  }
+}

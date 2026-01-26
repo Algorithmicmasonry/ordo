@@ -40,7 +40,7 @@ export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
     },
     {
       label: "Revenue Generated",
-      value: `₦ ${stats.revenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `₦ ${stats.revenue.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: `${stats.revenueChange > 0 ? "+" : ""}${stats.revenueChange}%`,
       trend: stats.revenueChange >= 0 ? ("up" as const) : ("down" as const),
     },

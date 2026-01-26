@@ -94,8 +94,9 @@ model Agent {
   address  String?
   isActive Boolean @default(true)
 
-  orders Order[]
-  stock  AgentStock[]
+  orders      Order[]
+  stock       AgentStock[]
+  settlements Settlement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,6 +124,30 @@ model AgentStock {
 
   @@unique([agentId, productId])
   @@map("agent_stock")
+}
+
+// Settlement Model (Financial reconciliation with agents)
+
+model Settlement {
+  id String @id @default(cuid())
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  stockValue    Float // Value of stock issued in period
+  cashCollected Float // Cash from COD orders delivered
+  cashReturned  Float // Cash remitted to company
+  adjustments   Float @default(0) // Deductions (-) or bonuses (+)
+  balanceDue    Float // Outstanding: + agent owes, - company owes
+
+  notes      String?
+  settledBy  String? // Admin user ID who recorded settlement
+  settledAt  DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settlements")
 }
 
 // Order Model

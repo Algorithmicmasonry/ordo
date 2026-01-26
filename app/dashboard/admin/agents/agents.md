@@ -89,9 +89,6 @@ ased on the scope of Ordo CRM and the role of Agents (external delivery personne
     - Outstanding balance (owes company / company owes)
     - Settlement history
   - Agent Payables:
-    - Delivery commission (if applicable)
-    - Fuel/transport allowance
-    - Bonus payments
     - Deductions for damages/missing items
   - Payment History:
     - Settlement records
@@ -158,7 +155,6 @@ ased on the scope of Ordo CRM and the role of Agents (external delivery personne
   - Contact Agent:
     - Call, SMS, WhatsApp integration
     - Send delivery instructions
-    - Broadcast messages to all agents
   - Task Assignment:
     - Special pickup/collection tasks
     - Inventory returns to warehouse

@@ -259,3 +259,8 @@ DashboardShell (layout wrapper)
 **API Routes:**
 - `/api/auth/[...all]` - Better Auth API routes (catch-all)
 - `/api/products/available` - Public endpoint for available products (used by order form)
+
+
+##Make sure to always read the Prisma schema before making any code base changes
+
+## make sure to always commit changes to github following developer best practices

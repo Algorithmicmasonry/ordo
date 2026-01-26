@@ -161,6 +161,14 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
     return await createSettlement(data);
   };
 
+  // Calculate pending deliveries for an agent
+  const getPendingDeliveries = (agent: Agent) => {
+    // This would need to be calculated from the agent's orders
+    // For now, returning 0 as a placeholder
+    // TODO: Pass this data from the parent component or fetch it
+    return 0;
+  };
+
   return (
     <div className="space-y-4">
       {/* Action Bar & Filters */}
@@ -345,6 +353,27 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                         >
                           Assign Stock
                         </DropdownMenuItem>
+                        {agent.stockValue > 0 && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // Navigate to agent detail page for stock reconciliation
+                              // ReconcileStockModal requires full stock details with products
+                              router.push(
+                                `/dashboard/admin/agents/${agent.id}?tab=stock`
+                              );
+                            }}
+                          >
+                            Reconcile Stock
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedAgent(agent);
+                            setShowSettlementDialog(true);
+                          }}
+                        >
+                          Record Settlement
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             setSelectedAgent(agent);
@@ -353,7 +382,15 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                         >
                           Edit Agent
                         </DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/admin/agents/${agent.id}?tab=history`
+                            )
+                          }
+                        >
+                          View History
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className={
                             agent.isActive ? "text-red-600" : "text-green-600"
@@ -410,7 +447,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
         onOpenChange={setShowSettlementDialog}
         agent={toPrismaAgent(selectedAgent)}
         stockValue={selectedAgent?.stockValue || 0}
-        pendingDeliveries={0}
+        pendingDeliveries={selectedAgent ? getPendingDeliveries(selectedAgent) : 0}
         onSubmit={handleSettlementSubmit}
       />
     </div>

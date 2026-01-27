@@ -29,6 +29,18 @@ export async function getAgentStats() {
       0,
     );
 
+    // Calculate total defective stock value
+    const totalDefectiveValue = agentStocks.reduce(
+      (sum, stock) => sum + stock.defective * stock.product.cost,
+      0,
+    );
+
+    // Calculate total missing stock value
+    const totalMissingValue = agentStocks.reduce(
+      (sum, stock) => sum + stock.missing * stock.product.cost,
+      0,
+    );
+
     // Calculate total pending deliveries (CONFIRMED + DISPATCHED orders)
     const pendingDeliveries = await db.order.count({
       where: {
@@ -44,6 +56,8 @@ export async function getAgentStats() {
         totalAgents,
         activeAgents,
         totalStockValue,
+        totalDefectiveValue,
+        totalMissingValue,
         pendingDeliveries,
       },
     };

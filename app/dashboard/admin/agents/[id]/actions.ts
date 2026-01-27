@@ -27,7 +27,9 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
           },
           include: {
             items: { include: { product: true } },
-            assignedTo: { select: { name: true, email: true } },
+            assignedTo: { select: { id: true, name: true, email: true } },
+            agent: { select: { id: true, name: true, location: true } },
+            notes: true,
           },
           orderBy: { createdAt: "desc" },
         },
@@ -67,7 +69,8 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
         previousStats,
         stockValue,
         chartData,
-        recentOrders: currentOrders.slice(0, 10),
+        recentOrders: currentOrders,
+        totalOrders: currentOrders.length,
       },
     };
   } catch (error) {

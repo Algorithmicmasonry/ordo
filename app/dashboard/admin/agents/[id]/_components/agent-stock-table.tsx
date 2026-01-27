@@ -23,6 +23,19 @@ export function AgentStockTable({ stock, onReconcile }: AgentStockTableProps) {
     0
   );
 
+  const totalDefectiveValue = stock.reduce(
+    (sum, s) => sum + s.defective * s.product.cost,
+    0
+  );
+
+  const totalMissingValue = stock.reduce(
+    (sum, s) => sum + s.missing * s.product.cost,
+    0
+  );
+
+  const totalDefectiveCount = stock.reduce((sum, s) => sum + s.defective, 0);
+  const totalMissingCount = stock.reduce((sum, s) => sum + s.missing, 0);
+
   if (stock.length === 0) {
     return (
       <Card>
@@ -134,13 +147,48 @@ export function AgentStockTable({ stock, onReconcile }: AgentStockTableProps) {
         </Table>
 
         {/* Summary Footer */}
-        <div className="flex items-center justify-between pt-4 mt-4 border-t">
-          <p className="text-sm text-muted-foreground">
-            {stock.length} product{stock.length !== 1 ? "s" : ""} in inventory
-          </p>
-          <p className="text-sm font-semibold">
-            Total: ₦{totalStockValue.toLocaleString()}
-          </p>
+        <div className="space-y-3 pt-4 mt-4 border-t">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {stock.length} product{stock.length !== 1 ? "s" : ""} in inventory
+            </p>
+            <p className="text-sm font-semibold">
+              Total Stock Value: ₦{totalStockValue.toLocaleString()}
+            </p>
+          </div>
+
+          {/* Defective & Missing Summary */}
+          {(totalDefectiveCount > 0 || totalMissingCount > 0) && (
+            <div className="grid grid-cols-2 gap-4 pt-3 border-t">
+              {totalDefectiveCount > 0 && (
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/30 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Defective Stock
+                  </p>
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                    {totalDefectiveCount} items
+                  </p>
+                  <p className="text-lg font-bold text-red-700 dark:text-red-400">
+                    ₦{totalDefectiveValue.toLocaleString()}
+                  </p>
+                </div>
+              )}
+
+              {totalMissingCount > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-900/30 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Missing Stock
+                  </p>
+                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                    {totalMissingCount} items
+                  </p>
+                  <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
+                    ₦{totalMissingValue.toLocaleString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -41,6 +41,7 @@ interface AgentDetailsClientProps {
   stockValue: number;
   chartData: ChartDataPoint[];
   recentOrders: any[];
+  totalOrders: number;
   period: TimePeriod;
 }
 
@@ -51,6 +52,7 @@ export function AgentDetailsClient({
   stockValue,
   chartData,
   recentOrders,
+  totalOrders,
   period,
 }: AgentDetailsClientProps) {
   const [showReconcileModal, setShowReconcileModal] = useState(false);
@@ -93,7 +95,7 @@ export function AgentDetailsClient({
         </div>
       </div>
 
-      <AgentOrdersTable orders={recentOrders} />
+      <AgentOrdersTable orders={recentOrders} totalOrders={totalOrders} />
 
       {/* Reconcile Stock Modal */}
       <ReconcileStockModal

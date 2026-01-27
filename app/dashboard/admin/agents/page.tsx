@@ -65,6 +65,8 @@ export default async function AdminAgentsPage() {
           totalAgents={statsResponse.data.totalAgents}
           activeAgents={statsResponse.data.activeAgents}
           totalStockValue={statsResponse.data.totalStockValue}
+          totalDefectiveValue={statsResponse.data.totalDefectiveValue}
+          totalMissingValue={statsResponse.data.totalMissingValue}
           pendingDeliveries={statsResponse.data.pendingDeliveries}
         />
       )}

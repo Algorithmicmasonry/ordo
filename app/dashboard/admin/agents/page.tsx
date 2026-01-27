@@ -7,6 +7,7 @@ import { getAgentStats, getAgentsWithMetrics, getUniqueZones } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
+// TODO: add lost and damaged stock quantity and value to agent details page
 export default async function AdminAgentsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -37,7 +38,9 @@ export default async function AdminAgentsPage() {
         />
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            {statsResponse.error || agentsResponse.error || "Failed to load agent data"}
+            {statsResponse.error ||
+              agentsResponse.error ||
+              "Failed to load agent data"}
           </p>
         </div>
       </div>

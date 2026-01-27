@@ -4,8 +4,8 @@ import type { TimePeriod } from "@/lib/types";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "../_components";
-import { FinancialOverview } from "./_components";
-import { getFinancialOverview } from "./actions";
+import { FinancialOverview, SalesRepFinance } from "./_components";
+import { getFinancialOverview, getSalesRepFinance } from "./actions";
 
 interface PageProps {
   searchParams: Promise<{ period?: string; startDate?: string; endDate?: string }>;
@@ -26,6 +26,9 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
   // Fetch financial overview data
   const financialData = await getFinancialOverview(period, startDate, endDate);
+
+  // Fetch sales rep finance data
+  const salesRepData = await getSalesRepFinance(period, startDate, endDate);
 
   if (!financialData.success || !financialData.data) {
     return (
@@ -67,16 +70,20 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
         {/* Sales Rep Financial Performance Tab */}
         <TabsContent value="sales-rep" className="mt-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">
-                Sales Rep Financial Performance
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                This tab will show sales representative financial metrics
-              </p>
+          {salesRepData.success && salesRepData.data ? (
+            <SalesRepFinance data={salesRepData.data} period={period} />
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-muted-foreground">
+                  Failed to Load Sales Rep Data
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {salesRepData.error || "Unable to fetch sales rep finance data"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
 
         {/* Agent Cost Analysis Tab */}

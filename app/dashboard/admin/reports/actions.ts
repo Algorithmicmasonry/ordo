@@ -379,3 +379,163 @@ async function getExpensesByCategory(startDate: Date, endDate: Date) {
     }))
     .sort((a, b) => b.total - a.total);
 }
+
+/**
+ * Get sales rep financial performance data
+ */
+export async function getSalesRepFinance(
+  period: TimePeriod = "month",
+  customStartDate?: Date,
+  customEndDate?: Date
+) {
+  try {
+    // Use custom dates if provided, otherwise calculate from period
+    let startDate: Date;
+    let endDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else {
+      const dateRange = getDateRange(period);
+      startDate = dateRange.startDate;
+      endDate = dateRange.endDate;
+    }
+
+    // Get all sales reps
+    const salesReps = await db.user.findMany({
+      where: {
+        role: "SALES_REP",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    // Get performance data for each sales rep
+    const repPerformance = await Promise.all(
+      salesReps.map(async (rep) => {
+        // Get delivered orders for this rep
+        const orders = await db.order.findMany({
+          where: {
+            assignedToId: rep.id,
+            status: "DELIVERED",
+            deliveredAt: { gte: startDate, lte: endDate },
+          },
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
+            },
+          },
+        });
+
+        // Calculate revenue and cost
+        const revenue = orders.reduce((sum, order) => {
+          return (
+            sum +
+            order.items.reduce(
+              (itemSum, item) => itemSum + item.price * item.quantity,
+              0
+            )
+          );
+        }, 0);
+
+        const cost = orders.reduce((sum, order) => {
+          return (
+            sum +
+            order.items.reduce(
+              (itemSum, item) => itemSum + item.cost * item.quantity,
+              0
+            )
+          );
+        }, 0);
+
+        // Get product IDs from orders
+        const productIds = [
+          ...new Set(orders.flatMap((o) => o.items.map((i) => i.productId))),
+        ];
+
+        // Get expenses for products in this rep's orders
+        const expenses = await db.expense.findMany({
+          where: {
+            productId: { in: productIds },
+            date: { gte: startDate, lte: endDate },
+          },
+        });
+
+        const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+        // Calculate metrics
+        const deliveredCount = orders.length;
+        const netProfit = revenue - cost - totalExpenses;
+        const cpa = deliveredCount > 0 ? totalExpenses / deliveredCount : 0;
+        const totalCost = cost + totalExpenses;
+        const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+
+        return {
+          repId: rep.id,
+          repName: rep.name,
+          repEmail: rep.email,
+          revenue,
+          cost,
+          expenses: totalExpenses,
+          deliveredCount,
+          netProfit,
+          cpa,
+          roi,
+        };
+      })
+    );
+
+    // Sort by net profit (top performers first)
+    repPerformance.sort((a, b) => b.netProfit - a.netProfit);
+
+    // Calculate team metrics
+    const totalRevenue = repPerformance.reduce((sum, rep) => sum + rep.revenue, 0);
+    const totalCost = repPerformance.reduce((sum, rep) => sum + rep.cost, 0);
+    const totalExpenses = repPerformance.reduce(
+      (sum, rep) => sum + rep.expenses,
+      0
+    );
+    const totalNetProfit = totalRevenue - totalCost - totalExpenses;
+    const totalDelivered = repPerformance.reduce(
+      (sum, rep) => sum + rep.deliveredCount,
+      0
+    );
+    const teamROI =
+      totalCost + totalExpenses > 0
+        ? (totalNetProfit / (totalCost + totalExpenses)) * 100
+        : 0;
+    const avgCPA = totalDelivered > 0 ? totalExpenses / totalDelivered : 0;
+    const topPerformer =
+      repPerformance.length > 0 ? repPerformance[0] : null;
+
+    return {
+      success: true,
+      data: {
+        teamMetrics: {
+          teamROI,
+          avgCPA,
+          topPerformer: topPerformer
+            ? {
+                name: topPerformer.repName,
+                revenue: topPerformer.revenue,
+              }
+            : null,
+        },
+        repPerformance,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching sales rep finance data:", error);
+    return {
+      success: false,
+      error: "Failed to fetch sales rep finance data",
+    };
+  }
+}

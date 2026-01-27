@@ -19,12 +19,14 @@ export function DateRangePicker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
 
   // Parse date range from URL params
   const startDateParam = searchParams.get("startDate");
   const endDateParam = searchParams.get("endDate");
 
-  const [date, setDate] = useState<DateRange | undefined>(() => {
+  // Applied date range (from URL)
+  const [appliedDate, setAppliedDate] = useState<DateRange | undefined>(() => {
     if (startDateParam && endDateParam) {
       return {
         from: new Date(startDateParam),
@@ -34,10 +36,15 @@ export function DateRangePicker() {
     return undefined;
   });
 
-  const handleDateSelect = (range: DateRange | undefined) => {
-    setDate(range);
+  // Temporary date selection (before applying)
+  const [tempDate, setTempDate] = useState<DateRange | undefined>(appliedDate);
 
-    if (range?.from && range?.to) {
+  const handleDateSelect = (range: DateRange | undefined) => {
+    setTempDate(range);
+  };
+
+  const handleApply = () => {
+    if (tempDate?.from && tempDate?.to) {
       startTransition(() => {
         const params = new URLSearchParams(searchParams.toString());
 
@@ -45,16 +52,19 @@ export function DateRangePicker() {
         params.delete("period");
 
         // Set custom date range
-        params.set("startDate", range.from.toISOString());
-        params.set("endDate", range.to.toISOString());
+        params.set("startDate", tempDate.from.toISOString());
+        params.set("endDate", tempDate.to.toISOString());
 
         router.push(`${pathname}?${params.toString()}`);
+        setAppliedDate(tempDate);
+        setIsOpen(false);
       });
     }
   };
 
   const handleClearRange = () => {
-    setDate(undefined);
+    setTempDate(undefined);
+    setAppliedDate(undefined);
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("startDate");
@@ -63,18 +73,24 @@ export function DateRangePicker() {
       params.set("period", "month");
       router.push(`${pathname}?${params.toString()}`);
     });
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setTempDate(appliedDate);
+    setIsOpen(false);
   };
 
   return (
     <div className="flex items-center gap-2">
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             size="sm"
             className={cn(
               "justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !appliedDate && "text-muted-foreground"
             )}
             disabled={isPending}
           >
@@ -83,14 +99,14 @@ export function DateRangePicker() {
             ) : (
               <CalendarIcon className="mr-2 h-4 w-4" />
             )}
-            {date?.from ? (
-              date.to ? (
+            {appliedDate?.from ? (
+              appliedDate.to ? (
                 <>
-                  {format(date.from, "MMM dd, yyyy")} -{" "}
-                  {format(date.to, "MMM dd, yyyy")}
+                  {format(appliedDate.from, "MMM dd, yyyy")} -{" "}
+                  {format(appliedDate.to, "MMM dd, yyyy")}
                 </>
               ) : (
-                format(date.from, "MMM dd, yyyy")
+                format(appliedDate.from, "MMM dd, yyyy")
               )
             ) : (
               <span>Pick a date range</span>
@@ -98,18 +114,36 @@ export function DateRangePicker() {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={handleDateSelect}
-            numberOfMonths={2}
-          />
+          <div className="p-3">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={tempDate?.from}
+              selected={tempDate}
+              onSelect={handleDateSelect}
+              numberOfMonths={2}
+            />
+            <div className="flex items-center justify-end gap-2 pt-3 border-t mt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleApply}
+                disabled={!tempDate?.from || !tempDate?.to}
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
         </PopoverContent>
       </Popover>
 
-      {date?.from && date?.to && (
+      {appliedDate?.from && appliedDate?.to && (
         <Button
           variant="ghost"
           size="sm"

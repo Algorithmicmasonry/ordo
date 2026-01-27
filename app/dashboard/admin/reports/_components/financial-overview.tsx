@@ -60,10 +60,12 @@ const EXPENSE_LABELS = {
 
 export function FinancialOverview({ data, period }: FinancialOverviewProps) {
   const { kpis, chartData, expensesByCategory } = data;
+  console.log("This is the chart data: ", chartData);
   const searchParams = useSearchParams();
 
   // Check if using custom date range
-  const hasCustomDateRange = searchParams.get("startDate") && searchParams.get("endDate");
+  const hasCustomDateRange =
+    searchParams.get("startDate") && searchParams.get("endDate");
 
   // Prepare donut chart data (top 5 for visual clarity)
   const donutData = expensesByCategory.slice(0, 5).map((item) => ({
@@ -317,13 +319,12 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
                 strokeWidth={3}
                 fill="url(#colorRevenue)"
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="expenses"
-                stroke="#94a3b8"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={false}
+                stroke="#ef4444"
+                strokeWidth={3}
+                fill="#fef2f2"
               />
             </AreaChart>
           </ResponsiveContainer>

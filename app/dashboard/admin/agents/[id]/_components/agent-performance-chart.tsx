@@ -33,11 +33,14 @@ export function AgentPerformanceChart({
   const formatXAxis = (dateStr: string) => {
     const date = new Date(dateStr);
     if (period === "week") {
-      return date.toLocaleDateString("en-US", { weekday: "short" });
+      return date.toLocaleDateString("en-NG", { weekday: "short" });
     } else if (period === "month") {
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      return date.toLocaleDateString("en-NG", {
+        month: "short",
+        day: "numeric",
+      });
     } else {
-      return date.toLocaleDateString("en-US", { month: "short" });
+      return date.toLocaleDateString("en-NG", { month: "short" });
     }
   };
 

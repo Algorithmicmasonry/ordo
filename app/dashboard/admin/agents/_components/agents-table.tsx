@@ -366,14 +366,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                             Reconcile Stock
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedAgent(agent);
-                            setShowSettlementDialog(true);
-                          }}
-                        >
-                          Record Settlement
-                        </DropdownMenuItem>
+
                         <DropdownMenuItem
                           onClick={() => {
                             setSelectedAgent(agent);

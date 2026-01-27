@@ -31,10 +31,6 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
           },
           orderBy: { createdAt: "desc" },
         },
-        settlements: {
-          orderBy: { settledAt: "desc" },
-          take: 5,
-        },
       },
     });
 
@@ -60,14 +56,6 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
       0
     );
 
-    // Calculate outstanding balance from most recent settlement
-    const outstandingBalance = agent.settlements[0]?.balanceDue || 0;
-
-    // Count pending deliveries
-    const pendingDeliveries = agent.orders.filter(
-      (o) => o.status === "DISPATCHED" || o.status === "CONFIRMED"
-    ).length;
-
     // Generate chart data
     const chartData = generateDeliveryChartData(currentOrders, period);
 
@@ -78,9 +66,6 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
         currentStats,
         previousStats,
         stockValue,
-        outstandingBalance,
-        pendingDeliveries,
-        recentSettlements: agent.settlements,
         chartData,
         recentOrders: currentOrders.slice(0, 10),
       },
@@ -153,44 +138,4 @@ function generateDeliveryChartData(orders: any[], period: TimePeriod) {
   }
 
   return chartData;
-}
-
-/**
- * Record a settlement for an agent
- */
-export async function recordSettlement(data: {
-  agentId: string;
-  stockValue: number;
-  cashCollected: number;
-  cashReturned: number;
-  adjustments: number;
-  notes?: string;
-  settledBy: string;
-}) {
-  try {
-    const balanceDue =
-      data.stockValue + data.cashCollected - data.cashReturned + data.adjustments;
-
-    const settlement = await db.settlement.create({
-      data: {
-        agentId: data.agentId,
-        stockValue: data.stockValue,
-        cashCollected: data.cashCollected,
-        cashReturned: data.cashReturned,
-        adjustments: data.adjustments,
-        balanceDue,
-        notes: data.notes,
-        settledBy: data.settledBy,
-        settledAt: new Date(),
-      },
-    });
-
-    revalidatePath(`/dashboard/admin/agents/${data.agentId}`);
-    revalidatePath("/dashboard/admin/agents");
-
-    return { success: true, settlement };
-  } catch (error: any) {
-    console.error("Error recording settlement:", error);
-    return { success: false, error: error.message || "Failed to record settlement" };
-  }
 }

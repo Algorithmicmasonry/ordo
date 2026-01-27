@@ -7,12 +7,9 @@ import { AgentStatsCards } from "./agent-stats-cards";
 import { AgentPerformanceChart } from "./agent-performance-chart";
 import { AgentStockTable } from "./agent-stock-table";
 import { AgentOrdersTable } from "./agent-orders-table";
-import { AgentFinancialSummary } from "./agent-financial-summary";
-import { SettlementDialog } from "../../_components/settlement-dialog";
 import { ReconcileStockModal } from "../../_components/reconcile-stock-modal";
 import { AssignStockModal } from "../../_components/assign-stock-modal";
 import { EditAgentModal } from "../../_components/edit-agent-modal";
-import { recordSettlement } from "../actions";
 import { reconcileAgentStock } from "@/app/actions/agents";
 
 type TimePeriod = "week" | "month" | "year";
@@ -32,21 +29,9 @@ interface ChartDataPoint {
   failed: number;
 }
 
-interface Settlement {
-  id: string;
-  stockValue: number;
-  cashCollected: number;
-  cashReturned: number;
-  adjustments: number;
-  balanceDue: number;
-  notes: string | null;
-  settledAt: Date;
-}
-
 interface AgentWithRelations extends Agent {
   stock: (AgentStock & { product: Product })[];
   orders: any[];
-  settlements: Settlement[];
 }
 
 interface AgentDetailsClientProps {
@@ -54,9 +39,6 @@ interface AgentDetailsClientProps {
   currentStats: OrderStats;
   previousStats: OrderStats;
   stockValue: number;
-  outstandingBalance: number;
-  pendingDeliveries: number;
-  recentSettlements: Settlement[];
   chartData: ChartDataPoint[];
   recentOrders: any[];
   period: TimePeriod;
@@ -67,14 +49,10 @@ export function AgentDetailsClient({
   currentStats,
   previousStats,
   stockValue,
-  outstandingBalance,
-  pendingDeliveries,
-  recentSettlements,
   chartData,
   recentOrders,
   period,
 }: AgentDetailsClientProps) {
-  const [showSettlementDialog, setShowSettlementDialog] = useState(false);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [showAssignStockModal, setShowAssignStockModal] = useState(false);
   const [showEditAgentModal, setShowEditAgentModal] = useState(false);
@@ -115,25 +93,7 @@ export function AgentDetailsClient({
         </div>
       </div>
 
-      <AgentFinancialSummary
-        stockValue={stockValue}
-        outstandingBalance={outstandingBalance}
-        recentSettlements={recentSettlements}
-        onRecordSettlement={() => setShowSettlementDialog(true)}
-      />
-
       <AgentOrdersTable orders={recentOrders} />
-
-      {/* Settlement Dialog */}
-      <SettlementDialog
-        open={showSettlementDialog}
-        onOpenChange={setShowSettlementDialog}
-        agent={agent}
-        stockValue={stockValue}
-        pendingDeliveries={pendingDeliveries}
-        lastSettlement={recentSettlements[0] || null}
-        onSubmit={recordSettlement}
-      />
 
       {/* Reconcile Stock Modal */}
       <ReconcileStockModal

@@ -1,16 +1,14 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { auth } from "@/lib/auth";
+import type { TimePeriod } from "@/lib/types";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { DashboardHeader } from "../_components";
 import { FinancialOverview } from "./_components";
 import { getFinancialOverview } from "./actions";
-import type { TimePeriod } from "@/lib/types";
 
 interface PageProps {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; startDate?: string; endDate?: string }>;
 }
 
 export default async function ReportsPage({ searchParams }: PageProps) {
@@ -20,12 +18,14 @@ export default async function ReportsPage({ searchParams }: PageProps) {
     redirect("/dashboard");
   }
 
-  // Get period from search params
+  // Get params from search params
   const query = await searchParams;
   const period = (query.period || "month") as TimePeriod;
+  const startDate = query.startDate ? new Date(query.startDate) : undefined;
+  const endDate = query.endDate ? new Date(query.endDate) : undefined;
 
   // Fetch financial overview data
-  const financialData = await getFinancialOverview(period);
+  const financialData = await getFinancialOverview(period, startDate, endDate);
 
   if (!financialData.success || !financialData.data) {
     return (

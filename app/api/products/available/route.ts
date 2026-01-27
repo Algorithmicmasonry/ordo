@@ -11,6 +11,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
+        sku: true,
         currentStock: true,
       },
       orderBy: {

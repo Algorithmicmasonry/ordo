@@ -359,7 +359,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                               // Navigate to agent detail page for stock reconciliation
                               // ReconcileStockModal requires full stock details with products
                               router.push(
-                                `/dashboard/admin/agents/${agent.id}?tab=stock`
+                                `/dashboard/admin/agents/${agent.id}?tab=stock`,
                               );
                             }}
                           >
@@ -382,15 +382,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                         >
                           Edit Agent
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/admin/agents/${agent.id}?tab=history`
-                            )
-                          }
-                        >
-                          View History
-                        </DropdownMenuItem>
+
                         <DropdownMenuItem
                           className={
                             agent.isActive ? "text-red-600" : "text-green-600"
@@ -447,7 +439,9 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
         onOpenChange={setShowSettlementDialog}
         agent={toPrismaAgent(selectedAgent)}
         stockValue={selectedAgent?.stockValue || 0}
-        pendingDeliveries={selectedAgent ? getPendingDeliveries(selectedAgent) : 0}
+        pendingDeliveries={
+          selectedAgent ? getPendingDeliveries(selectedAgent) : 0
+        }
         onSubmit={handleSettlementSubmit}
       />
     </div>

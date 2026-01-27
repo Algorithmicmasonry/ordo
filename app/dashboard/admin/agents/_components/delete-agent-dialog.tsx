@@ -55,21 +55,22 @@ export function DeleteAgentDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Agent</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
-            <p>
+            <span>
               Are you sure you want to delete{" "}
               <span className="font-semibold text-foreground">
                 {agent?.name}
               </span>
               ?
-            </p>
-            <p className="text-destructive font-medium">
+            </span>
+            <br />
+            <span className="text-destructive font-medium">
               This action cannot be undone. The agent will be permanently
               removed from the system.
-            </p>
-            <p className="text-sm text-muted-foreground">
+            </span>
+            <span className="text-sm text-muted-foreground">
               Note: You cannot delete an agent with active orders or stock
               holdings.
-            </p>
+            </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

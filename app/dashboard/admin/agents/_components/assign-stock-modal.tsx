@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -57,6 +57,7 @@ export function AssignStockModal({
   >([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const router = useRouter();
+  const [diaOpen, setDiaOpen] = useState(false);
 
   const form = useForm<AssignStockFormValues>({
     resolver: zodResolver(assignStockSchema),
@@ -68,17 +69,22 @@ export function AssignStockModal({
 
   const selectedProductId = form.watch("productId");
   const selectedProduct = availableProducts.find(
-    (p) => p.id === selectedProductId
+    (p) => p.id === selectedProductId,
   );
   const watchedQuantity = form.watch("quantity");
 
   // Fetch available products when dialog opens
   const fetchProducts = async () => {
     setIsLoadingProducts(true);
+    console.log("The fetchProducts function is called");
     try {
       const response = await fetch("/api/products/available");
       if (response.ok) {
         const data = await response.json();
+        console.log(
+          "This is the data returned when products are fetched in the assign stock modal of the agents table: ",
+          data,
+        );
         setAvailableProducts(data.products || []);
       }
     } catch (error) {
@@ -91,7 +97,9 @@ export function AssignStockModal({
 
   const handleOpenChange = (newOpen: boolean) => {
     onOpenChange(newOpen);
+    setDiaOpen(newOpen);
     if (newOpen) {
+      // Add the agent check here
       fetchProducts();
     } else {
       form.reset();
@@ -106,12 +114,12 @@ export function AssignStockModal({
       const result = await assignStockToAgent(
         agent.id,
         values.productId,
-        values.quantity
+        values.quantity,
       );
 
       if (result.success) {
         toast.success(
-          `Successfully assigned ${values.quantity} units to ${agent.name}`
+          `Successfully assigned ${values.quantity} units to ${agent.name}`,
         );
         form.reset();
         onOpenChange(false);
@@ -127,13 +135,21 @@ export function AssignStockModal({
     }
   }
 
+  useEffect(() => {
+    if (open && agent) {
+      console.log("Modal opened, fetching products for agent:", agent.name);
+      fetchProducts();
+    } else if (!open) {
+      // Reset form when modal closes
+      form.reset();
+    }
+  }, [open, agent]);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            Assign Stock to {agent?.name || "Agent"}
-          </DialogTitle>
+          <DialogTitle>Assign Stock to {agent?.name || "Agent"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>

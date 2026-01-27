@@ -10,6 +10,8 @@ import { AgentOrdersTable } from "./agent-orders-table";
 import { AgentFinancialSummary } from "./agent-financial-summary";
 import { SettlementDialog } from "../../_components/settlement-dialog";
 import { ReconcileStockModal } from "../../_components/reconcile-stock-modal";
+import { AssignStockModal } from "../../_components/assign-stock-modal";
+import { EditAgentModal } from "../../_components/edit-agent-modal";
 import { recordSettlement } from "../actions";
 import { reconcileAgentStock } from "@/app/actions/agents";
 
@@ -74,6 +76,8 @@ export function AgentDetailsClient({
 }: AgentDetailsClientProps) {
   const [showSettlementDialog, setShowSettlementDialog] = useState(false);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
+  const [showAssignStockModal, setShowAssignStockModal] = useState(false);
+  const [showEditAgentModal, setShowEditAgentModal] = useState(false);
   const [selectedStock, setSelectedStock] = useState<
     (AgentStock & { product: Product; agent: { name: string } }) | null
   >(null);
@@ -88,7 +92,12 @@ export function AgentDetailsClient({
 
   return (
     <div className="space-y-6">
-      <AgentProfileHeader agent={agent} period={period} />
+      <AgentProfileHeader
+        agent={agent}
+        period={period}
+        onAssignStock={() => setShowAssignStockModal(true)}
+        onEdit={() => setShowEditAgentModal(true)}
+      />
 
       <AgentStatsCards
         currentStats={currentStats}
@@ -132,6 +141,20 @@ export function AgentDetailsClient({
         onOpenChange={setShowReconcileModal}
         agentStock={selectedStock}
         onReconcile={reconcileAgentStock}
+      />
+
+      {/* Assign Stock Modal */}
+      <AssignStockModal
+        open={showAssignStockModal}
+        onOpenChange={setShowAssignStockModal}
+        agent={agent}
+      />
+
+      {/* Edit Agent Modal */}
+      <EditAgentModal
+        open={showEditAgentModal}
+        onOpenChange={setShowEditAgentModal}
+        agent={agent}
       />
     </div>
   );

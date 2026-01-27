@@ -10,7 +10,9 @@
       "Bash(wc:*)",
       "Bash(pnpm db:generate:*)",
       "Bash(pnpm db:migrate:*)",
-      "Bash(pnpm db:push:*)"
+      "Bash(pnpm db:push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

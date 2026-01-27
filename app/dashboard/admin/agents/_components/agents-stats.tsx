@@ -1,18 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Circle, Package, TrendingUp } from "lucide-react";
+import { Users, Circle, Package, Truck } from "lucide-react";
 
 interface AgentStatsProps {
   totalAgents: number;
   activeAgents: number;
   totalStockValue: number;
-  avgSuccessRate: number;
+  pendingDeliveries: number;
 }
 
 export function AgentsStats({
   totalAgents,
   activeAgents,
   totalStockValue,
-  avgSuccessRate,
+  pendingDeliveries,
 }: AgentStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,12 +68,12 @@ export function AgentsStats({
         <CardContent className="p-6 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-muted-foreground">
-              Avg. Success Rate
+              Pending Deliveries
             </p>
-            <TrendingUp className="w-5 h-5 text-blue-500" />
+            <Truck className="w-5 h-5 text-purple-500" />
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold">{Math.round(avgSuccessRate)}%</p>
+            <p className="text-2xl font-bold">{pendingDeliveries}</p>
           </div>
         </CardContent>
       </Card>

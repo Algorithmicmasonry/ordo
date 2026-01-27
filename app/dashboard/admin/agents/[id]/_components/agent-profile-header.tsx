@@ -19,21 +19,22 @@ type TimePeriod = "week" | "month" | "year";
 interface AgentProfileHeaderProps {
   agent: Agent;
   period: TimePeriod;
+  onAssignStock?: () => void;
+  onEdit?: () => void;
 }
 
-export function AgentProfileHeader({
-  agent,
-  period,
-}: AgentProfileHeaderProps) {
+export function AgentProfileHeader({ agent, period, onAssignStock, onEdit }: AgentProfileHeaderProps) {
   return (
     <div className="space-y-4">
       {/* Back Button */}
-      <Link href="/dashboard/admin/agents">
-        <Button variant="ghost" size="sm">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Agents
-        </Button>
-      </Link>
+      <div>
+        <Link href="/dashboard/admin/agents">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Agents
+          </Button>
+        </Link>
+      </div>
 
       {/* Profile Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -79,11 +80,11 @@ export function AgentProfileHeader({
         {/* Actions */}
         <div className="flex items-center gap-3">
           <PeriodFilter currentPeriod={period} />
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onAssignStock}>
             <Package className="w-4 h-4 mr-2" />
             Assign Stock
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={onEdit}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>

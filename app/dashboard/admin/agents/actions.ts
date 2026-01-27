@@ -29,35 +29,14 @@ export async function getAgentStats() {
       0,
     );
 
-    // Calculate average success rate
-    const agents = await db.agent.findMany({
-      include: {
-        orders: {
-          where: {
-            status: {
-              in: ["DELIVERED", "CANCELLED"],
-            },
-          },
+    // Calculate total pending deliveries (CONFIRMED + DISPATCHED orders)
+    const pendingDeliveries = await db.order.count({
+      where: {
+        status: {
+          in: ["CONFIRMED", "DISPATCHED"],
         },
       },
     });
-
-    let totalSuccessRate = 0;
-    let agentsWithOrders = 0;
-
-    agents.forEach((agent) => {
-      if (agent.orders.length > 0) {
-        const delivered = agent.orders.filter(
-          (o) => o.status === "DELIVERED",
-        ).length;
-        const successRate = (delivered / agent.orders.length) * 100;
-        totalSuccessRate += successRate;
-        agentsWithOrders++;
-      }
-    });
-
-    const avgSuccessRate =
-      agentsWithOrders > 0 ? totalSuccessRate / agentsWithOrders : 0;
 
     return {
       success: true,
@@ -65,7 +44,7 @@ export async function getAgentStats() {
         totalAgents,
         activeAgents,
         totalStockValue,
-        avgSuccessRate,
+        pendingDeliveries,
       },
     };
   } catch (error) {

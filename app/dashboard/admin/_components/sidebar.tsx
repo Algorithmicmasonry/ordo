@@ -225,12 +225,9 @@ export function Sidebar() {
                     {formatRole(user.role)}
                   </p>
                 </div>
-                <Link href={`/dashboard/admin/settings`}>
-                  <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                </Link>
               </>
             )}
-            {isCollapsed && (
+            {/*{isCollapsed && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link href={`/dashboard/admin/settings`}>
@@ -241,7 +238,7 @@ export function Sidebar() {
                   <p>Settings</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            )}*/}
           </div>
         )}
       </div>

@@ -539,3 +539,274 @@ export async function getSalesRepFinance(
     };
   }
 }
+
+/**
+ * Get agent cost analysis data
+ */
+export async function getAgentCostAnalysis(
+  period: TimePeriod = "month",
+  customStartDate?: Date,
+  customEndDate?: Date
+) {
+  try {
+    // Use custom dates if provided, otherwise calculate from period
+    let startDate: Date;
+    let endDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else {
+      const dateRange = getDateRange(period);
+      startDate = dateRange.startDate;
+      endDate = dateRange.endDate;
+    }
+
+    // Get all active agents
+    const agents = await db.agent.findMany({
+      where: {
+        isActive: true,
+      },
+      include: {
+        stock: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    // Get all delivered orders with agent assignments in the period
+    const deliveredOrders = await db.order.findMany({
+      where: {
+        status: "DELIVERED",
+        agentId: { not: null },
+        deliveredAt: { gte: startDate, lte: endDate },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        agent: true,
+      },
+    });
+
+    // Get delivery expenses for the period
+    const deliveryExpenses = await db.expense.findMany({
+      where: {
+        type: "delivery",
+        date: { gte: startDate, lte: endDate },
+      },
+    });
+
+    const totalDeliveryExpenses = deliveryExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+
+    // Calculate agent performance metrics
+    const agentPerformance = await Promise.all(
+      agents.map(async (agent) => {
+        // Get orders delivered by this agent
+        const agentOrders = deliveredOrders.filter(
+          (order) => order.agentId === agent.id
+        );
+
+        // Get all orders assigned to this agent (for success rate)
+        const allAssignedOrders = await db.order.findMany({
+          where: {
+            agentId: agent.id,
+            createdAt: { gte: startDate, lte: endDate },
+          },
+        });
+
+        const totalDeliveries = agentOrders.length;
+        const totalAssigned = allAssignedOrders.length;
+        const successRate =
+          totalAssigned > 0 ? (totalDeliveries / totalAssigned) * 100 : 0;
+
+        // Calculate stock value in hand
+        const stockValue = agent.stock.reduce((sum, stock) => {
+          return sum + stock.quantity * stock.product.cost;
+        }, 0);
+
+        // Calculate defective and missing stock counts and values
+        const defectiveCount = agent.stock.reduce(
+          (sum, stock) => sum + stock.defective,
+          0
+        );
+        const missingCount = agent.stock.reduce(
+          (sum, stock) => sum + stock.missing,
+          0
+        );
+        const defectiveValue = agent.stock.reduce(
+          (sum, stock) => sum + stock.defective * stock.product.cost,
+          0
+        );
+        const missingValue = agent.stock.reduce(
+          (sum, stock) => sum + stock.missing * stock.product.cost,
+          0
+        );
+        const totalStockIssues = defectiveCount + missingCount;
+        const totalStockIssuesValue = defectiveValue + missingValue;
+
+        // Calculate revenue and profit from agent's deliveries
+        const revenue = agentOrders.reduce((sum, order) => {
+          return (
+            sum +
+            order.items.reduce(
+              (itemSum, item) => itemSum + item.price * item.quantity,
+              0
+            )
+          );
+        }, 0);
+
+        const cost = agentOrders.reduce((sum, order) => {
+          return (
+            sum +
+            order.items.reduce(
+              (itemSum, item) => itemSum + item.cost * item.quantity,
+              0
+            )
+          );
+        }, 0);
+
+        // Get product IDs from orders
+        const productIds = [
+          ...new Set(agentOrders.flatMap((o) => o.items.map((i) => i.productId))),
+        ];
+
+        // Get expenses for products in this agent's orders
+        const expenses = await db.expense.findMany({
+          where: {
+            productId: { in: productIds },
+            date: { gte: startDate, lte: endDate },
+          },
+        });
+
+        const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const profitContribution = revenue - cost - totalExpenses;
+
+        return {
+          agentId: agent.id,
+          agentName: agent.name,
+          location: agent.location,
+          totalDeliveries,
+          successRate,
+          stockValue,
+          profitContribution,
+          totalStockIssues,
+          totalStockIssuesValue,
+          defectiveCount,
+          missingCount,
+        };
+      })
+    );
+
+    // Sort by total deliveries (most active first)
+    agentPerformance.sort((a, b) => b.totalDeliveries - a.totalDeliveries);
+
+    // Calculate total stock value across all agents
+    const totalStockValue = agents.reduce((sum, agent) => {
+      return (
+        sum +
+        agent.stock.reduce((stockSum, stock) => {
+          return stockSum + stock.quantity * stock.product.cost;
+        }, 0)
+      );
+    }, 0);
+
+    // Calculate defective and missing stock losses
+    const defectiveValue = agents.reduce((sum, agent) => {
+      return (
+        sum +
+        agent.stock.reduce((stockSum, stock) => {
+          return stockSum + stock.defective * stock.product.cost;
+        }, 0)
+      );
+    }, 0);
+
+    const missingValue = agents.reduce((sum, agent) => {
+      return (
+        sum +
+        agent.stock.reduce((stockSum, stock) => {
+          return stockSum + stock.missing * stock.product.cost;
+        }, 0)
+      );
+    }, 0);
+
+    const totalStockLoss = defectiveValue + missingValue;
+
+    // Calculate total orders delivered by agents
+    const totalOrdersDelivered = deliveredOrders.length;
+
+    // Get previous period for comparison
+    const periodLength = endDate.getTime() - startDate.getTime();
+    const previousStartDate = new Date(startDate.getTime() - periodLength);
+    const previousEndDate = new Date(startDate.getTime() - 1);
+
+    const previousDeliveryExpenses = await db.expense.findMany({
+      where: {
+        type: "delivery",
+        date: { gte: previousStartDate, lte: previousEndDate },
+      },
+    });
+
+    const previousTotalDeliveryExpenses = previousDeliveryExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+
+    // Calculate percentage change
+    const deliveryCostChange =
+      previousTotalDeliveryExpenses !== 0
+        ? ((totalDeliveryExpenses - previousTotalDeliveryExpenses) /
+            previousTotalDeliveryExpenses) *
+          100
+        : totalDeliveryExpenses > 0
+        ? 100
+        : 0;
+
+    return {
+      success: true,
+      data: {
+        kpis: {
+          totalDeliveryCosts: {
+            value: totalDeliveryExpenses,
+            change: deliveryCostChange,
+          },
+          totalOrdersDelivered: {
+            value: totalOrdersDelivered,
+          },
+          totalStockValue: {
+            value: totalStockValue,
+            units: agents.reduce(
+              (sum, agent) =>
+                sum +
+                agent.stock.reduce((s, stock) => s + stock.quantity, 0),
+              0
+            ),
+          },
+          stockLoss: {
+            value: totalStockLoss,
+            percentage:
+              totalStockValue > 0 ? (totalStockLoss / totalStockValue) * 100 : 0,
+            breakdown: {
+              defective: defectiveValue,
+              missing: missingValue,
+            },
+          },
+        },
+        agentPerformance,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching agent cost analysis:", error);
+    return {
+      success: false,
+      error: "Failed to fetch agent cost analysis data",
+    };
+  }
+}

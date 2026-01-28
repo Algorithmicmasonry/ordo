@@ -4,8 +4,8 @@ import type { TimePeriod } from "@/lib/types";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "../_components";
-import { FinancialOverview, SalesRepFinance } from "./_components";
-import { getFinancialOverview, getSalesRepFinance } from "./actions";
+import { FinancialOverview, SalesRepFinance, AgentCostAnalysis } from "./_components";
+import { getFinancialOverview, getSalesRepFinance, getAgentCostAnalysis } from "./actions";
 
 interface PageProps {
   searchParams: Promise<{ period?: string; startDate?: string; endDate?: string }>;
@@ -29,6 +29,9 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
   // Fetch sales rep finance data
   const salesRepData = await getSalesRepFinance(period, startDate, endDate);
+
+  // Fetch agent cost analysis data
+  const agentCostData = await getAgentCostAnalysis(period, startDate, endDate);
 
   if (!financialData.success || !financialData.data) {
     return (
@@ -88,16 +91,20 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
         {/* Agent Cost Analysis Tab */}
         <TabsContent value="agent-costs" className="mt-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">
-                Agent Cost Analysis
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                This tab will show agent cost breakdown and analysis
-              </p>
+          {agentCostData.success && agentCostData.data ? (
+            <AgentCostAnalysis data={agentCostData.data} period={period} />
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-muted-foreground">
+                  Failed to Load Agent Cost Data
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {agentCostData.error || "Unable to fetch agent cost analysis data"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
 
         {/* Profit & Loss Tab */}

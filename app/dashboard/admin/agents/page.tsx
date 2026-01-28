@@ -7,7 +7,6 @@ import { getAgentStats, getAgentsWithMetrics, getUniqueZones } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
-// TODO: add lost and damaged stock quantity and value to agent details page
 export default async function AdminAgentsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),

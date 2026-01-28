@@ -4,8 +4,8 @@ import type { TimePeriod } from "@/lib/types";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "../_components";
-import { FinancialOverview, SalesRepFinance, AgentCostAnalysis } from "./_components";
-import { getFinancialOverview, getSalesRepFinance, getAgentCostAnalysis } from "./actions";
+import { FinancialOverview, SalesRepFinance, AgentCostAnalysis, ProfitLossStatement, ProductProfitability } from "./_components";
+import { getFinancialOverview, getSalesRepFinance, getAgentCostAnalysis, getProfitLossStatement, getProductProfitability } from "./actions";
 
 interface PageProps {
   searchParams: Promise<{ period?: string; startDate?: string; endDate?: string }>;
@@ -32,6 +32,12 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
   // Fetch agent cost analysis data
   const agentCostData = await getAgentCostAnalysis(period, startDate, endDate);
+
+  // Fetch profit and loss statement data
+  const profitLossData = await getProfitLossStatement(period, startDate, endDate);
+
+  // Fetch product profitability data
+  const productProfitData = await getProductProfitability(period, startDate, endDate);
 
   if (!financialData.success || !financialData.data) {
     return (
@@ -109,30 +115,38 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
         {/* Profit & Loss Tab */}
         <TabsContent value="profit-loss" className="mt-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">
-                Profit & Loss Statement
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                This tab will show detailed profit and loss statements
-              </p>
+          {profitLossData.success && profitLossData.data ? (
+            <ProfitLossStatement data={profitLossData.data} period={period} />
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-muted-foreground">
+                  Failed to Load P&L Statement
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {profitLossData.error || "Unable to fetch profit and loss data"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
 
         {/* Product Profitability Tab */}
         <TabsContent value="product" className="mt-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">
-                Product Profitability
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                This tab will show product-level profitability metrics
-              </p>
+          {productProfitData.success && productProfitData.data ? (
+            <ProductProfitability data={productProfitData.data} period={period} />
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-muted-foreground">
+                  Failed to Load Product Profitability
+                </h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {productProfitData.error || "Unable to fetch product profitability data"}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

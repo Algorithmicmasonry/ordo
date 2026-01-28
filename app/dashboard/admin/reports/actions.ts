@@ -810,3 +810,427 @@ export async function getAgentCostAnalysis(
     };
   }
 }
+
+/**
+ * Get profit and loss statement data
+ */
+export async function getProfitLossStatement(
+  period: TimePeriod = "month",
+  customStartDate?: Date,
+  customEndDate?: Date
+) {
+  try {
+    // Use custom dates if provided, otherwise calculate from period
+    let startDate: Date;
+    let endDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else {
+      const dateRange = getDateRange(period);
+      startDate = dateRange.startDate;
+      endDate = dateRange.endDate;
+    }
+
+    // Get previous period for comparison
+    const periodLength = endDate.getTime() - startDate.getTime();
+    const previousStartDate = new Date(startDate.getTime() - periodLength);
+    const previousEndDate = new Date(startDate.getTime() - 1);
+
+    // Current period orders
+    const currentOrders = await db.order.findMany({
+      where: {
+        createdAt: { gte: startDate, lte: endDate },
+        status: "DELIVERED",
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    // Previous period orders
+    const previousOrders = await db.order.findMany({
+      where: {
+        createdAt: { gte: previousStartDate, lte: previousEndDate },
+        status: "DELIVERED",
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    // Current period expenses
+    const currentExpenses = await db.expense.findMany({
+      where: {
+        date: { gte: startDate, lte: endDate },
+      },
+    });
+
+    // Previous period expenses
+    const previousExpenses = await db.expense.findMany({
+      where: {
+        date: { gte: previousStartDate, lte: previousEndDate },
+      },
+    });
+
+    // Calculate current period revenue
+    const currentRevenue = currentOrders.reduce((sum, order) => {
+      return (
+        sum +
+        order.items.reduce(
+          (itemSum, item) => itemSum + item.price * item.quantity,
+          0
+        )
+      );
+    }, 0);
+
+    // Calculate current period COGS
+    const currentCOGS = currentOrders.reduce((sum, order) => {
+      return (
+        sum +
+        order.items.reduce(
+          (itemSum, item) => itemSum + item.cost * item.quantity,
+          0
+        )
+      );
+    }, 0);
+
+    // Calculate current period expenses by type
+    const currentExpensesByType = currentExpenses.reduce((acc, expense) => {
+      const type = expense.type || "other";
+      if (!acc[type]) {
+        acc[type] = 0;
+      }
+      acc[type] += expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const currentTotalExpenses = currentExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+
+    // Calculate previous period revenue
+    const previousRevenue = previousOrders.reduce((sum, order) => {
+      return (
+        sum +
+        order.items.reduce(
+          (itemSum, item) => itemSum + item.price * item.quantity,
+          0
+        )
+      );
+    }, 0);
+
+    // Calculate previous period COGS
+    const previousCOGS = previousOrders.reduce((sum, order) => {
+      return (
+        sum +
+        order.items.reduce(
+          (itemSum, item) => itemSum + item.cost * item.quantity,
+          0
+        )
+      );
+    }, 0);
+
+    // Calculate previous period expenses by type
+    const previousExpensesByType = previousExpenses.reduce((acc, expense) => {
+      const type = expense.type || "other";
+      if (!acc[type]) {
+        acc[type] = 0;
+      }
+      acc[type] += expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const previousTotalExpenses = previousExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+
+    // Calculate gross profit
+    const currentGrossProfit = currentRevenue - currentCOGS;
+    const previousGrossProfit = previousRevenue - previousCOGS;
+
+    // Calculate net profit
+    const currentNetProfit = currentGrossProfit - currentTotalExpenses;
+    const previousNetProfit = previousGrossProfit - previousTotalExpenses;
+
+    // Calculate margins
+    const grossMargin = currentRevenue > 0 ? (currentGrossProfit / currentRevenue) * 100 : 0;
+    const netMargin = currentRevenue > 0 ? (currentNetProfit / currentRevenue) * 100 : 0;
+
+    // Calculate percentage changes
+    const revenueChange =
+      previousRevenue !== 0
+        ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
+        : currentRevenue > 0
+        ? 100
+        : 0;
+
+    const cogsChange =
+      previousCOGS !== 0
+        ? ((currentCOGS - previousCOGS) / previousCOGS) * 100
+        : currentCOGS > 0
+        ? 100
+        : 0;
+
+    const grossProfitChange =
+      previousGrossProfit !== 0
+        ? ((currentGrossProfit - previousGrossProfit) / Math.abs(previousGrossProfit)) * 100
+        : currentGrossProfit > 0
+        ? 100
+        : 0;
+
+    const netProfitChange =
+      previousNetProfit !== 0
+        ? ((currentNetProfit - previousNetProfit) / Math.abs(previousNetProfit)) * 100
+        : currentNetProfit > 0
+        ? 100
+        : 0;
+
+    // Calculate expense changes by type
+    const expenseTypes = ["ad_spend", "delivery", "shipping", "clearing", "other"];
+    const expenseDetails = expenseTypes.map((type) => {
+      const current = currentExpensesByType[type] || 0;
+      const previous = previousExpensesByType[type] || 0;
+      const change =
+        previous !== 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+
+      return {
+        type,
+        current,
+        previous,
+        change,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        revenue: {
+          current: currentRevenue,
+          previous: previousRevenue,
+          change: revenueChange,
+        },
+        cogs: {
+          current: currentCOGS,
+          previous: previousCOGS,
+          change: cogsChange,
+        },
+        grossProfit: {
+          current: currentGrossProfit,
+          previous: previousGrossProfit,
+          change: grossProfitChange,
+        },
+        expenses: expenseDetails,
+        totalExpenses: {
+          current: currentTotalExpenses,
+          previous: previousTotalExpenses,
+          change:
+            previousTotalExpenses !== 0
+              ? ((currentTotalExpenses - previousTotalExpenses) / previousTotalExpenses) * 100
+              : currentTotalExpenses > 0
+              ? 100
+              : 0,
+        },
+        netProfit: {
+          current: currentNetProfit,
+          previous: previousNetProfit,
+          change: netProfitChange,
+        },
+        margins: {
+          gross: grossMargin,
+          net: netMargin,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching profit and loss statement:", error);
+    return {
+      success: false,
+      error: "Failed to fetch profit and loss statement",
+    };
+  }
+}
+
+/**
+ * Get product profitability analysis
+ */
+export async function getProductProfitability(
+  period: TimePeriod = "month",
+  customStartDate?: Date,
+  customEndDate?: Date
+) {
+  try {
+    // Calculate date ranges
+    const { startDate, endDate } = getDateRange(period, customStartDate, customEndDate);
+
+    // Fetch all products (including soft-deleted for historical data)
+    const products = await db.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        price: true,
+        cost: true,
+      },
+    });
+
+    // Fetch all delivered orders in the period with items
+    const deliveredOrders = await db.order.findMany({
+      where: {
+        status: "DELIVERED",
+        deliveredAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    // Fetch all product expenses in the period
+    const productExpenses = await db.expense.findMany({
+      where: {
+        date: { gte: startDate, lte: endDate },
+        productId: { not: null },
+      },
+    });
+
+    // Calculate profitability per product
+    const productProfitability = products.map((product) => {
+      // Calculate units sold
+      let unitsSold = 0;
+      let revenue = 0;
+      let cogs = 0;
+
+      deliveredOrders.forEach((order) => {
+        order.items.forEach((item) => {
+          if (item.productId === product.id) {
+            unitsSold += item.quantity;
+            revenue += item.price * item.quantity;
+            cogs += item.cost * item.quantity;
+          }
+        });
+      });
+
+      // Calculate product-specific expenses by type
+      const productExpensesByType = productExpenses
+        .filter((exp) => exp.productId === product.id)
+        .reduce((acc, exp) => {
+          const type = exp.type || "other";
+          acc[type] = (acc[type] || 0) + exp.amount;
+          return acc;
+        }, {} as Record<string, number>);
+
+      const expenses = Object.values(productExpensesByType).reduce(
+        (sum, amount) => sum + amount,
+        0
+      );
+      const adSpend = productExpensesByType["ad_spend"] || 0;
+
+      // Calculate net profit
+      const netProfit = revenue - cogs - expenses;
+
+      // Calculate margin percentage
+      const margin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+
+      // Calculate ROI
+      const totalCost = cogs + expenses;
+      const roi = totalCost > 0 ? netProfit / totalCost : 0;
+
+      // Calculate ROAS (Return on Ad Spend)
+      const roas = adSpend > 0 ? revenue / adSpend : 0;
+
+      return {
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku || "N/A",
+        unitsSold,
+        revenue,
+        cogs,
+        expenses,
+        adSpend,
+        netProfit,
+        margin,
+        roi,
+        roas,
+        expensesByType: productExpensesByType,
+      };
+    });
+
+    // Filter out products with no sales in the period
+    const productsWithSales = productProfitability.filter((p) => p.unitsSold > 0);
+
+    // Sort by revenue descending
+    productsWithSales.sort((a, b) => b.revenue - a.revenue);
+
+    // Calculate summary statistics
+    const totalRevenue = productsWithSales.reduce((sum, p) => sum + p.revenue, 0);
+    const totalNetProfit = productsWithSales.reduce((sum, p) => sum + p.netProfit, 0);
+    const totalAdSpend = productsWithSales.reduce((sum, p) => sum + p.adSpend, 0);
+    const averageMargin =
+      productsWithSales.length > 0
+        ? productsWithSales.reduce((sum, p) => sum + p.margin, 0) / productsWithSales.length
+        : 0;
+    const overallRoas = totalAdSpend > 0 ? totalRevenue / totalAdSpend : 0;
+
+    // Find top performer (highest margin with positive profit)
+    const topPerformer = productsWithSales
+      .filter((p) => p.netProfit > 0)
+      .sort((a, b) => b.margin - a.margin)[0] || null;
+
+    // Find products at a loss
+    const productsAtLoss = productsWithSales
+      .filter((p) => p.netProfit < 0)
+      .sort((a, b) => a.netProfit - b.netProfit);
+
+    return {
+      success: true,
+      data: {
+        products: productsWithSales,
+        summary: {
+          totalRevenue,
+          totalNetProfit,
+          totalAdSpend,
+          averageMargin,
+          overallRoas,
+          totalProducts: productsWithSales.length,
+        },
+        insights: {
+          topPerformer: topPerformer
+            ? {
+                name: topPerformer.productName,
+                margin: topPerformer.margin,
+                netProfit: topPerformer.netProfit,
+                revenue: topPerformer.revenue,
+              }
+            : null,
+          worstPerformer:
+            productsAtLoss.length > 0
+              ? {
+                  name: productsAtLoss[0].productName,
+                  margin: productsAtLoss[0].margin,
+                  netProfit: productsAtLoss[0].netProfit,
+                  revenue: productsAtLoss[0].revenue,
+                  cogs: productsAtLoss[0].cogs,
+                  expenses: productsAtLoss[0].expenses,
+                }
+              : null,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching product profitability:", error);
+    return {
+      success: false,
+      error: "Failed to fetch product profitability data",
+    };
+  }
+}

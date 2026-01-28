@@ -225,13 +225,17 @@ export function Sidebar() {
                     {formatRole(user.role)}
                   </p>
                 </div>
-                <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                <Link href={`/dashboard/admin/settings`}>
+                  <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                </Link>
               </>
             )}
             {isCollapsed && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                  <Link href={`/dashboard/admin/settings`}>
+                    <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p>Settings</p>

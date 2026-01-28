@@ -52,8 +52,8 @@ export function DateRangePicker() {
         params.delete("period");
 
         // Set custom date range
-        params.set("startDate", tempDate.from.toISOString());
-        params.set("endDate", tempDate.to.toISOString());
+        params.set("startDate", tempDate.from!.toISOString());
+        params.set("endDate", tempDate.to!.toISOString());
 
         router.push(`${pathname}?${params.toString()}`);
         setAppliedDate(tempDate);

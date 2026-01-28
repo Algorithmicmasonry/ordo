@@ -1063,8 +1063,18 @@ export async function getProductProfitability(
   customEndDate?: Date
 ) {
   try {
-    // Calculate date ranges
-    const { startDate, endDate } = getDateRange(period, customStartDate, customEndDate);
+    // Use custom dates if provided, otherwise calculate from period
+    let startDate: Date;
+    let endDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else {
+      const dateRange = getDateRange(period);
+      startDate = dateRange.startDate;
+      endDate = dateRange.endDate;
+    }
 
     // Fetch all products (including soft-deleted for historical data)
     const products = await db.product.findMany({

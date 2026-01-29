@@ -8,6 +8,7 @@ import {
   AssignedOrdersTable,
   DashboardHeader,
   PeriodFilter,
+  CreateOrderDialog,
 } from "./_components";
 import type { OrderStatus } from "@prisma/client";
 import type { TimePeriod } from "@/lib/types";
@@ -21,7 +22,9 @@ interface PageProps {
   }>;
 }
 
-export default async function SalesRepDashboardPage({ searchParams }: PageProps) {
+export default async function SalesRepDashboardPage({
+  searchParams,
+}: PageProps) {
   // Authentication check
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user || session.user.role !== "SALES_REP") {
@@ -74,14 +77,17 @@ export default async function SalesRepDashboardPage({ searchParams }: PageProps)
   return (
     <div className="space-y-8">
       {/* Dashboard Header */}
-      <DashboardHeader
-        heading="Dashboard Overview"
-        text="Track your orders, performance, and customer interactions"
-      />
+      <div>
+        <DashboardHeader
+          heading="Dashboard Overview"
+          text="Track your orders, performance, and customer interactions"
+        />
+      </div>
 
       {/* Period Filter */}
-      <div className="flex justify-end">
+      <div className="flex justify-between">
         <PeriodFilter currentPeriod={period} />
+        <CreateOrderDialog />
       </div>
 
       {/* Stats Cards */}

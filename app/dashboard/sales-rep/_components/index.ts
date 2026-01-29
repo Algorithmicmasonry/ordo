@@ -4,3 +4,4 @@ export { FollowUpReminder } from "./follow-up-reminder";
 export { AssignedOrdersTable } from "./assigned-orders-table";
 export { DashboardHeader } from "./dashboard-header";
 export { PeriodFilter } from "./period-filter";
+export { CreateOrderDialog } from "./create-order-dialog";

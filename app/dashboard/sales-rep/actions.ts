@@ -3,8 +3,9 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { getDateRange, getPreviousPeriodRange } from "@/lib/date-utils";
-import type { OrderStatus } from "@prisma/client";
+import type { OrderStatus, OrderSource, Prisma } from "@prisma/client";
 import type { TimePeriod } from "@/lib/types";
 
 export async function getSalesRepDashboardStats(period: TimePeriod = "month") {
@@ -237,5 +238,140 @@ export async function getAssignedOrders({
   } catch (error) {
     console.error("Error fetching assigned orders:", error);
     return { success: false, error: "Failed to fetch assigned orders" };
+  }
+}
+
+/**
+ * Get available products for order creation
+ */
+export async function getAvailableProducts() {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user || session.user.role !== "SALES_REP") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const products = await db.product.findMany({
+      where: {
+        isActive: true,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        currentStock: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return { success: true, data: products };
+  } catch (error) {
+    console.error("Error fetching available products:", error);
+    return { success: false, error: "Failed to fetch products" };
+  }
+}
+
+/**
+ * Create order manually (assigned to current sales rep)
+ */
+export async function createManualOrder(data: {
+  customerName: string;
+  customerPhone: string;
+  customerWhatsapp?: string;
+  deliveryAddress: string;
+  state: string;
+  city: string;
+  source: OrderSource;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+}) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user || session.user.role !== "SALES_REP") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const salesRepId = session.user.id;
+
+    // Calculate total amount and prepare order items
+    let totalAmount = 0;
+    const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = [];
+
+    for (const item of data.items) {
+      const product = await db.product.findUnique({
+        where: { id: item.productId },
+      });
+
+      if (!product) {
+        return {
+          success: false,
+          error: `Product not found: ${item.productId}`,
+        };
+      }
+
+      if (!product.isActive || product.isDeleted) {
+        return {
+          success: false,
+          error: `Product "${product.name}" is not available`,
+        };
+      }
+
+      totalAmount += product.price * item.quantity;
+
+      orderItems.push({
+        product: { connect: { id: product.id } },
+        quantity: item.quantity,
+        price: product.price,
+        cost: product.cost,
+      });
+    }
+
+    // Create order assigned to current sales rep
+    const order = await db.order.create({
+      data: {
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        customerWhatsapp: data.customerWhatsapp,
+        deliveryAddress: data.deliveryAddress,
+        state: data.state,
+        city: data.city,
+        source: data.source,
+        totalAmount,
+        assignedTo: { connect: { id: salesRepId } },
+        status: "NEW",
+        items: {
+          create: orderItems,
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        assignedTo: true,
+      },
+    });
+
+    revalidatePath("/dashboard/sales-rep");
+    revalidatePath("/dashboard/sales-rep/orders");
+
+    return {
+      success: true,
+      data: order,
+    };
+  } catch (error) {
+    console.error("Error creating manual order:", error);
+    return {
+      success: false,
+      error: "Failed to create order",
+    };
   }
 }

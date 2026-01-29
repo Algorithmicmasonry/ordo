@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getAssignedOrders } from "../actions";
-import { AssignedOrdersTable } from "../_components";
+import { AssignedOrdersTable, CreateOrderDialog } from "../_components";
 import type { OrderStatus } from "@prisma/client";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -61,13 +61,16 @@ export default async function SalesRepOrdersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Page Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-black leading-tight tracking-tight">
-          My Orders
-        </h1>
-        <p className="text-muted-foreground text-base">
-          Manage and track all your assigned orders
-        </p>
+      <div className="flex justify-between items-end gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-4xl font-black leading-tight tracking-tight">
+            My Orders
+          </h1>
+          <p className="text-muted-foreground text-base">
+            Manage and track all your assigned orders
+          </p>
+        </div>
+        <CreateOrderDialog />
       </div>
 
       {/* Orders Table */}

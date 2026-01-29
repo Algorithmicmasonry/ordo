@@ -10,3 +10,5 @@ export { PrintInvoiceButton } from "./print-invoice-button";
 export { ConfirmOrderButton } from "./confirm-order-button";
 export { MarkDeliveredButton } from "./mark-delivered-button";
 export { PostponeOrderDialog } from "./postpone-order-dialog";
+export { SendToAgentButton } from "./send-to-agent-button";
+export { ChangeStatusDialog } from "./change-status-dialog";

@@ -218,3 +218,59 @@ export async function updateInventoryOnDelivery(orderId: string): Promise<void> 
     }
   }
 }
+
+/**
+ * Restore inventory when reverting from delivered status
+ */
+export async function restoreInventoryFromDelivery(orderId: string): Promise<void> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: true,
+    },
+  })
+
+  if (!order) {
+    throw new Error('Order not found')
+  }
+
+  // Restore global stock
+  for (const item of order.items) {
+    await db.product.update({
+      where: { id: item.productId },
+      data: {
+        currentStock: {
+          increment: item.quantity,
+        },
+      },
+    })
+
+    // If order has an agent assigned, restore agent stock too
+    if (order.agentId) {
+      const agentStock = await db.agentStock.findUnique({
+        where: {
+          agentId_productId: {
+            agentId: order.agentId,
+            productId: item.productId,
+          },
+        },
+      })
+
+      if (agentStock) {
+        await db.agentStock.update({
+          where: {
+            agentId_productId: {
+              agentId: order.agentId,
+              productId: item.productId,
+            },
+          },
+          data: {
+            quantity: {
+              increment: item.quantity,
+            },
+          },
+        })
+      }
+    }
+  }
+}

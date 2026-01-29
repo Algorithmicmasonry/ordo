@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { updateInventoryOnDelivery } from "@/lib/calculations";
+import { updateInventoryOnDelivery, restoreInventoryFromDelivery } from "@/lib/calculations";
 
 export async function getOrderDetails(orderId: string) {
   try {
@@ -181,7 +181,7 @@ export async function assignAgent(orderId: string, agentId: string, deliverySlot
   }
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: string, reason?: string) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
 
@@ -203,6 +203,18 @@ export async function updateOrderStatus(orderId: string, status: string) {
       return { success: false, error: "Order not found" };
     }
 
+    const previousStatus = order.status;
+
+    // Handle inventory changes
+    // If reverting FROM DELIVERED, restore inventory
+    if (previousStatus === "DELIVERED" && status !== "DELIVERED") {
+      await restoreInventoryFromDelivery(orderId);
+    }
+    // If changing TO DELIVERED, deduct inventory
+    else if (status === "DELIVERED" && previousStatus !== "DELIVERED") {
+      await updateInventoryOnDelivery(orderId);
+    }
+
     // Update order status with timestamp
     const updateData: any = { status };
 
@@ -215,8 +227,6 @@ export async function updateOrderStatus(orderId: string, status: string) {
         break;
       case "DELIVERED":
         updateData.deliveredAt = new Date();
-        // Deduct inventory when order is delivered
-        await updateInventoryOnDelivery(orderId);
         break;
       case "CANCELLED":
         updateData.cancelledAt = new Date();
@@ -230,6 +240,17 @@ export async function updateOrderStatus(orderId: string, status: string) {
       where: { id: orderId },
       data: updateData,
     });
+
+    // Log status change as a note if reason provided
+    if (reason && previousStatus !== status) {
+      await db.orderNote.create({
+        data: {
+          orderId,
+          note: `Status changed from ${previousStatus} to ${status}. Reason: ${reason}`,
+          isFollowUp: false,
+        },
+      });
+    }
 
     revalidatePath(`/dashboard/sales-rep/orders/${orderId}`);
     revalidatePath("/dashboard/sales-rep");

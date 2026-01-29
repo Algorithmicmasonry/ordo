@@ -20,6 +20,8 @@ import {
   ConfirmOrderButton,
   MarkDeliveredButton,
   PostponeOrderDialog,
+  SendToAgentButton,
+  ChangeStatusDialog,
 } from "./_components";
 
 interface PageProps {
@@ -86,7 +88,13 @@ export default async function OrderDetailsPage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex gap-3">
+              <ChangeStatusDialog
+                orderId={order.id}
+                currentStatus={order.status}
+                orderNumber={order.orderNumber}
+              />
               <PrintInvoiceButton order={order} />
+              <SendToAgentButton order={order} />
               <EditOrderModal order={order} />
             </div>
           </div>

@@ -2,12 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-import type { Order, OrderItem, Product } from "@prisma/client";
+import type { Order, OrderItem, Product, Agent } from "@prisma/client";
 import { format } from "date-fns";
 
 interface PrintInvoiceButtonProps {
   order: Order & {
     items: (OrderItem & { product: Product })[];
+    agent?: Agent | null;
   };
 }
 
@@ -161,6 +162,23 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
               <p><strong>Location:</strong> ${order.city}, ${order.state}</p>
             </div>
           </div>
+
+          ${
+            order.agent
+              ? `
+          <div class="section">
+            <div class="section-title">Delivery Information</div>
+            <div class="order-details" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
+              <p><strong>Delivery Agent:</strong> ${order.agent.name}</p>
+              <p><strong>Agent Phone:</strong> ${order.agent.phone}</p>
+              <p><strong>Agent Location:</strong> ${order.agent.location}</p>
+              ${order.deliverySlot ? `<p><strong>Delivery Slot:</strong> ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}</p>` : ""}
+              ${order.dispatchedAt ? `<p><strong>Dispatch Date:</strong> ${format(new Date(order.dispatchedAt), "MMM dd, yyyy h:mm a")}</p>` : ""}
+            </div>
+          </div>
+          `
+              : ""
+          }
 
           <div class="section">
             <div class="section-title">Order Items</div>

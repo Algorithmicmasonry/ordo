@@ -3,8 +3,27 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async headers() {
     return [
+      // Allow embedding for the order form embed route
       {
-        source: '/(.*)',
+        source: '/order-form/embed',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors *",
+          },
+        ],
+      },
+      // Deny framing for all other routes
+      {
+        source: '/((?!order-form/embed).*)',
         headers: [
           {
             key: 'X-Content-Type-Options',

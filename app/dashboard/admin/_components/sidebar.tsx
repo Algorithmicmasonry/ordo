@@ -12,6 +12,7 @@ import { cn, getInitials, formatRole } from "@/lib/utils";
 import {
   BookUser,
   ChartPie,
+  Code2,
   HatGlasses,
   LayoutDashboard,
   PackageOpen,
@@ -81,6 +82,11 @@ const routes = [
     label: "Round-Robin",
     icon: Repeat,
     href: "/dashboard/admin/round-robin",
+  },
+  {
+    label: "Embed Form",
+    icon: Code2,
+    href: "/dashboard/admin/embed-form",
   },
 ];
 

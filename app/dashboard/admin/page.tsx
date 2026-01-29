@@ -18,6 +18,8 @@ import {
   StatsCards,
   TopProducts,
 } from "./_components";
+import { PushNotificationManager } from "@/app/_components/push-notification-manager";
+import { InstallPrompt } from "@/app/_components/install-prompt";
 
 interface AdminDashboardPageProps {
   searchParams: Promise<{ period?: string }>;
@@ -61,6 +63,12 @@ export default async function AdminDashboardPage({
         heading="Administrator Dashboard"
         text="Monitor your business performance in real-time"
       />
+
+      {/* PWA Components */}
+      <div className="grid gap-4 md:grid-cols-2 mb-6">
+        <InstallPrompt />
+        <PushNotificationManager />
+      </div>
 
       {/* Filters */}
       <div className="flex items-center justify-between mb-4">

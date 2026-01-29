@@ -8,6 +8,8 @@ import {
   AdminInventoryClient,
   AgentInventoryBreakdown,
 } from "@/app/dashboard/admin/inventory/_components";
+import { PushNotificationManager } from "@/app/_components/push-notification-manager";
+import { InstallPrompt } from "@/app/_components/install-prompt";
 
 async function getInventoryData() {
   // Fetch products with agent stock
@@ -135,6 +137,12 @@ export default async function InventoryManagerPage() {
 
   return (
     <div className="space-y-8">
+      {/* PWA Components */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <InstallPrompt />
+        <PushNotificationManager />
+      </div>
+
       <Suspense fallback={<InventoryPageSkeleton />}>
         <AdminInventoryClient
           products={data.products}

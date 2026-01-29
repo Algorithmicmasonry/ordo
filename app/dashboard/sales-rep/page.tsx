@@ -12,6 +12,8 @@ import {
 } from "./_components";
 import type { OrderStatus } from "@prisma/client";
 import type { TimePeriod } from "@/lib/types";
+import { PushNotificationManager } from "@/app/_components/push-notification-manager";
+import { InstallPrompt } from "@/app/_components/install-prompt";
 
 interface PageProps {
   searchParams: Promise<{
@@ -82,6 +84,12 @@ export default async function SalesRepDashboardPage({
           heading="Dashboard Overview"
           text="Track your orders, performance, and customer interactions"
         />
+      </div>
+
+      {/* PWA Components */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <InstallPrompt />
+        <PushNotificationManager />
       </div>
 
       {/* Period Filter */}

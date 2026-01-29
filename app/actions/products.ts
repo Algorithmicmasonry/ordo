@@ -1,5 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { UnknownKeysParam } from "zod";
 
@@ -17,6 +19,17 @@ export async function createProduct(data: {
   isActive?: boolean;
 }) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } });
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" };
+    }
+
     // Check if SKU is provided and already exists
     if (data.sku) {
       const existingProduct = await db.product.findUnique({
@@ -44,6 +57,7 @@ export async function createProduct(data: {
 
     revalidatePath("/admin/products");
     revalidatePath("/dashboard/admin/inventory");
+    revalidatePath("/dashboard/inventory");
 
     return { success: true, product };
   } catch (error: any) {
@@ -95,12 +109,25 @@ export async function updateProduct(
   },
 ) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } });
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" };
+    }
+
     const product = await db.product.update({
       where: { id: productId },
       data,
     });
 
     revalidatePath("/admin/products");
+    revalidatePath("/dashboard/admin/inventory");
+    revalidatePath("/dashboard/inventory");
 
     return { success: true, product };
   } catch (error) {
@@ -110,10 +137,21 @@ export async function updateProduct(
 }
 
 /**
- * Add stock to product (Admin only)
+ * Add stock to product (Admin and Inventory Manager)
  */
 export async function addStock(productId: string, quantity: number) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } });
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" };
+    }
+
     const product = await db.product.update({
       where: { id: productId },
       data: {
@@ -125,6 +163,7 @@ export async function addStock(productId: string, quantity: number) {
 
     revalidatePath("/admin/products");
     revalidatePath("/dashboard/admin/inventory");
+    revalidatePath("/dashboard/inventory");
 
     return { success: true, product };
   } catch (error) {
@@ -173,10 +212,21 @@ export async function getActiveProducts() {
 }
 
 /**
- * Soft delete a product (Admin only)
+ * Soft delete a product (Admin and Inventory Manager)
  */
 export async function softDeleteProduct(productId: string) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } });
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" };
+    }
+
     // Check if product exists
     const product = await db.product.findUnique({
       where: { id: productId },

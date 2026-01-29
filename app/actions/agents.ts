@@ -1,6 +1,8 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 
 /**
@@ -13,6 +15,17 @@ export async function createAgent(data: {
   address?: string
 }) {
   try {
+    // Authorization: ADMIN only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Admin access required" }
+    }
+
     const agent = await db.agent.create({
       data,
     })
@@ -40,6 +53,17 @@ export async function updateAgent(
   }
 ) {
   try {
+    // Authorization: ADMIN only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Admin access required" }
+    }
+
     const agent = await db.agent.update({
       where: { id: agentId },
       data,
@@ -55,7 +79,7 @@ export async function updateAgent(
 }
 
 /**
- * Assign stock to agent (Admin only)
+ * Assign stock to agent (Admin and Inventory Manager)
  */
 export async function assignStockToAgent(
   agentId: string,
@@ -63,6 +87,17 @@ export async function assignStockToAgent(
   quantity: number
 ) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" }
+    }
+
     // Check if agent stock record exists
     const existingStock = await db.agentStock.findUnique({
       where: {
@@ -111,6 +146,8 @@ export async function assignStockToAgent(
 
     revalidatePath("/admin/agents")
     revalidatePath("/dashboard/admin/inventory")
+    revalidatePath("/dashboard/inventory")
+    revalidatePath("/dashboard/inventory/agents")
 
     return { success: true, agentStock }
   } catch (error) {
@@ -120,7 +157,7 @@ export async function assignStockToAgent(
 }
 
 /**
- * Update agent stock defective/missing items
+ * Update agent stock defective/missing items (Admin and Inventory Manager)
  */
 export async function updateAgentStockIssues(
   agentId: string,
@@ -129,6 +166,17 @@ export async function updateAgentStockIssues(
   missing?: number
 ) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" }
+    }
+
     const updateData: any = {}
 
     if (defective !== undefined) {
@@ -151,6 +199,8 @@ export async function updateAgentStockIssues(
 
     revalidatePath("/admin/agents")
     revalidatePath("/dashboard/admin/inventory")
+    revalidatePath("/dashboard/inventory")
+    revalidatePath("/dashboard/inventory/agents")
 
     return { success: true, agentStock }
   } catch (error) {
@@ -211,6 +261,17 @@ export async function getActiveAgents() {
  */
 export async function deleteAgent(agentId: string) {
   try {
+    // Authorization: ADMIN only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Admin access required" }
+    }
+
     // 1. Check for active orders
     const activeOrders = await db.order.count({
       where: {
@@ -252,7 +313,7 @@ export async function deleteAgent(agentId: string) {
 }
 
 /**
- * Reconcile agent stock (return, defective, missing tracking)
+ * Reconcile agent stock (return, defective, missing tracking) (Admin and Inventory Manager)
  */
 export async function reconcileAgentStock(data: {
   agentId: string
@@ -263,6 +324,17 @@ export async function reconcileAgentStock(data: {
   notes?: string
 }) {
   try {
+    // Authorization: ADMIN and INVENTORY_MANAGER only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN" && user?.role !== "INVENTORY_MANAGER") {
+      return { success: false, error: "Insufficient permissions" }
+    }
+
     return await db.$transaction(async (tx) => {
       const agentStock = await tx.agentStock.findUnique({
         where: {
@@ -315,6 +387,8 @@ export async function reconcileAgentStock(data: {
 
       revalidatePath("/dashboard/admin/agents")
       revalidatePath("/dashboard/admin/inventory")
+      revalidatePath("/dashboard/inventory")
+      revalidatePath("/dashboard/inventory/agents")
 
       return { success: true, message: "Stock reconciled successfully" }
     })
@@ -325,7 +399,7 @@ export async function reconcileAgentStock(data: {
 }
 
 /**
- * Create settlement record for agent
+ * Create settlement record for agent (Admin only)
  */
 export async function createSettlement(data: {
   agentId: string
@@ -337,6 +411,17 @@ export async function createSettlement(data: {
   settledBy: string
 }) {
   try {
+    // Authorization: ADMIN only
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } })
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Admin access required" }
+    }
+
     const balanceDue =
       data.stockValue + data.cashCollected - data.cashReturned + data.adjustments
 

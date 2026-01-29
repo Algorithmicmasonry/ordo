@@ -174,8 +174,9 @@ model Order {
   assignedTo   User?   @relation(fields: [assignedToId], references: [id])
 
   // Agent Assignment (for fulfillment)
-  agentId String?
-  agent   Agent?  @relation(fields: [agentId], references: [id])
+  agentId      String?
+  agent        Agent?  @relation(fields: [agentId], references: [id])
+  deliverySlot String? // "immediate", "morning", "afternoon", "evening"
 
   // Order Items
   items OrderItem[]

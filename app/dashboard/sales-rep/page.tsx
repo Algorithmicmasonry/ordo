@@ -1,9 +1,104 @@
-import React from 'react'
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { getSalesRepDashboardStats, getAssignedOrders } from "./actions";
+import {
+  DashboardStats,
+  FollowUpReminder,
+  AssignedOrdersTable,
+  DashboardHeader,
+  PeriodFilter,
+} from "./_components";
+import type { OrderStatus } from "@prisma/client";
+import type { TimePeriod } from "@/lib/types";
 
-const SalesRepresentativePage = () => {
-  return (
-    <div>SalesRepresentativePage</div>
-  )
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+    status?: string;
+    search?: string;
+    period?: string;
+  }>;
 }
 
-export default SalesRepresentativePage
+export default async function SalesRepDashboardPage({ searchParams }: PageProps) {
+  // Authentication check
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || session.user.role !== "SALES_REP") {
+    redirect("/dashboard");
+  }
+
+  // Parse search params
+  const params = await searchParams;
+  const page = parseInt(params.page || "1");
+  const status = (params.status || "ALL") as OrderStatus | "ALL" | "FOLLOW_UP";
+  const search = params.search || "";
+  const period = (params.period || "month") as TimePeriod;
+
+  // Fetch dashboard data
+  const [statsResult, ordersResult] = await Promise.all([
+    getSalesRepDashboardStats(period),
+    getAssignedOrders({ page, status, search }),
+  ]);
+
+  if (!statsResult.success || !statsResult.data) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-muted-foreground">
+            Failed to Load Dashboard
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            {statsResult.error || "Unable to fetch dashboard data"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ordersResult.success || !ordersResult.data) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-muted-foreground">
+            Failed to Load Orders
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            {ordersResult.error || "Unable to fetch orders"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Dashboard Header */}
+      <DashboardHeader
+        heading="Dashboard Overview"
+        text="Track your orders, performance, and customer interactions"
+      />
+
+      {/* Period Filter */}
+      <div className="flex justify-end">
+        <PeriodFilter currentPeriod={period} />
+      </div>
+
+      {/* Stats Cards */}
+      <DashboardStats stats={statsResult.data} />
+
+      {/* Follow-up Reminder */}
+      {statsResult.data.followUpOrders > 0 && (
+        <FollowUpReminder count={statsResult.data.followUpOrders} />
+      )}
+
+      {/* Assigned Orders Table */}
+      <AssignedOrdersTable
+        orders={ordersResult.data.orders}
+        pagination={ordersResult.data.pagination}
+        currentStatus={status}
+        currentSearch={search}
+      />
+    </div>
+  );
+}

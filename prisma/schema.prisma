@@ -43,7 +43,8 @@ model User {
   role     UserRole @default(SALES_REP)
   isActive Boolean  @default(true)
 
-  orders Order[]
+  orders            Order[]
+  pushSubscriptions PushSubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,6 +55,29 @@ model User {
   accounts      Account[]
 
   @@map("users")
+}
+
+// Push Subscription Model
+
+model PushSubscription {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint   String  // Web push endpoint URL
+  p256dh     String  // Diffie-Hellman public key (base64)
+  auth       String  // Authentication secret (base64)
+  isActive   Boolean @default(true)
+  lastUsedAt DateTime? // Track last successful push
+  userAgent  String? // Browser/device info
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // Product Model

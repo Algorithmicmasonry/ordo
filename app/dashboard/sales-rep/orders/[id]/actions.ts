@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { updateInventoryOnDelivery, restoreInventoryFromDelivery } from "@/lib/calculations";
+import { notifyAdmins } from "@/app/actions/push-notifications";
 
 export async function getOrderDetails(orderId: string) {
   try {
@@ -249,6 +250,16 @@ export async function updateOrderStatus(orderId: string, status: string, reason?
           note: `Status changed from ${previousStatus} to ${status}. Reason: ${reason}`,
           isFollowUp: false,
         },
+      });
+    }
+
+    // If status changed TO DELIVERED, notify all admins
+    if (status === "DELIVERED" && previousStatus !== "DELIVERED") {
+      await notifyAdmins({
+        title: "Order Delivered 🎉",
+        body: `Order ${updatedOrder.orderNumber} has been delivered to ${updatedOrder.customerName}`,
+        url: `/dashboard/admin/orders/${updatedOrder.id}`,
+        orderId: updatedOrder.id,
       });
     }
 

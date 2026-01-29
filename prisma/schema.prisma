@@ -33,6 +33,16 @@ enum OrderSource {
   WEBSITE
 }
 
+enum NotificationType {
+  ORDER_ASSIGNED
+  ORDER_STATUS_CHANGED
+  ORDER_DELIVERED
+  ORDER_NOTE_ADDED
+  LOW_STOCK_ALERT
+  NEW_ORDER
+  GENERAL
+}
+
 // User Model
 
 model User {
@@ -45,6 +55,7 @@ model User {
 
   orders            Order[]
   pushSubscriptions PushSubscription[]
+  notifications     Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -78,6 +89,31 @@ model PushSubscription {
   @@unique([userId, endpoint])
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+// Notification Model
+
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  title   String
+  message String
+  link    String?  // URL to navigate to when clicked
+  isRead  Boolean  @default(false)
+
+  // Optional reference to related order
+  orderId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
 
 // Product Model

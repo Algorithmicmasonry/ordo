@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { updateInventoryOnDelivery, restoreInventoryFromDelivery } from "@/lib/calculations";
 import { notifyAdmins } from "@/app/actions/push-notifications";
+import { createBulkNotifications } from "@/app/actions/notifications";
 
 export async function getOrderDetails(orderId: string) {
   try {
@@ -255,12 +256,30 @@ export async function updateOrderStatus(orderId: string, status: string, reason?
 
     // If status changed TO DELIVERED, notify all admins
     if (status === "DELIVERED" && previousStatus !== "DELIVERED") {
+      // Send push notification
       await notifyAdmins({
         title: "Order Delivered 🎉",
         body: `Order ${updatedOrder.orderNumber} has been delivered to ${updatedOrder.customerName}`,
         url: `/dashboard/admin/orders/${updatedOrder.id}`,
         orderId: updatedOrder.id,
       });
+
+      // Create in-app notifications for all admins
+      const admins = await db.user.findMany({
+        where: { role: "ADMIN", isActive: true },
+        select: { id: true },
+      });
+
+      if (admins.length > 0) {
+        await createBulkNotifications({
+          userIds: admins.map((admin) => admin.id),
+          type: "ORDER_DELIVERED",
+          title: "Order Delivered",
+          message: `Order ${updatedOrder.orderNumber} has been delivered to ${updatedOrder.customerName}`,
+          link: `/dashboard/admin/orders/${updatedOrder.id}`,
+          orderId: updatedOrder.id,
+        });
+      }
     }
 
     revalidatePath(`/dashboard/sales-rep/orders/${orderId}`);

@@ -3,9 +3,10 @@
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, HelpCircle, Search } from "lucide-react";
+import { HelpCircle, Search } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useTransition, useEffect, useRef } from "react";
+import { NotificationBell } from "@/app/_components/notification-bell";
 
 interface DashboardHeaderProps {
   heading: string;
@@ -88,10 +89,7 @@ export function DashboardHeader({
           )}
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" title="Notifications">
-              <Bell className="size-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <NotificationBell />
 
             <Button variant="ghost" size="icon" title="Help">
               <HelpCircle className="size-5" />

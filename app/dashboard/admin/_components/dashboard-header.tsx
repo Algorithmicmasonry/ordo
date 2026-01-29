@@ -2,7 +2,8 @@
 
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { Bell, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
+import { NotificationBell } from "@/app/_components/notification-bell";
 
 interface DashboardHeaderProps {
   heading: string;
@@ -21,7 +22,6 @@ export function DashboardHeader({ heading, text }: DashboardHeaderProps) {
           {text && <p className="text-foreground/90">{text}</p>}
         </div>
 
-        {/* TODO: Make the dashboard header functional */}
         <div className="flex items-center gap-4">
           {/* Search */}
           {/* <div className="relative w-64">
@@ -29,9 +29,7 @@ export function DashboardHeader({ heading, text }: DashboardHeaderProps) {
             <Input placeholder="Search data..." className="pl-10" />
           </div> */}
 
-          <Button variant="ghost" size="icon">
-            <Bell className="size-5" />
-          </Button>
+          <NotificationBell />
 
           <Button variant="ghost" size="icon">
             <HelpCircle className="size-5" />

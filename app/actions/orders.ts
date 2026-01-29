@@ -7,6 +7,7 @@ import { OrderFormData } from "@/lib/types";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { notifySalesRep } from "./push-notifications";
+import { createNotification } from "./notifications";
 
 /**
  * Create a new order from the embedded form
@@ -77,11 +78,21 @@ export async function createOrder(data: OrderFormData) {
       },
     });
 
-    // Notify the assigned sales rep
+    // Notify the assigned sales rep (push notification)
     await notifySalesRep(assignedToId, {
       title: "New Order Assigned 📦",
       body: `Order ${order.orderNumber} from ${order.customerName} has been assigned to you`,
       url: `/dashboard/sales-rep/orders/${order.id}`,
+      orderId: order.id,
+    });
+
+    // Create in-app notification
+    await createNotification({
+      userId: assignedToId,
+      type: "ORDER_ASSIGNED",
+      title: "New Order Assigned",
+      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) has been assigned to you`,
+      link: `/dashboard/sales-rep/orders/${order.id}`,
       orderId: order.id,
     });
 

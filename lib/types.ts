@@ -5,10 +5,12 @@ import {
   User,
   UserRole,
   Product,
+  ProductPackage,
   Agent,
   OrderItem,
   OrderNote,
 } from "@prisma/client";
+import type { UTMParams } from "./utm-parser";
 
 // Extended types with relations
 export type OrderWithDetails = Order & {
@@ -65,6 +67,25 @@ export type OrderFormData = {
     quantity: number;
   }>;
 };
+
+// Order form V2 with packages and UTM tracking
+export interface OrderFormDataV2 {
+  customerName: string;
+  customerPhone: string;
+  customerWhatsapp?: string;
+  deliveryAddress: string;
+  state: string;
+  city: string;
+  productId: string;
+  selectedPackages: string[]; // Array of package IDs
+  utmParams?: UTMParams;
+  referrer?: string;
+}
+
+// Product with packages
+export interface ProductWithPackages extends Product {
+  packages: ProductPackage[];
+}
 
 // Expense types
 export type ExpenseType =

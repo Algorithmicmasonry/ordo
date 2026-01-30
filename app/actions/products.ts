@@ -259,3 +259,37 @@ export async function softDeleteProduct(productId: string) {
     return { success: false, error: "Failed to delete product" };
   }
 }
+
+/**
+ * Get product with its active packages (for order form)
+ */
+export async function getProductWithPackages(productId: string) {
+  try {
+    const product = await db.product.findUnique({
+      where: {
+        id: productId,
+        isActive: true,
+        isDeleted: false,
+      },
+      include: {
+        packages: {
+          where: { isActive: true },
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    if (product.packages.length === 0) {
+      return { success: false, error: "Product has no available packages" };
+    }
+
+    return { success: true, data: product };
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return { success: false, error: "Failed to fetch product" };
+  }
+}

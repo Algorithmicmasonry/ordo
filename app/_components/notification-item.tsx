@@ -39,7 +39,10 @@ const colorMap: Record<NotificationType, string> = {
   GENERAL: "text-gray-600 bg-gray-100",
 };
 
-export function NotificationItem({ notification, onUpdate }: NotificationItemProps) {
+export function NotificationItem({
+  notification,
+  onUpdate,
+}: NotificationItemProps) {
   const router = useRouter();
 
   const handleClick = async () => {
@@ -49,7 +52,7 @@ export function NotificationItem({ notification, onUpdate }: NotificationItemPro
       onUpdate();
     }
 
-    // Navigate to link if provided
+    // Navigate to link if available
     if (notification.link) {
       router.push(notification.link);
     }
@@ -64,14 +67,14 @@ export function NotificationItem({ notification, onUpdate }: NotificationItemPro
       onClick={handleClick}
       className={cn(
         "flex gap-3 p-4 cursor-pointer transition-colors hover:bg-muted/50",
-        !notification.isRead && "bg-blue-50/50 dark:bg-blue-950/20"
+        !notification.isRead && "bg-blue-50/50 dark:bg-blue-950/20",
       )}
     >
       {/* Icon */}
       <div
         className={cn(
           "flex items-center justify-center size-9 rounded-full shrink-0",
-          colorMap[notification.type]
+          colorMap[notification.type],
         )}
       >
         {iconMap[notification.type]}
@@ -83,7 +86,7 @@ export function NotificationItem({ notification, onUpdate }: NotificationItemPro
           <p
             className={cn(
               "text-sm font-medium leading-tight",
-              !notification.isRead && "font-semibold"
+              !notification.isRead && "font-semibold",
             )}
           >
             {notification.title}

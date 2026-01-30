@@ -137,11 +137,34 @@ model Product {
   orders     OrderItem[]
   agentStock AgentStock[]
   expenses   Expense[]
+  packages   ProductPackage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("products")
+}
+
+// Product Package Model (for product variants/bundles)
+
+model ProductPackage {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name        String // e.g., "Regular", "Silver", "Exclusive", "Resellers"
+  description String? // e.g., "1 BOX OF PLANT HAIR DYE SHAMPOO + FREE DELIVERY"
+  quantity    Int // Number of items in this package
+  price       Float // Price for this package
+  isActive    Boolean @default(true)
+  displayOrder Int @default(0) // For ordering packages in UI
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, isActive])
+  @@map("product_packages")
 }
 
 // Agent Model (No login - managed by Admin and Sales Reps)
@@ -227,6 +250,8 @@ model Order {
   // Order Details
   status      OrderStatus @default(NEW)
   source      OrderSource
+  utmSource   String?     // Detailed UTM tracking (e.g., "facebook_winter_sale")
+  referrer    String?     // Fallback referrer domain
   totalAmount Float       @default(0)
 
   // Assignment (Round-robin)

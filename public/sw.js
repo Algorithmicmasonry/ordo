@@ -1,21 +1,39 @@
 self.addEventListener('push', function (event) {
   if (event.data) {
     const data = event.data.json()
-    const options = {
-      body: data.body,
-      icon: data.icon || '/icon.png',
-      badge: '/badge.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || '/dashboard',
-        orderId: data.orderId,
-      },
-      actions: data.actions || [],
-      tag: data.tag || 'ordo-notification',
-      requireInteraction: data.requireInteraction || false,
-    }
+
     event.waitUntil(
-      self.registration.showNotification(data.title, options)
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(function (clientList) {
+          // Check if any window is focused
+          const isAppOpen = clientList.some(client => client.focused)
+
+          if (isAppOpen) {
+            // App is open - send message to show toast instead of browser notification
+            clientList.forEach(client => {
+              client.postMessage({
+                type: 'SHOW_TOAST',
+                data: data
+              })
+            })
+          } else {
+            // App is closed/unfocused - show browser notification
+            const options = {
+              body: data.body,
+              icon: data.icon || '/icon.png',
+              badge: '/badge.png',
+              vibrate: [100, 50, 100],
+              data: {
+                url: data.url || '/dashboard',
+                orderId: data.orderId,
+              },
+              actions: data.actions || [],
+              tag: data.tag || 'ordo-notification',
+              requireInteraction: data.requireInteraction || false,
+            }
+            return self.registration.showNotification(data.title, options)
+          }
+        })
     )
   }
 })

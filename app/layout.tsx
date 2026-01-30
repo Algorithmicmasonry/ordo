@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Rethink_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Rethink_Sans({ subsets: ["latin"], display: "swap" });
 

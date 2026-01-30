@@ -3,11 +3,15 @@
 import { db } from "@/lib/db";
 import { getNextSalesRep } from "@/lib/round-robin";
 import { updateInventoryOnDelivery } from "@/lib/calculations";
-import { OrderFormData } from "@/lib/types";
+import { OrderFormData, OrderFormDataV2 } from "@/lib/types";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { notifySalesRep } from "./push-notifications";
-import { createNotification } from "./notifications";
+import { notifySalesRep, notifyAdmins } from "./push-notifications";
+import { createNotification, createBulkNotifications } from "./notifications";
+import {
+  determineOrderSource,
+  formatUTMSource,
+} from "@/lib/utm-parser";
 
 /**
  * Create a new order from the embedded form
@@ -98,6 +102,158 @@ export async function createOrder(data: OrderFormData) {
 
     revalidatePath("/dashboard");
     revalidatePath("/admin");
+
+    return {
+      success: true,
+      order,
+    };
+  } catch (error) {
+    console.error("Error creating order:", error);
+    return {
+      success: false,
+      error: "Failed to create order",
+    };
+  }
+}
+
+/**
+ * Create a new order from the V2 embedded form (with packages and UTM tracking)
+ * Automatically assigns to sales rep using round-robin
+ */
+export async function createOrderV2(data: OrderFormDataV2) {
+  try {
+    // Get next sales rep in round-robin
+    const assignedToId = await getNextSalesRep();
+
+    if (!assignedToId) {
+      return {
+        success: false,
+        error: "No active sales representatives available",
+      };
+    }
+
+    // Get product and packages
+    const product = await db.product.findUnique({
+      where: { id: data.productId },
+      include: {
+        packages: {
+          where: {
+            id: { in: data.selectedPackages },
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      return {
+        success: false,
+        error: "Product not found",
+      };
+    }
+
+    if (product.packages.length === 0) {
+      return {
+        success: false,
+        error: "No valid packages selected",
+      };
+    }
+
+    // Calculate total amount and create order items
+    let totalAmount = 0;
+    const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = [];
+
+    for (const pkg of product.packages) {
+      totalAmount += pkg.price;
+
+      orderItems.push({
+        product: { connect: { id: product.id } },
+        quantity: pkg.quantity,
+        price: pkg.price,
+        cost: product.cost * pkg.quantity, // Total cost for this package
+      });
+    }
+
+    // Determine order source from UTM/referrer
+    const utmSource = data.utmParams
+      ? formatUTMSource(data.utmParams)
+      : undefined;
+    const orderSource = determineOrderSource(utmSource, data.referrer);
+
+    // Create order with items
+    const order = await db.order.create({
+      data: {
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        customerWhatsapp: data.customerWhatsapp,
+        deliveryAddress: data.deliveryAddress,
+        state: data.state,
+        city: data.city,
+        source: orderSource,
+        utmSource,
+        referrer: data.referrer,
+        totalAmount,
+        assignedTo: { connect: { id: assignedToId } },
+        status: OrderStatus.NEW,
+        items: {
+          create: orderItems,
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        assignedTo: true,
+      },
+    });
+
+    // Notify the assigned sales rep (push notification)
+    await notifySalesRep(assignedToId, {
+      title: "New Order Assigned 📦",
+      body: `Order ${order.orderNumber} from ${order.customerName} - ₦${order.totalAmount.toLocaleString()}`,
+      url: `/dashboard/sales-rep/orders/${order.id}`,
+      orderId: order.id,
+    });
+
+    // Create in-app notification for sales rep
+    await createNotification({
+      userId: assignedToId,
+      type: "ORDER_ASSIGNED",
+      title: "New Order Assigned",
+      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ₦${order.totalAmount.toLocaleString()}`,
+      link: `/dashboard/sales-rep/orders/${order.id}`,
+      orderId: order.id,
+    });
+
+    // Notify all active admins
+    const admins = await db.user.findMany({
+      where: { role: "ADMIN", isActive: true },
+      select: { id: true, name: true },
+    });
+
+    // Create in-app notifications for admins
+    await createBulkNotifications({
+      userIds: admins.map((a) => a.id),
+      type: "NEW_ORDER",
+      title: "New Order Received",
+      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ₦${order.totalAmount.toLocaleString()}`,
+      link: `/dashboard/admin/orders/${order.id}`,
+      orderId: order.id,
+    });
+
+    // Send push notifications to admins
+    await notifyAdmins({
+      title: "New Order Received 📦",
+      body: `Order ${order.orderNumber} from ${order.customerName} - ₦${order.totalAmount.toLocaleString()}`,
+      url: `/dashboard/admin/orders/${order.id}`,
+      orderId: order.id,
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/dashboard/admin/orders");
 
     return {
       success: true,

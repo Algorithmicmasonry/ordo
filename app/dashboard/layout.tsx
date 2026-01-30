@@ -3,6 +3,7 @@ import { Rethink_Sans } from "next/font/google";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { NotificationListener } from "@/app/_components/notification-listener";
 
 const inter = Rethink_Sans({ subsets: ["latin"], display: "swap" });
 
@@ -30,6 +31,7 @@ export default async function DashboardLayout({
 
   return (
     <div className={inter.className} suppressHydrationWarning>
+      <NotificationListener />
       {children}
     </div>
   );

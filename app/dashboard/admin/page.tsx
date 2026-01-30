@@ -18,7 +18,6 @@ import {
   StatsCards,
   TopProducts,
 } from "./_components";
-import { PushNotificationManager } from "@/app/_components/push-notification-manager";
 import { InstallPrompt } from "@/app/_components/install-prompt";
 
 interface AdminDashboardPageProps {
@@ -67,7 +66,6 @@ export default async function AdminDashboardPage({
       {/* PWA Components */}
       <div className="grid gap-4 md:grid-cols-2 mb-6">
         <InstallPrompt />
-        <PushNotificationManager />
       </div>
 
       {/* Filters */}

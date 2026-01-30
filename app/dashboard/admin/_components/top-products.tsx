@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Package } from "lucide-react";
 import Link from "next/link";
 import type { TopProduct } from "@/lib/types";
-import { formatCurrency } from "@/lib/date-utils";
+import { formatCurrency } from "@/lib/currency";
 
 interface TopProductsProps {
   products: TopProduct[] | null;

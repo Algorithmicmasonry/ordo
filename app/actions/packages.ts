@@ -62,6 +62,7 @@ export async function createPackage({
   description,
   quantity,
   price,
+  currency = "NGN",
   displayOrder = 0,
 }: {
   productId: string;
@@ -69,12 +70,30 @@ export async function createPackage({
   description?: string;
   quantity: number;
   price: number;
+  currency?: import("@prisma/client").Currency;
   displayOrder?: number;
 }) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user || session.user.role !== "ADMIN") {
       return { success: false, error: "Unauthorized" };
+    }
+
+    // Check for duplicate package name + currency combination
+    const existingPackage = await db.productPackage.findFirst({
+      where: {
+        productId,
+        name,
+        currency,
+        isActive: true,
+      },
+    });
+
+    if (existingPackage) {
+      return {
+        success: false,
+        error: `A package named "${name}" already exists for ${currency}`,
+      };
     }
 
     const package_ = await db.productPackage.create({
@@ -84,6 +103,7 @@ export async function createPackage({
         description,
         quantity,
         price,
+        currency,
         displayOrder,
       },
     });
@@ -107,6 +127,7 @@ export async function updatePackage({
   description,
   quantity,
   price,
+  currency,
   isActive,
   displayOrder,
 }: {
@@ -115,6 +136,7 @@ export async function updatePackage({
   description?: string;
   quantity?: number;
   price?: number;
+  currency?: import("@prisma/client").Currency;
   isActive?: boolean;
   displayOrder?: number;
 }) {
@@ -129,6 +151,7 @@ export async function updatePackage({
     if (description !== undefined) updateData.description = description;
     if (quantity !== undefined) updateData.quantity = quantity;
     if (price !== undefined) updateData.price = price;
+    if (currency !== undefined) updateData.currency = currency;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
 

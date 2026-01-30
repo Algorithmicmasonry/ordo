@@ -157,7 +157,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
     if (product.packages.length === 0) {
       return {
         success: false,
-        error: "No valid packages selected",
+        error: `No packages available for ${data.currency}. Please select a different currency or contact support.`,
       };
     }
 

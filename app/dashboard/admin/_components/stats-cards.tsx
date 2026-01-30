@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Wallet, DollarSign, ShoppingBag, TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/date-utils";
+import { formatCurrency } from "@/lib/currency";
+import { formatPercentage } from "@/lib/date-utils";
 import type { DashboardStats } from "@/lib/types";
 
 interface StatsCardsProps {

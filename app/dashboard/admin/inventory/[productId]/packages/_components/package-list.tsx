@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getCurrencySymbol } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,7 @@ export function PackageList({ packages, productId }: PackageListProps) {
             <TableHead>Description</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
             <TableHead className="text-right">Price</TableHead>
+            <TableHead>Currency</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -107,7 +109,13 @@ export function PackageList({ packages, productId }: PackageListProps) {
               </TableCell>
               <TableCell className="text-right">{pkg.quantity}</TableCell>
               <TableCell className="text-right font-medium">
-                ₦{pkg.price.toLocaleString()}
+                {getCurrencySymbol(pkg.currency)}
+                {pkg.price.toLocaleString()}
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline" className="font-mono">
+                  {pkg.currency}
+                </Badge>
               </TableCell>
               <TableCell>
                 <Badge

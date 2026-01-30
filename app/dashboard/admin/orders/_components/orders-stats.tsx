@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 
 type Stats = {
@@ -40,7 +41,7 @@ export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
     },
     {
       label: "Revenue Generated",
-      value: `₦ ${stats.revenue.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: formatCurrency(stats.revenue),
       change: `${stats.revenueChange > 0 ? "+" : ""}${stats.revenueChange}%`,
       trend: stats.revenueChange >= 0 ? ("up" as const) : ("down" as const),
     },

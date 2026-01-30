@@ -2,7 +2,7 @@
 
 import type { ProductPackage, Currency } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { getCurrencySymbol } from "@/lib/currency";
+import { getCurrencySymbol, getCurrencyName } from "@/lib/currency";
 
 interface PackageSelectorProps {
   packages: ProductPackage[];
@@ -29,7 +29,15 @@ export function PackageSelector({
         Select Your Package:{" "}
         {note && <span className="text-muted-foreground">({note})</span>} *
       </label>
-      {filteredPackages.map((pkg) => (
+      {filteredPackages.length === 0 ? (
+        <div className="p-4 bg-muted rounded-lg text-center">
+          <p className="text-sm text-muted-foreground">
+            No packages available for {getCurrencyName(currency)}. Please select
+            a different currency or contact support.
+          </p>
+        </div>
+      ) : (
+        filteredPackages.map((pkg) => (
         <label
           key={pkg.id}
           className={cn(
@@ -62,7 +70,8 @@ export function PackageSelector({
             </div>
           </div>
         </label>
-      ))}
+        ))
+      )}
     </div>
   );
 }

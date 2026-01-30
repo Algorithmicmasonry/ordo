@@ -108,7 +108,11 @@ export default async function OrderDetailsPage({ params }: PageProps) {
 
             {/* Center Column: Order Items & Workflow */}
             <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
-              <OrderItemsTable items={order.items} totalAmount={totalAmount} />
+              <OrderItemsTable
+                items={order.items}
+                totalAmount={totalAmount}
+                currency={order.currency}
+              />
               <StatusWorkflow order={order} />
               <FulfillmentSection order={order} />
             </div>

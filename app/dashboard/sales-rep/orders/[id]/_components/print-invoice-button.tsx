@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
+import { getCurrencySymbol } from "@/lib/currency";
 import type { Order, OrderItem, Product, Agent } from "@prisma/client";
 import { format } from "date-fns";
 
@@ -20,6 +21,7 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
     );
 
     const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Ordo Store";
+    const currencySymbol = getCurrencySymbol(order.currency);
 
     // Create print content
     const printContent = `
@@ -198,15 +200,15 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
                   <tr>
                     <td>${item.product.name}</td>
                     <td>${item.quantity}</td>
-                    <td>₦${item.price.toLocaleString()}</td>
-                    <td>₦${(item.quantity * item.price).toLocaleString()}</td>
+                    <td>${currencySymbol}${item.price.toLocaleString()}</td>
+                    <td>${currencySymbol}${(item.quantity * item.price).toLocaleString()}</td>
                   </tr>
                 `
                   )
                   .join("")}
                 <tr class="total-row">
                   <td colspan="3">Total Amount</td>
-                  <td>₦${totalAmount.toLocaleString()}</td>
+                  <td>${currencySymbol}${totalAmount.toLocaleString()}</td>
                 </tr>
               </tbody>
             </table>

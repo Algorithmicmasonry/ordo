@@ -118,16 +118,6 @@ export function calculatePercentageChange(
 }
 
 /**
- * Format currency value
- */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-  }).format(amount);
-}
-
-/**
  * Format percentage value
  */
 export function formatPercentage(value: number): string {

@@ -11,14 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { OrderItem, Product } from "@prisma/client";
+import { getCurrencySymbol } from "@/lib/currency";
+import type { OrderItem, Product, Currency } from "@prisma/client";
 
 interface OrderItemsTableProps {
   items: (OrderItem & { product: Product })[];
   totalAmount: number;
+  currency: Currency;
 }
 
-export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
+export function OrderItemsTable({ items, totalAmount, currency }: OrderItemsTableProps) {
   return (
     <Card className="shadow-sm overflow-hidden">
       <CardHeader className="px-5 py-4 border-b flex flex-row justify-between items-center">
@@ -60,7 +62,8 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
                     {item.quantity}
                   </TableCell>
                   <TableCell className="px-5 py-4 text-right text-sm font-bold">
-                    ₦{item.price.toLocaleString()}
+                    {getCurrencySymbol(currency)}
+                    {item.price.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
@@ -74,7 +77,8 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
                   Total Amount
                 </TableCell>
                 <TableCell className="px-5 py-3 text-right text-lg font-black text-primary">
-                  ₦{totalAmount.toLocaleString()}
+                  {getCurrencySymbol(currency)}
+                  {totalAmount.toLocaleString()}
                 </TableCell>
               </TableRow>
             </TableFooter>

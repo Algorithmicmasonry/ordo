@@ -123,7 +123,7 @@ export function EmbedOrderFormClient({
         {success && (
           <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
             <p className="text-green-800 dark:text-green-200 text-sm font-medium">
-              Order submitted successfully! We'll contact you shortly.
+              Order submitted successfully! We&pos;ll contact you shortly.
             </p>
           </div>
         )}

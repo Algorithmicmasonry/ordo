@@ -189,6 +189,7 @@ export function AssignedOrdersTable({
       "Location",
       "Date",
       "Total Amount",
+      "Currency",
     ];
     const rows = orders.map((order) => {
       const totalAmount = order.items.reduce(
@@ -204,6 +205,7 @@ export function AssignedOrdersTable({
         `${order.city}, ${order.state}`,
         format(new Date(order.createdAt), "MMM dd, yyyy"),
         totalAmount.toString(),
+        order.currency,
       ];
     });
 

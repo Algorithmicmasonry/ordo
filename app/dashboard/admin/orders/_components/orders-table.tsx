@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { getCurrencySymbol } from "@/lib/currency";
 import type {
   Agent,
   Order,
@@ -427,10 +428,12 @@ export const OrderDetailsModal = ({
                         {item.quantity}
                       </TableCell>
                       <TableCell className="text-right">
-                        ₦{item.product.price.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}
+                        {item.product.price.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        ₦{(item.quantity * item.product.price).toLocaleString()}
+                        {getCurrencySymbol(order.currency)}
+                        {(item.quantity * item.product.price).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -439,7 +442,8 @@ export const OrderDetailsModal = ({
                       Total Amount
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      ₦{totalAmount.toLocaleString()}
+                      {getCurrencySymbol(order.currency)}
+                      {totalAmount.toLocaleString()}
                     </TableCell>
                   </TableRow>
                 </TableBody>

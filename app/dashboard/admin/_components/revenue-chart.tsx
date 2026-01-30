@@ -9,7 +9,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { RevenueTrendData } from "@/lib/types";
-import { formatCurrency } from "@/lib/date-utils";
+import { formatCurrency } from "@/lib/currency";
 
 interface RevenueChartProps {
   data: RevenueTrendData[] | null;

@@ -3,7 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { formatCurrency, formatDateTime } from "@/lib/date-utils";
+import { formatCurrency } from "@/lib/currency";
+import { formatDateTime } from "@/lib/date-utils";
 import type { OrderWithRelations } from "@/lib/types";
 import { OrderStatus } from "@prisma/client";
 import { Eye, ShoppingCart } from "lucide-react";

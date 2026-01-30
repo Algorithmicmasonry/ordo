@@ -7,8 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import type { ProductPackage } from "@prisma/client";
+import { getAvailableCurrencies, getCurrencySymbol } from "@/lib/currency";
+import type { ProductPackage, Currency } from "@prisma/client";
 
 interface PackageFormProps {
   productId: string;
@@ -29,6 +37,7 @@ export function PackageForm({
     quantity: existingPackage?.quantity.toString() || "1",
     price: existingPackage?.price.toString() || "0",
     displayOrder: existingPackage?.displayOrder.toString() || "0",
+    currency: (existingPackage?.currency || "NGN") as Currency,
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,6 +49,7 @@ export function PackageForm({
       description: formData.description.trim() || undefined,
       quantity: parseInt(formData.quantity),
       price: parseFloat(formData.price),
+      currency: formData.currency,
       displayOrder: parseInt(formData.displayOrder),
     };
 
@@ -122,7 +132,9 @@ export function PackageForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="price">Price (₦) *</Label>
+          <Label htmlFor="price">
+            Price ({getCurrencySymbol(formData.currency)}) *
+          </Label>
           <Input
             id="price"
             type="number"
@@ -138,6 +150,30 @@ export function PackageForm({
             Total price for this package
           </p>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="currency">Currency *</Label>
+        <Select
+          value={formData.currency}
+          onValueChange={(value) =>
+            setFormData({ ...formData, currency: value as Currency })
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            {getAvailableCurrencies().map((curr) => (
+              <SelectItem key={curr.code} value={curr.code}>
+                {curr.symbol} - {curr.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Currency for this package pricing
+        </p>
       </div>
 
       <div className="space-y-2">

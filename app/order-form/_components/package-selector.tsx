@@ -1,13 +1,15 @@
 "use client";
 
-import type { ProductPackage } from "@prisma/client";
+import type { ProductPackage, Currency } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface PackageSelectorProps {
   packages: ProductPackage[];
   selectedPackages: string[];
   onToggle: (packageId: string) => void;
   note?: string | null; // Optional note from product settings
+  currency?: Currency; // Currency to display prices in
 }
 
 export function PackageSelector({
@@ -15,14 +17,19 @@ export function PackageSelector({
   selectedPackages,
   onToggle,
   note,
+  currency = "NGN",
 }: PackageSelectorProps) {
+  // Filter packages by selected currency
+  const filteredPackages = packages.filter((pkg) => pkg.currency === currency);
+  const currencySymbol = getCurrencySymbol(currency);
+
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium mb-2">
         Select Your Package:{" "}
         {note && <span className="text-muted-foreground">({note})</span>} *
       </label>
-      {packages.map((pkg) => (
+      {filteredPackages.map((pkg) => (
         <label
           key={pkg.id}
           className={cn(
@@ -49,7 +56,8 @@ export function PackageSelector({
                 )}
               </div>
               <p className="font-bold text-lg whitespace-nowrap ml-4">
-                = ₦{pkg.price.toLocaleString()}
+                = {currencySymbol}
+                {pkg.price.toLocaleString()}
               </p>
             </div>
           </div>

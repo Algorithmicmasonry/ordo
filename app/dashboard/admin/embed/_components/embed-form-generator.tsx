@@ -11,9 +11,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Check, Copy, ExternalLink, Package, PackageX } from "lucide-react";
 import Link from "next/link";
+import { getAvailableCurrencies } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 
 interface Product {
   id: string;
@@ -32,10 +41,14 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
     {},
   );
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<
+    Record<string, Currency>
+  >({});
 
   const generateEmbedUrl = (productId: string) => {
     const baseUrl = window.location.origin;
-    const embedUrl = `${baseUrl}/order-form/embed?product=${productId}`;
+    const currency = selectedCurrency[productId] || "NGN";
+    const embedUrl = `${baseUrl}/order-form/embed?product=${productId}&currency=${currency}`;
     setGeneratedUrls((prev) => ({ ...prev, [productId]: embedUrl }));
     return embedUrl;
   };
@@ -109,12 +122,39 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
 
                   <CardContent className="space-y-3">
                     {!embedUrl ? (
-                      <Button
-                        onClick={() => generateEmbedUrl(product.id)}
-                        className="w-full"
-                      >
-                        Generate Embed URL
-                      </Button>
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">
+                            Select Currency
+                          </label>
+                          <Select
+                            value={selectedCurrency[product.id] || "NGN"}
+                            onValueChange={(value) =>
+                              setSelectedCurrency((prev) => ({
+                                ...prev,
+                                [product.id]: value as Currency,
+                              }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableCurrencies().map((curr) => (
+                                <SelectItem key={curr.code} value={curr.code}>
+                                  {curr.symbol} - {curr.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={() => generateEmbedUrl(product.id)}
+                          className="w-full"
+                        >
+                          Generate Embed URL
+                        </Button>
+                      </>
                     ) : (
                       <div className="space-y-2">
                         <div className="flex gap-2">

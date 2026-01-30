@@ -1,8 +1,9 @@
 import { getProductWithPackages } from "@/app/actions/products";
 import { EmbedOrderFormClient } from "./_components/embed-order-form-client";
+import { parseCurrency } from "@/lib/currency";
 
 interface EmbedOrderFormPageProps {
-  searchParams: Promise<{ product?: string }>;
+  searchParams: Promise<{ product?: string; currency?: string }>;
 }
 
 export default async function EmbedOrderFormPage({
@@ -10,6 +11,7 @@ export default async function EmbedOrderFormPage({
 }: EmbedOrderFormPageProps) {
   const params = await searchParams;
   const productId = params?.product;
+  const currency = parseCurrency(params?.currency);
 
   if (!productId) {
     return (
@@ -49,5 +51,5 @@ export default async function EmbedOrderFormPage({
     );
   }
 
-  return <EmbedOrderFormClient product={result.data} />;
+  return <EmbedOrderFormClient product={result.data} currency={currency} />;
 }

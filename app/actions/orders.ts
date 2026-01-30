@@ -12,6 +12,7 @@ import {
   determineOrderSource,
   formatUTMSource,
 } from "@/lib/utm-parser";
+import { formatCurrency } from "@/lib/currency";
 
 /**
  * Create a new order from the embedded form
@@ -132,7 +133,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
       };
     }
 
-    // Get product and packages
+    // Get product and packages (filter by currency)
     const product = await db.product.findUnique({
       where: { id: data.productId },
       include: {
@@ -140,6 +141,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
           where: {
             id: { in: data.selectedPackages },
             isActive: true,
+            currency: data.currency,
           },
         },
       },
@@ -190,6 +192,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
         state: data.state,
         city: data.city,
         source: orderSource,
+        currency: data.currency,
         utmSource,
         referrer: data.referrer,
         totalAmount,
@@ -212,7 +215,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
     // Notify the assigned sales rep (push notification)
     await notifySalesRep(assignedToId, {
       title: "New Order Assigned 📦",
-      body: `Order ${order.orderNumber} from ${order.customerName} - ₦${order.totalAmount.toLocaleString()}`,
+      body: `Order ${order.orderNumber} from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/sales-rep/orders/${order.id}`,
       orderId: order.id,
     });
@@ -222,7 +225,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
       userId: assignedToId,
       type: "ORDER_ASSIGNED",
       title: "New Order Assigned",
-      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ₦${order.totalAmount.toLocaleString()}`,
+      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ${formatCurrency(order.totalAmount, data.currency)}`,
       link: `/dashboard/sales-rep/orders/${order.id}`,
       orderId: order.id,
     });
@@ -238,7 +241,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
       userIds: admins.map((a) => a.id),
       type: "NEW_ORDER",
       title: "New Order Received",
-      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ₦${order.totalAmount.toLocaleString()}`,
+      message: `Order ${order.orderNumber} from ${order.customerName} (${order.customerPhone}) - ${formatCurrency(order.totalAmount, data.currency)}`,
       link: `/dashboard/admin/orders/${order.id}`,
       orderId: order.id,
     });
@@ -246,7 +249,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
     // Send push notifications to admins
     await notifyAdmins({
       title: "New Order Received 📦",
-      body: `Order ${order.orderNumber} from ${order.customerName} - ₦${order.totalAmount.toLocaleString()}`,
+      body: `Order ${order.orderNumber} from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/admin/orders/${order.id}`,
       orderId: order.id,
     });

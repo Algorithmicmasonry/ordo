@@ -5,15 +5,19 @@ import { createOrderV2 } from "@/app/actions/orders";
 import { PackageSelector } from "@/app/order-form/_components/package-selector";
 import { PayOnDeliveryBadge } from "@/app/order-form/_components/pay-on-delivery-badge";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
-import type { ProductWithPackages } from "@/lib/types";
+import type { ProductWithPackages, Currency } from "@/lib/types";
 import type { UTMParams } from "@/lib/utm-parser";
 import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
 
 interface EmbedOrderFormClientProps {
   product: ProductWithPackages;
+  currency: Currency;
 }
 
-export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
+export function EmbedOrderFormClient({
+  product,
+  currency,
+}: EmbedOrderFormClientProps) {
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -76,6 +80,7 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
       city: formData.city,
       productId: product.id,
       selectedPackages,
+      currency,
       utmParams,
       referrer,
     });
@@ -256,6 +261,7 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
               selectedPackages={selectedPackages}
               onToggle={handlePackageToggle}
               note={product.packageSelectorNote}
+              currency={currency}
             />
           </div>
           <PayOnDeliveryBadge />

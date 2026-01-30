@@ -6,9 +6,10 @@ import { getActiveProducts, getProductWithPackages } from "@/app/actions/product
 import { PackageSelector } from "./_components/package-selector";
 import { PayOnDeliveryBadge } from "./_components/pay-on-delivery-badge";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
-import type { ProductPackage } from "@prisma/client";
+import type { ProductPackage, Currency } from "@prisma/client";
 import type { UTMParams } from "@/lib/utm-parser";
 import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
+import { getAvailableCurrencies } from "@/lib/currency";
 
 type Product = {
   id: string;
@@ -23,6 +24,7 @@ export default function OrderFormPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Store full product with packages
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>("NGN");
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -117,6 +119,7 @@ export default function OrderFormPage() {
       city: formData.city,
       productId: selectedProductId,
       selectedPackages,
+      currency: selectedCurrency,
       utmParams,
       referrer,
     });
@@ -169,6 +172,25 @@ export default function OrderFormPage() {
             {/* Pay on Delivery Badge */}
             <PayOnDeliveryBadge />
 
+            {/* Currency Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Currency *
+              </label>
+              <select
+                required
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                {getAvailableCurrencies().map((curr) => (
+                  <option key={curr.code} value={curr.code}>
+                    {curr.symbol} - {curr.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Product Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -204,6 +226,7 @@ export default function OrderFormPage() {
                 selectedPackages={selectedPackages}
                 onToggle={handlePackageToggle}
                 note={selectedProduct?.packageSelectorNote}
+                currency={selectedCurrency}
               />
             )}
 

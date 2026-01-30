@@ -9,6 +9,7 @@ import {
   Agent,
   OrderItem,
   OrderNote,
+  Currency,
 } from "@prisma/client";
 import type { UTMParams } from "./utm-parser";
 
@@ -78,6 +79,7 @@ export interface OrderFormDataV2 {
   city: string;
   productId: string;
   selectedPackages: string[]; // Array of package IDs
+  currency: Currency; // Currency for this order
   utmParams?: UTMParams;
   referrer?: string;
 }
@@ -133,7 +135,7 @@ export interface RecentOrder {
   status: OrderStatus;
 }
 
-export { OrderStatus, OrderSource, UserRole };
+export { OrderStatus, OrderSource, UserRole, Currency };
 
 export type OrderWithRelations = Order & {
   assignedTo: Pick<User, "id" | "name" | "email"> | null;

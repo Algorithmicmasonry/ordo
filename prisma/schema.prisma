@@ -43,6 +43,14 @@ enum NotificationType {
   GENERAL
 }
 
+enum Currency {
+  NGN // Nigerian Naira (₦)
+  GHS // Ghanaian Cedi (GH₵)
+  USD // US Dollar ($)
+  GBP // British Pound (£)
+  EUR // Euro (€)
+}
+
 // User Model
 
 model User {
@@ -160,6 +168,7 @@ model ProductPackage {
   description String? // e.g., "1 BOX OF PLANT HAIR DYE SHAMPOO + FREE DELIVERY"
   quantity    Int // Number of items in this package
   price       Float // Price for this package
+  currency    Currency @default(NGN) // Currency for this package price
   isActive    Boolean @default(true)
   displayOrder Int @default(0) // For ordering packages in UI
 
@@ -167,6 +176,7 @@ model ProductPackage {
   updatedAt DateTime @updatedAt
 
   @@index([productId, isActive])
+  @@index([productId, currency])
   @@map("product_packages")
 }
 
@@ -255,6 +265,7 @@ model Order {
   source      OrderSource
   utmSource   String?     // Detailed UTM tracking (e.g., "facebook_winter_sale")
   referrer    String?     // Fallback referrer domain
+  currency    Currency    @default(NGN) // Currency used for this order
   totalAmount Float       @default(0)
 
   // Assignment (Round-robin)

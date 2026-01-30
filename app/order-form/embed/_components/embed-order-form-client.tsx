@@ -7,10 +7,7 @@ import { PayOnDeliveryBadge } from "@/app/order-form/_components/pay-on-delivery
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
 import type { ProductWithPackages } from "@/lib/types";
 import type { UTMParams } from "@/lib/utm-parser";
-import {
-  parseUTMParams,
-  extractReferrerDomain,
-} from "@/lib/utm-parser";
+import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
 
 interface EmbedOrderFormClientProps {
   product: ProductWithPackages;
@@ -36,13 +33,18 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
   // Capture UTM params and referrer on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Parse UTM parameters
+      // Use startTransition or batch the updates
       const params = parseUTMParams(window.location.href);
-      if (params.source) setUtmParams(params);
-
-      // Extract referrer
       const ref = extractReferrerDomain();
-      if (ref) setReferrer(ref);
+
+      // Batch state updates using a single effect execution
+      if (params.source || ref) {
+        // Use a microtask to batch updates
+        Promise.resolve().then(() => {
+          if (params.source) setUtmParams(params);
+          if (ref) setReferrer(ref);
+        });
+      }
     }
   }, []);
 
@@ -100,6 +102,7 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
 
   return (
     <div className="w-full p-4 md:p-6">
+      {/* Rest of your JSX remains the same */}
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -127,19 +130,6 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Pay on Delivery Badge */}
-          <PayOnDeliveryBadge />
-
-          {/* Package Selection */}
-          <div>
-            <PackageSelector
-              packages={product.packages}
-              selectedPackages={selectedPackages}
-              onToggle={handlePackageToggle}
-            />
-          </div>
-
-          {/* Customer Information */}
           <div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
               Customer Information
@@ -178,10 +168,11 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  WhatsApp Number (Optional)
+                  WhatsApp Number *
                 </label>
                 <input
                   type="tel"
+                  required
                   value={formData.customerWhatsapp}
                   onChange={(e) =>
                     setFormData({
@@ -195,7 +186,6 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
             </div>
           </div>
 
-          {/* Delivery Information */}
           <div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
               Delivery Information
@@ -260,12 +250,20 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
             </div>
           </div>
 
+          <div>
+            <PackageSelector
+              packages={product.packages}
+              selectedPackages={selectedPackages}
+              onToggle={handlePackageToggle}
+            />
+          </div>
+          <PayOnDeliveryBadge />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md text-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer "
           >
-            {loading ? "Submitting..." : "Submit Order"}
+            {loading ? "Submitting..." : "PLACE MY ORDER"}
           </button>
         </form>
 

@@ -11,11 +11,15 @@ export const metadata = {
   description: "Manage your account settings and preferences",
 };
 
-export default async function SettingsPage() {
+export default async function AdminSettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session?.user) {
     redirect("/login");
+  }
+
+  if (session.user.role !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   return (
@@ -23,7 +27,7 @@ export default async function SettingsPage() {
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
         <Link
-          href="/dashboard"
+          href="/dashboard/admin"
           className="text-muted-foreground hover:text-primary font-medium"
         >
           Dashboard

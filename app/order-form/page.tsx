@@ -20,6 +20,7 @@ type Product = {
 export default function OrderFormPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [packages, setPackages] = useState<ProductPackage[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null); // Store full product with packages
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
@@ -62,6 +63,7 @@ export default function OrderFormPage() {
     setSelectedProductId(productId);
     setSelectedPackages([]);
     setPackages([]);
+    setSelectedProduct(null);
     setError("");
 
     if (!productId) return;
@@ -71,6 +73,7 @@ export default function OrderFormPage() {
     setLoadingPackages(false);
 
     if (result.success && result.data) {
+      setSelectedProduct(result.data); // Store full product object
       setPackages(result.data.packages);
     } else {
       setError(
@@ -200,6 +203,7 @@ export default function OrderFormPage() {
                 packages={packages}
                 selectedPackages={selectedPackages}
                 onToggle={handlePackageToggle}
+                note={selectedProduct?.packageSelectorNote}
               />
             )}
 

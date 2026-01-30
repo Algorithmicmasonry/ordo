@@ -255,6 +255,7 @@ export function EmbedOrderFormClient({ product }: EmbedOrderFormClientProps) {
               packages={product.packages}
               selectedPackages={selectedPackages}
               onToggle={handlePackageToggle}
+              note={product.packageSelectorNote}
             />
           </div>
           <PayOnDeliveryBadge />

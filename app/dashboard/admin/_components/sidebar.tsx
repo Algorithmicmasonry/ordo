@@ -91,7 +91,7 @@ const routes = [
   {
     label: "Settings",
     icon: Settings,
-    href: "/dashboard/settings",
+    href: "/dashboard/admin/settings",
   },
 ];
 

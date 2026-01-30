@@ -129,6 +129,9 @@ model Product {
   isDeleted   Boolean   @default(false) // Soft delete flag
   deletedAt   DateTime? // When product was soft deleted
 
+  // Package selector note (displayed above package options on order form)
+  packageSelectorNote String? // e.g., "NOTE: ONE BOX CONTAINS 10PCS INSIDE"
+
   // Inventory tracking
   openingStock Int @default(0)
   currentStock Int @default(0)

@@ -7,17 +7,20 @@ interface PackageSelectorProps {
   packages: ProductPackage[];
   selectedPackages: string[];
   onToggle: (packageId: string) => void;
+  note?: string | null; // Optional note from product settings
 }
 
 export function PackageSelector({
   packages,
   selectedPackages,
   onToggle,
+  note,
 }: PackageSelectorProps) {
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium mb-2">
-        Select Your Package: (NOTE: ONE BOX CONTAINS 10PCS INSIDE) *
+        Select Your Package:{" "}
+        {note && <span className="text-muted-foreground">({note})</span>} *
       </label>
       {packages.map((pkg) => (
         <label

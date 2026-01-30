@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
-import { getRecentNotifications, markAllAsRead } from "@/app/actions/notifications";
+import {
+  getRecentNotifications,
+  markAllAsRead,
+} from "@/app/actions/notifications";
 import { NotificationItem } from "./notification-item";
 import type { Notification } from "@prisma/client";
 
@@ -14,35 +17,49 @@ interface NotificationDropdownProps {
   onUpdate: () => void;
 }
 
-export function NotificationDropdown({ onViewAll, onUpdate }: NotificationDropdownProps) {
+export function NotificationDropdown({
+  onViewAll,
+  onUpdate,
+}: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [markingAllRead, setMarkingAllRead] = useState(false);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  async function fetchNotifications() {
-    setLoading(true);
-    const result = await getRecentNotifications();
-    if (result.success && result.data) {
-      setNotifications(result.data);
-    }
-    setLoading(false);
-  }
 
   async function handleMarkAllRead() {
     setMarkingAllRead(true);
     const result = await markAllAsRead();
     if (result.success) {
       setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, isRead: true }))
+        prev.map((notif) => ({ ...notif, isRead: true })),
       );
       onUpdate();
     }
     setMarkingAllRead(false);
   }
+
+  // Move fetchNotifications inside useEffect
+  useEffect(() => {
+    async function fetchNotifications() {
+      setLoading(true);
+      const result = await getRecentNotifications();
+      if (result.success && result.data) {
+        setNotifications(result.data);
+      }
+      setLoading(false);
+    }
+
+    fetchNotifications();
+  }, []);
+
+  // Create a separate function for manual refresh if needed
+  const refreshNotifications = async () => {
+    setLoading(true);
+    const result = await getRecentNotifications();
+    if (result.success && result.data) {
+      setNotifications(result.data);
+    }
+    setLoading(false);
+  };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -75,7 +92,6 @@ export function NotificationDropdown({ onViewAll, onUpdate }: NotificationDropdo
           </Button>
         )}
       </div>
-
       <Separator />
 
       {/* Notifications List */}
@@ -91,7 +107,7 @@ export function NotificationDropdown({ onViewAll, onUpdate }: NotificationDropdo
               No notifications yet
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              You'll see updates about orders and activities here
+              You&pos;ll see updates about orders and activities here
             </p>
           </div>
         ) : (
@@ -101,7 +117,7 @@ export function NotificationDropdown({ onViewAll, onUpdate }: NotificationDropdo
                 key={notification.id}
                 notification={notification}
                 onUpdate={() => {
-                  fetchNotifications();
+                  refreshNotifications();
                   onUpdate();
                 }}
               />

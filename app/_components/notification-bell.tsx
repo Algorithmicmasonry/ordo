@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getUnreadCount, getRecentNotifications } from "@/app/actions/notifications";
+import { getUnreadCount } from "@/app/actions/notifications";
 import { NotificationDropdown } from "./notification-dropdown";
 import { useRouter } from "next/navigation";
 
@@ -17,22 +17,22 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
+  // Define fetchUnreadCount BEFORE using it
+  const fetchUnreadCount = async () => {
+    const result = await getUnreadCount();
+    if (result.success && typeof result.count === "number") {
+      setUnreadCount(result.count);
+    }
+  };
+
   // Fetch unread count on mount and periodically
   useEffect(() => {
     fetchUnreadCount();
 
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000);
-
     return () => clearInterval(interval);
   }, []);
-
-  async function fetchUnreadCount() {
-    const result = await getUnreadCount();
-    if (result.success && typeof result.count === "number") {
-      setUnreadCount(result.count);
-    }
-  }
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);

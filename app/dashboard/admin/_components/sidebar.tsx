@@ -86,7 +86,12 @@ const routes = [
   {
     label: "Embed Form",
     icon: Code2,
-    href: "/dashboard/admin/embed-form",
+    href: "/dashboard/admin/embed",
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: "/dashboard/settings",
   },
 ];
 

@@ -1,22 +1,33 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { createOrder } from "@/app/actions/orders"
-import { getActiveProducts } from "@/app/actions/products"
-import { OrderSource } from "@prisma/client"
+import { useState, useEffect } from "react";
+import { createOrderV2 } from "@/app/actions/orders";
+import { getActiveProducts, getProductWithPackages } from "@/app/actions/products";
+import { PackageSelector } from "./_components/package-selector";
+import { PayOnDeliveryBadge } from "./_components/pay-on-delivery-badge";
+import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import type { ProductPackage } from "@prisma/client";
+import type { UTMParams } from "@/lib/utm-parser";
+import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
 
 type Product = {
-  id: string
-  name: string
-  price: number
-  currentStock: number
-}
+  id: string;
+  name: string;
+  price: number;
+  currentStock: number;
+};
 
 export default function OrderFormPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState("")
+  const [products, setProducts] = useState<Product[]>([]);
+  const [packages, setPackages] = useState<ProductPackage[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [utmParams, setUtmParams] = useState<UTMParams | undefined>();
+  const [referrer, setReferrer] = useState<string | undefined>();
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -25,53 +36,92 @@ export default function OrderFormPage() {
     deliveryAddress: "",
     state: "",
     city: "",
-    source: "WEBSITE" as OrderSource,
-    productId: "",
-    quantity: 1,
-  })
+  });
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    loadProducts();
+
+    // Capture UTM params and referrer on mount
+    if (typeof window !== "undefined") {
+      const params = parseUTMParams(window.location.href);
+      if (params.source) setUtmParams(params);
+
+      const ref = extractReferrerDomain();
+      if (ref) setReferrer(ref);
+    }
+  }, []);
 
   async function loadProducts() {
-    const result = await getActiveProducts()
+    const result = await getActiveProducts();
     if (result.success && result.products) {
-      setProducts(result.products)
+      setProducts(result.products);
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
+  async function handleProductChange(productId: string) {
+    setSelectedProductId(productId);
+    setSelectedPackages([]);
+    setPackages([]);
+    setError("");
 
-    if (!formData.productId) {
-      setError("Please select a product")
-      setLoading(false)
-      return
+    if (!productId) return;
+
+    setLoadingPackages(true);
+    const result = await getProductWithPackages(productId);
+    setLoadingPackages(false);
+
+    if (result.success && result.data) {
+      setPackages(result.data.packages);
+    } else {
+      setError(
+        result.error ||
+          "This product has no available packages. Please select another product.",
+      );
+    }
+  }
+
+  function handlePackageToggle(packageId: string) {
+    setSelectedPackages((prev) =>
+      prev.includes(packageId)
+        ? prev.filter((id) => id !== packageId)
+        : [...prev, packageId],
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!selectedProductId) {
+      setError("Please select a product");
+      setLoading(false);
+      return;
     }
 
-    const result = await createOrder({
+    if (selectedPackages.length === 0) {
+      setError("Please select at least one package");
+      setLoading(false);
+      return;
+    }
+
+    const result = await createOrderV2({
       customerName: formData.customerName,
       customerPhone: formData.customerPhone,
       customerWhatsapp: formData.customerWhatsapp || undefined,
       deliveryAddress: formData.deliveryAddress,
       state: formData.state,
       city: formData.city,
-      source: formData.source,
-      items: [
-        {
-          productId: formData.productId,
-          quantity: formData.quantity,
-        },
-      ],
-    })
+      productId: selectedProductId,
+      selectedPackages,
+      utmParams,
+      referrer,
+    });
 
-    setLoading(false)
+    setLoading(false);
 
     if (result.success) {
-      setSuccess(true)
+      setSuccess(true);
       setFormData({
         customerName: "",
         customerPhone: "",
@@ -79,49 +129,89 @@ export default function OrderFormPage() {
         deliveryAddress: "",
         state: "",
         city: "",
-        source: "WEBSITE",
-        productId: "",
-        quantity: 1,
-      })
+      });
+      setSelectedProductId("");
+      setSelectedPackages([]);
+      setPackages([]);
 
-      setTimeout(() => setSuccess(false), 5000)
+      setTimeout(() => setSuccess(false), 5000);
     } else {
-      setError(result.error || "Failed to submit order")
+      setError(result.error || "Failed to submit order");
     }
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-950 p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 md:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
             Place Your Order
           </h1>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-green-800 font-medium">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+              <p className="text-green-800 dark:text-green-200 font-medium">
                 Order submitted successfully! We'll contact you shortly.
               </p>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-800">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Pay on Delivery Badge */}
+            <PayOnDeliveryBadge />
+
+            {/* Product Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Product *
+              </label>
+              <select
+                required
+                value={selectedProductId}
+                onChange={(e) => handleProductChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                <option value="">Choose a product</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Package Selection */}
+            {loadingPackages && (
+              <div className="text-center py-4">
+                <p className="text-gray-600 dark:text-gray-400">
+                  Loading packages...
+                </p>
+              </div>
+            )}
+
+            {packages.length > 0 && !loadingPackages && (
+              <PackageSelector
+                packages={packages}
+                selectedPackages={selectedPackages}
+                onToggle={handlePackageToggle}
+              />
+            )}
+
             {/* Customer Information */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Customer Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Full Name *
                   </label>
                   <input
@@ -131,12 +221,12 @@ export default function OrderFormPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, customerName: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Phone Number *
                   </label>
                   <input
@@ -146,12 +236,12 @@ export default function OrderFormPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, customerPhone: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     WhatsApp Number (Optional)
                   </label>
                   <input
@@ -163,7 +253,7 @@ export default function OrderFormPage() {
                         customerWhatsapp: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
@@ -171,13 +261,13 @@ export default function OrderFormPage() {
 
             {/* Delivery Information */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Delivery Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Delivery Address *
                   </label>
                   <textarea
@@ -190,28 +280,34 @@ export default function OrderFormPage() {
                         deliveryAddress: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       State *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       required
                       value={formData.state}
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="">Select state</option>
+                      {NIGERIA_STATES.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       City *
                     </label>
                     <input
@@ -221,87 +317,16 @@ export default function OrderFormPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Order Details */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Order Details
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product *
-                  </label>
-                  <select
-                    required
-                    value={formData.productId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, productId: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a product</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} - ₦{product.price.toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        quantity: parseInt(e.target.value) || 1,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    How did you hear about us? *
-                  </label>
-                  <select
-                    required
-                    value={formData.source}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        source: e.target.value as OrderSource,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="WEBSITE">Website</option>
-                    <option value="FACEBOOK">Facebook</option>
-                    <option value="TIKTOK">TikTok</option>
-                    <option value="WHATSAPP">WhatsApp</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !selectedProductId || selectedPackages.length === 0}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Submitting..." : "Submit Order"}
@@ -309,10 +334,10 @@ export default function OrderFormPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
           By submitting this form, you agree to be contacted by our sales team.
         </p>
       </div>
     </div>
-  )
+  );
 }

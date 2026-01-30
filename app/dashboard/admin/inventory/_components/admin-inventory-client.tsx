@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,6 +28,7 @@ import {
   Filter,
   Loader2,
   Package,
+  PackageOpen,
   Plus,
   RefreshCw,
   Search,
@@ -378,6 +380,15 @@ export default function AdminInventoryClient({
                               <ProductDetailsModal product={product} />
                             </DialogContent>
                           </Dialog>
+
+                          <Link
+                            href={`/dashboard/admin/inventory/${product.id}/packages`}
+                          >
+                            <Button size="sm" variant="outline" className="gap-2">
+                              <PackageOpen className="size-4" />
+                              Packages
+                            </Button>
+                          </Link>
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>

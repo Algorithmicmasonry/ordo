@@ -17,16 +17,16 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  // Define fetchUnreadCount BEFORE using it
-  const fetchUnreadCount = async () => {
-    const result = await getUnreadCount();
-    if (result.success && typeof result.count === "number") {
-      setUnreadCount(result.count);
-    }
-  };
-
   // Fetch unread count on mount and periodically
   useEffect(() => {
+    // Define the function inside useEffect
+    async function fetchUnreadCount() {
+      const result = await getUnreadCount();
+      if (result.success && typeof result.count === "number") {
+        setUnreadCount(result.count);
+      }
+    }
+
     fetchUnreadCount();
 
     // Poll for new notifications every 30 seconds
@@ -34,11 +34,19 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, []);
 
+  // Separate function for manual refresh (outside useEffect)
+  const refreshUnreadCount = async () => {
+    const result = await getUnreadCount();
+    if (result.success && typeof result.count === "number") {
+      setUnreadCount(result.count);
+    }
+  };
+
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
       // Refresh unread count when dropdown opens
-      fetchUnreadCount();
+      refreshUnreadCount();
     }
   };
 
@@ -67,7 +75,7 @@ export function NotificationBell() {
       <PopoverContent className="w-96 p-0" align="end">
         <NotificationDropdown
           onViewAll={handleViewAll}
-          onUpdate={fetchUnreadCount}
+          onUpdate={refreshUnreadCount}
         />
       </PopoverContent>
     </Popover>

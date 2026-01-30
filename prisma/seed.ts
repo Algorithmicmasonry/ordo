@@ -488,20 +488,27 @@ async function main() {
   // ============================================
 
   const expenseTypes = [
-    { type: 'ad_spend', description: 'Facebook Ads Campaign - Electronics' },
-    { type: 'ad_spend', description: 'TikTok Marketing - January Campaign' },
-    { type: 'delivery', description: 'Courier services - Lagos deliveries' },
-    { type: 'delivery', description: 'Fuel and logistics - Abuja zone' },
-    { type: 'shipping', description: 'Import shipping from China' },
-    { type: 'clearing', description: 'Customs clearing charges' },
-    { type: 'other', description: 'Office supplies and utilities' },
+    { type: 'ad_spend', description: 'Facebook Ads Campaign - Electronics', currency: Currency.NGN },
+    { type: 'ad_spend', description: 'TikTok Marketing - January Campaign', currency: Currency.NGN },
+    { type: 'ad_spend', description: 'Facebook Ads Campaign - Ghana Market', currency: Currency.GHS },
+    { type: 'delivery', description: 'Courier services - Lagos deliveries', currency: Currency.NGN },
+    { type: 'delivery', description: 'Fuel and logistics - Abuja zone', currency: Currency.NGN },
+    { type: 'delivery', description: 'Courier services - Accra deliveries', currency: Currency.GHS },
+    { type: 'shipping', description: 'Import shipping from China', currency: Currency.NGN },
+    { type: 'clearing', description: 'Customs clearing charges', currency: Currency.NGN },
+    { type: 'other', description: 'Office supplies and utilities', currency: Currency.NGN },
   ]
 
   for (const expense of expenseTypes) {
+    const amount = expense.currency === Currency.GHS
+      ? Math.floor(Math.random() * 800) + 200  // GHS amounts (smaller numbers)
+      : Math.floor(Math.random() * 100000) + 20000  // NGN amounts
+
     await prisma.expense.create({
       data: {
         type: expense.type,
-        amount: Math.floor(Math.random() * 100000) + 20000,
+        amount,
+        currency: expense.currency,
         description: expense.description,
         productId: Math.random() > 0.5 ? randomItem(products).id : null,
         date: getRandomDateInLastNDays(30),

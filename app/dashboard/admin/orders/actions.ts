@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { OrderStatus, OrderSource, Prisma } from "@prisma/client";
+import { OrderStatus, OrderSource, Currency, Prisma } from "@prisma/client";
 import type { TimePeriod } from "@/lib/types";
 
 // Define the exact type that matches what Prisma returns
@@ -50,6 +50,7 @@ export type OrderFilters = {
   source?: OrderSource;
   location?: string;
   search?: string;
+  currency?: Currency;
 };
 
 export type PaginationParams = {
@@ -145,6 +146,10 @@ export async function getOrders(
         { city: { contains: filters.location, mode: "insensitive" } },
         { state: { contains: filters.location, mode: "insensitive" } },
       ];
+    }
+
+    if (filters.currency) {
+      where.currency = filters.currency;
     }
 
     if (filters.search) {

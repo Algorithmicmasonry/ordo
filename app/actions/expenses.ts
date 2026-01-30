@@ -10,6 +10,7 @@ export async function createExpense(data: {
   productId?: string
   type: string
   amount: number
+  currency?: import("@prisma/client").Currency
   description?: string
   date?: Date
 }) {
@@ -17,6 +18,7 @@ export async function createExpense(data: {
     const expense = await db.expense.create({
       data: {
         ...data,
+        currency: data.currency || "NGN",
         date: data.date || new Date(),
       },
     })
@@ -40,6 +42,7 @@ export async function updateExpense(
     productId?: string
     type?: string
     amount?: number
+    currency?: import("@prisma/client").Currency
     description?: string
     date?: Date
   }

@@ -17,7 +17,9 @@
       "Bash(npm run build)",
       "Bash(pnpm run build:*)",
       "Bash(pnpm add:*)",
-      "Bash(npx web-push:*)"
+      "Bash(npx web-push:*)",
+      "Bash(git push)",
+      "Bash(grep:*)"
     ]
   }
 }

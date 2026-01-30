@@ -273,7 +273,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
               <TableHead>Primary Zone</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Success Rate</TableHead>
-              <TableHead>Stock Value (₦)</TableHead>
+              <TableHead>Stock Value</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -328,7 +328,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">
-                    ₦{agent.stockValue.toLocaleString()}
+                    ₦{agent.stockValue.toLocaleString()} <span className="text-xs text-muted-foreground">(NGN)</span>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

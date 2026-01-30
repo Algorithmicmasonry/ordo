@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { OrdersStats } from "./_components";
 import { OrdersTable } from "./_components";
 import { getOrders, getOrderStats, getUniqueLocations } from "./actions";
-import { OrderStatus, OrderSource } from "@prisma/client";
+import { OrderStatus, OrderSource, Currency } from "@prisma/client";
 import { DashboardHeader, PeriodFilter } from "../_components";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -16,7 +16,8 @@ type SearchParams = {
   source?: OrderSource;
   location?: string;
   search?: string;
-  period?: string; // Add period parameter
+  period?: string;
+  currency?: Currency; // Add currency filter
 };
 
 export default async function OrdersPage({
@@ -51,6 +52,7 @@ export default async function OrdersPage({
     source: searchParameter.source,
     location: searchParameter.location,
     search: searchParameter.search,
+    currency: searchParameter.currency,
   };
 
   // Fetch data with period

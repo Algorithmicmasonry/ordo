@@ -32,10 +32,13 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { createExpense } from "@/app/actions/expenses";
 import { useRouter } from "next/navigation";
+import { getAvailableCurrencies, getCurrencySymbol } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 
 const expenseSchema = z.object({
   type: z.enum(["ad_spend", "delivery", "shipping", "clearing", "other"]),
   amount: z.number().positive("Amount must be greater than 0"),
+  currency: z.enum(["NGN", "GHS", "USD", "GBP", "EUR"]),
   date: z.string(),
   productId: z.string().optional(),
   description: z.string().optional(),
@@ -62,6 +65,7 @@ export function AddExpenseModal({
     defaultValues: {
       type: "other",
       amount: 0,
+      currency: "NGN",
       date: new Date().toISOString().split("T")[0],
       productId: "general",
       description: "",
@@ -74,6 +78,7 @@ export function AddExpenseModal({
       const result = await createExpense({
         type: values.type,
         amount: values.amount,
+        currency: values.currency as Currency,
         date: new Date(values.date),
         productId:
           values.productId === "general" ? undefined : values.productId,
@@ -138,7 +143,9 @@ export function AddExpenseModal({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount (₦)</FormLabel>
+                  <FormLabel>
+                    Amount ({getCurrencySymbol(form.watch("currency") as Currency)})
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -149,6 +156,35 @@ export function AddExpenseModal({
                       }
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Currency */}
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getAvailableCurrencies().map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          {curr.symbol} - {curr.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

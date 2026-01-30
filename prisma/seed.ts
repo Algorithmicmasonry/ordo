@@ -1,4 +1,4 @@
-import { PrismaClient, OrderStatus, OrderSource } from '@prisma/client'
+import { PrismaClient, OrderStatus, OrderSource, Currency } from '@prisma/client'
 import { auth } from '../lib/auth'
 
 const prisma = new PrismaClient()
@@ -156,6 +156,93 @@ async function main() {
   }
 
   // ============================================
+  // 2.1 CREATE PRODUCT PACKAGES (Multi-Currency)
+  // ============================================
+
+  console.log('Creating product packages...')
+
+  // Create packages for each product in both NGN and GHS currencies
+  for (const product of products) {
+    // NGN Packages (Nigerian Naira)
+    await prisma.productPackage.upsert({
+      where: {
+        id: `${product.id}-ngn-regular`
+      },
+      update: {},
+      create: {
+        id: `${product.id}-ngn-regular`,
+        productId: product.id,
+        name: 'Regular',
+        description: '1 unit with standard delivery',
+        quantity: 1,
+        price: product.price,
+        currency: Currency.NGN,
+        displayOrder: 0,
+        isActive: true,
+      },
+    })
+
+    await prisma.productPackage.upsert({
+      where: {
+        id: `${product.id}-ngn-double`
+      },
+      update: {},
+      create: {
+        id: `${product.id}-ngn-double`,
+        productId: product.id,
+        name: 'Double Pack',
+        description: '2 units with free express delivery',
+        quantity: 2,
+        price: product.price * 1.85, // 7.5% discount
+        currency: Currency.NGN,
+        displayOrder: 1,
+        isActive: true,
+      },
+    })
+
+    // GHS Packages (Ghanaian Cedi) - Convert NGN to GHS (approximate rate: 1 GHS = 130 NGN)
+    const ghsPrice = Math.round(product.price / 130)
+
+    await prisma.productPackage.upsert({
+      where: {
+        id: `${product.id}-ghs-regular`
+      },
+      update: {},
+      create: {
+        id: `${product.id}-ghs-regular`,
+        productId: product.id,
+        name: 'Regular',
+        description: '1 unit with standard delivery',
+        quantity: 1,
+        price: ghsPrice,
+        currency: Currency.GHS,
+        displayOrder: 0,
+        isActive: true,
+      },
+    })
+
+    await prisma.productPackage.upsert({
+      where: {
+        id: `${product.id}-ghs-double`
+      },
+      update: {},
+      create: {
+        id: `${product.id}-ghs-double`,
+        productId: product.id,
+        name: 'Double Pack',
+        description: '2 units with free express delivery',
+        quantity: 2,
+        price: Math.round(ghsPrice * 1.85), // 7.5% discount
+        currency: Currency.GHS,
+        displayOrder: 1,
+        isActive: true,
+      },
+    })
+  }
+
+  console.log('✅ Created product packages (NGN and GHS currencies)')
+
+  // ============================================
   // 3. CREATE AGENTS
   // ============================================
 
@@ -201,7 +288,7 @@ async function main() {
   console.log('✅ Assigned stock to agents')
 
   // ============================================
-  // 4. CREATE ORDERS
+  // 4. CREATE ORDERS (Multi-Currency)
   // ============================================
 
   const nigerianNames = [
@@ -216,18 +303,37 @@ async function main() {
     'Victor Odili', 'Mercy Bassey', 'Suleiman Baba', 'Rita Nnamdi',
   ]
 
-  const cities = [
-    { city: 'Lagos', state: 'Lagos State' },
-    { city: 'Ikeja', state: 'Lagos State' },
-    { city: 'Abuja', state: 'FCT' },
-    { city: 'Port Harcourt', state: 'Rivers State' },
-    { city: 'Ibadan', state: 'Oyo State' },
-    { city: 'Kano', state: 'Kano State' },
-    { city: 'Enugu', state: 'Enugu State' },
-    { city: 'Benin City', state: 'Edo State' },
-    { city: 'Owerri', state: 'Imo State' },
-    { city: 'Kaduna', state: 'Kaduna State' },
+  const ghanaianNames = [
+    'Kwame Mensah', 'Ama Asante', 'Kofi Owusu', 'Abena Boateng',
+    'Kwesi Adjei', 'Akosua Agyei', 'Yaw Appiah', 'Efua Darko',
+    'Kwabena Osei', 'Adwoa Frimpong', 'Kojo Gyasi', 'Akua Danso',
+    'Fiifi Antwi', 'Afia Ofori', 'Ekow Ansah', 'Esi Acquah',
   ]
+
+  const nigerianCities = [
+    { city: 'Lagos', state: 'Lagos State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Ikeja', state: 'Lagos State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Abuja', state: 'FCT', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Port Harcourt', state: 'Rivers State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Ibadan', state: 'Oyo State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Kano', state: 'Kano State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Enugu', state: 'Enugu State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Benin City', state: 'Edo State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Owerri', state: 'Imo State', country: 'Nigeria', currency: Currency.NGN },
+    { city: 'Kaduna', state: 'Kaduna State', country: 'Nigeria', currency: Currency.NGN },
+  ]
+
+  const ghanaianCities = [
+    { city: 'Accra', state: 'Greater Accra', country: 'Ghana', currency: Currency.GHS },
+    { city: 'Kumasi', state: 'Ashanti', country: 'Ghana', currency: Currency.GHS },
+    { city: 'Tamale', state: 'Northern', country: 'Ghana', currency: Currency.GHS },
+    { city: 'Takoradi', state: 'Western', country: 'Ghana', currency: Currency.GHS },
+    { city: 'Cape Coast', state: 'Central', country: 'Ghana', currency: Currency.GHS },
+    { city: 'Tema', state: 'Greater Accra', country: 'Ghana', currency: Currency.GHS },
+  ]
+
+  const allCities = [...nigerianCities, ...ghanaianCities]
+  const allNames = [...nigerianNames, ...ghanaianNames]
 
   const addresses = [
     'Plot 15, Admiralty Way',
@@ -262,11 +368,16 @@ async function main() {
 
   const orders = []
   for (let i = 0; i < 50; i++) {
-    const location = randomItem(cities)
+    const location = randomItem(allCities)
     const status = randomItem(orderStatuses)
     const source = randomItem(orderSources)
     const salesRep = randomItem(allSalesReps)
     const agent = Math.random() > 0.3 ? randomItem(agents) : null // 70% have agent assigned
+    const orderCurrency = location.currency
+
+    // Select appropriate name based on country
+    const customerName = orderCurrency === Currency.GHS ? randomItem(ghanaianNames) : randomItem(nigerianNames)
+    const phonePrefix = orderCurrency === Currency.GHS ? '024' : '080'
 
     // Create order date in last 30 days
     const createdAt = getRandomDateInLastNDays(30)
@@ -297,28 +408,38 @@ async function main() {
     const numItems = Math.floor(Math.random() * 3) + 1
     const orderProducts = products.sort(() => 0.5 - Math.random()).slice(0, numItems)
 
+    // Calculate total based on currency
     let totalAmount = 0
     const items = orderProducts.map(product => {
       const quantity = Math.floor(Math.random() * 3) + 1
-      totalAmount += product.price * quantity
+      // Use currency-adjusted prices
+      const price = orderCurrency === Currency.GHS
+        ? Math.round(product.price / 130) // Convert NGN to GHS
+        : product.price
+      const cost = orderCurrency === Currency.GHS
+        ? Math.round(product.cost / 130) // Convert NGN to GHS
+        : product.cost
+
+      totalAmount += price * quantity
       return {
         productId: product.id,
         quantity,
-        price: product.price,
-        cost: product.cost,
+        price,
+        cost,
       }
     })
 
     const order = await prisma.order.create({
       data: {
-        customerName: randomItem(nigerianNames),
-        customerPhone: `080${Math.floor(10000000 + Math.random() * 90000000)}`,
-        customerWhatsapp: Math.random() > 0.5 ? `081${Math.floor(10000000 + Math.random() * 90000000)}` : null,
+        customerName,
+        customerPhone: `${phonePrefix}${Math.floor(10000000 + Math.random() * 90000000)}`,
+        customerWhatsapp: Math.random() > 0.5 ? `${phonePrefix}${Math.floor(10000000 + Math.random() * 90000000)}` : null,
         deliveryAddress: randomItem(addresses),
         city: location.city,
         state: location.state,
         status,
         source,
+        currency: orderCurrency,
         totalAmount,
         assignedToId: salesRep.id,
         agentId: agent?.id,
@@ -360,7 +481,7 @@ async function main() {
     }
   }
 
-  console.log(`✅ Created ${orders.length} orders`)
+  console.log(`✅ Created ${orders.length} orders with multi-currency support`)
 
   // ============================================
   // 5. CREATE EXPENSES
@@ -421,6 +542,7 @@ async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`   Users: ${allSalesReps.length + 2} (1 Admin, ${allSalesReps.length} Sales Reps, 1 Inventory Manager)`)
   console.log(`   Products: ${products.length}`)
+  console.log(`   Product Packages: ${products.length * 4} (4 per product: NGN Regular, NGN Double, GHS Regular, GHS Double)`)
   console.log(`   Agents: ${agents.length}`)
   console.log(`   Orders: ${orders.length}`)
   console.log(`   - NEW: ${orders.filter(o => o.status === OrderStatus.NEW).length}`)
@@ -429,6 +551,10 @@ async function main() {
   console.log(`   - DELIVERED: ${orders.filter(o => o.status === OrderStatus.DELIVERED).length}`)
   console.log(`   - CANCELLED: ${orders.filter(o => o.status === OrderStatus.CANCELLED).length}`)
   console.log(`   - POSTPONED: ${orders.filter(o => o.status === OrderStatus.POSTPONED).length}`)
+  console.log('')
+  console.log('💱 Currency Breakdown:')
+  console.log(`   - NGN Orders: ${orders.filter(o => o.currency === Currency.NGN).length}`)
+  console.log(`   - GHS Orders: ${orders.filter(o => o.currency === Currency.GHS).length}`)
   console.log('')
   console.log('📧 Login credentials:')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

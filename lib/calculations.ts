@@ -1,5 +1,5 @@
 import { db } from './db'
-import { OrderStatus } from '@prisma/client'
+import { OrderStatus, Currency } from '@prisma/client'
 
 /**
  * Calculate revenue from delivered orders only
@@ -7,7 +7,8 @@ import { OrderStatus } from '@prisma/client'
 export async function calculateRevenue(
   startDate?: Date,
   endDate?: Date,
-  salesRepId?: string
+  salesRepId?: string,
+  currency?: Currency
 ): Promise<number> {
   const where: any = {
     status: OrderStatus.DELIVERED,
@@ -22,6 +23,10 @@ export async function calculateRevenue(
 
   if (salesRepId) {
     where.assignedToId = salesRepId
+  }
+
+  if (currency) {
+    where.currency = currency
   }
 
   const orders = await db.order.findMany({
@@ -46,7 +51,8 @@ export async function calculateRevenue(
 export async function calculateProfit(
   startDate?: Date,
   endDate?: Date,
-  productId?: string
+  productId?: string,
+  currency?: Currency
 ): Promise<number> {
   const where: any = {
     status: OrderStatus.DELIVERED,
@@ -57,6 +63,10 @@ export async function calculateProfit(
       gte: startDate,
       lte: endDate,
     }
+  }
+
+  if (currency) {
+    where.currency = currency
   }
 
   // Get delivered orders
@@ -96,6 +106,10 @@ export async function calculateProfit(
 
   if (productId) {
     expenseWhere.productId = productId
+  }
+
+  if (currency) {
+    expenseWhere.currency = currency
   }
 
   const expenses = await db.expense.findMany({

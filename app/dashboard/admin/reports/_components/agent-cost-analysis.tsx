@@ -3,6 +3,7 @@
 import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 import { getInitials } from "@/lib/utils";
 import {
@@ -160,7 +161,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              ₦{kpis.totalDeliveryCosts.value.toLocaleString()}
+              {formatCurrency(kpis.totalDeliveryCosts.value)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               {kpis.totalDeliveryCosts.change >= 0 ? (
@@ -217,7 +218,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              ₦{kpis.totalStockValue.value.toLocaleString()}
+              {formatCurrency(kpis.totalStockValue.value)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-xs font-bold text-muted-foreground">
@@ -241,7 +242,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              ₦{kpis.stockLoss.value.toLocaleString()}
+              {formatCurrency(kpis.stockLoss.value)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-xs font-bold text-red-600">
@@ -368,7 +369,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-2xl font-bold">
-                    ₦{(kpis.stockLoss.value / 1000).toFixed(1)}k
+                    {formatCurrency(kpis.stockLoss.value / 1000)}{kpis.stockLoss.value >= 1000 ? 'k' : ''}
                   </span>
                   <span className="text-[10px] text-muted-foreground uppercase font-semibold">
                     Total Loss
@@ -392,7 +393,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                       </span>
                     </div>
                     <span className="font-bold">
-                      ₦{item.value.toLocaleString()}
+                      {formatCurrency(item.value)}
                     </span>
                   </div>
                 ))}
@@ -476,7 +477,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        ₦{agent.stockValue.toLocaleString()}
+                        {formatCurrency(agent.stockValue)}
                       </td>
                       <td
                         className={`px-6 py-4 text-sm font-bold ${
@@ -485,8 +486,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                             : "text-red-600"
                         }`}
                       >
-                        {agent.profitContribution >= 0 ? "+" : ""}₦
-                        {agent.profitContribution.toLocaleString()}
+                        {agent.profitContribution >= 0 ? "+" : ""}{formatCurrency(agent.profitContribution)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <Link href={`/dashboard/admin/agents/${agent.agentId}`}>

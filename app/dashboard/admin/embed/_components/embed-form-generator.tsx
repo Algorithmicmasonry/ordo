@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Check, Copy, ExternalLink, Package, PackageX } from "lucide-react";
 import Link from "next/link";
@@ -156,34 +157,137 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
                         </Button>
                       </>
                     ) : (
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <Input
-                            value={embedUrl}
-                            readOnly
-                            className="font-mono text-sm"
-                          />
-                          <Button
-                            variant={isCopied ? "default" : "outline"}
-                            size="icon"
-                            onClick={() => copyToClipboard(product.id, embedUrl)}
-                          >
-                            {isCopied ? (
-                              <Check className="size-4" />
-                            ) : (
-                              <Copy className="size-4" />
-                            )}
-                          </Button>
-                          <Link href={embedUrl} target="_blank">
-                            <Button variant="outline" size="icon">
-                              <ExternalLink className="size-4" />
-                            </Button>
-                          </Link>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Share this URL to allow customers to order this
-                          product
-                        </p>
+                      <div className="space-y-3">
+                        <Tabs defaultValue="url" className="w-full">
+                          <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="url">Direct Link</TabsTrigger>
+                            <TabsTrigger value="iframe">HTML/Iframe</TabsTrigger>
+                            <TabsTrigger value="elementor">Elementor</TabsTrigger>
+                          </TabsList>
+
+                          {/* Direct Link Tab */}
+                          <TabsContent value="url" className="space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              Share this direct link to your order form
+                            </p>
+                            <div className="flex gap-2">
+                              <Input
+                                value={embedUrl}
+                                readOnly
+                                className="font-mono text-xs"
+                              />
+                              <Button
+                                variant={isCopied ? "default" : "outline"}
+                                size="icon"
+                                onClick={() => copyToClipboard(product.id, embedUrl)}
+                              >
+                                {isCopied ? (
+                                  <Check className="size-4" />
+                                ) : (
+                                  <Copy className="size-4" />
+                                )}
+                              </Button>
+                              <Link href={embedUrl} target="_blank">
+                                <Button variant="outline" size="icon">
+                                  <ExternalLink className="size-4" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </TabsContent>
+
+                          {/* Iframe Tab */}
+                          <TabsContent value="iframe" className="space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              Copy and paste this code into your HTML page
+                            </p>
+                            <div className="relative">
+                              <pre className="bg-muted p-3 rounded-lg overflow-x-auto text-xs">
+                                <code>{`<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="800"
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+  title="${product.name} Order Form"
+></iframe>`}</code>
+                              </pre>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="absolute top-2 right-2"
+                                onClick={() => {
+                                  const iframeCode = `<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="800"
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+  title="${product.name} Order Form"
+></iframe>`;
+                                  navigator.clipboard.writeText(iframeCode);
+                                  toast.success("Iframe code copied!");
+                                }}
+                              >
+                                <Copy className="size-3 mr-1" />
+                                Copy
+                              </Button>
+                            </div>
+                          </TabsContent>
+
+                          {/* Elementor Tab */}
+                          <TabsContent value="elementor" className="space-y-3">
+                            <p className="text-xs text-muted-foreground">
+                              For WordPress with Elementor page builder
+                            </p>
+
+                            <div className="relative">
+                              <pre className="bg-muted p-3 rounded-lg overflow-x-auto text-xs">
+                                <code>{`<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="800"
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+  title="${product.name} Order Form"
+></iframe>`}</code>
+                              </pre>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="absolute top-2 right-2"
+                                onClick={() => {
+                                  const iframeCode = `<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="800"
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+  title="${product.name} Order Form"
+></iframe>`;
+                                  navigator.clipboard.writeText(iframeCode);
+                                  toast.success("Elementor code copied!");
+                                }}
+                              >
+                                <Copy className="size-3 mr-1" />
+                                Copy
+                              </Button>
+                            </div>
+
+                            <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                              <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                                Elementor Integration Steps:
+                              </p>
+                              <ol className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-decimal">
+                                <li>Open your page in Elementor editor</li>
+                                <li>Drag an "HTML" widget to your page</li>
+                                <li>Click "Copy" button above and paste the code into the HTML widget</li>
+                                <li>Set widget width to "Full Width (100%)" for best results</li>
+                                <li>Adjust height if needed (recommended: 800px minimum)</li>
+                                <li>Update and preview your page</li>
+                              </ol>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
                       </div>
                     )}
                   </CardContent>

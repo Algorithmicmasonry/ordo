@@ -5,6 +5,7 @@ import { RevenueChart } from "./revenue-chart";
 import { RecentOrders } from "./recent-orders";
 import { TopProducts } from "./top-products";
 import { PeriodFilter } from "./period-filter";
+import { CurrencyFilter } from "./currency-filter";
 
 export {
   DashboardShell,
@@ -14,4 +15,5 @@ export {
   TopProducts,
   RecentOrders,
   PeriodFilter,
+  CurrencyFilter,
 };

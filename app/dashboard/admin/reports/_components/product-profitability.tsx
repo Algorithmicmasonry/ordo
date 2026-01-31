@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 import {
   AlertTriangle,
@@ -217,7 +218,7 @@ export function ProductProfitability({
                   Revenue
                 </p>
                 <p className="text-2xl font-bold">
-                  ₦{selectedProduct.revenue.toLocaleString()}
+                  {formatCurrency(selectedProduct.revenue)}
                 </p>
               </div>
               <div>
@@ -229,8 +230,7 @@ export function ProductProfitability({
                     selectedProduct.netProfit
                   )}`}
                 >
-                  {selectedProduct.netProfit < 0 ? "-" : ""}₦
-                  {Math.abs(selectedProduct.netProfit).toLocaleString()}
+                  {formatCurrency(selectedProduct.netProfit)}
                 </p>
               </div>
               <div>
@@ -251,7 +251,7 @@ export function ProductProfitability({
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-sm text-muted-foreground">COGS</span>
                     <span className="text-sm font-semibold">
-                      ₦{selectedProduct.cogs.toLocaleString()}
+                      {formatCurrency(selectedProduct.cogs)}
                     </span>
                   </div>
                   {Object.entries(selectedProduct.expensesByType).map(
@@ -264,7 +264,7 @@ export function ProductProfitability({
                           {EXPENSE_LABELS[type] || type}
                         </span>
                         <span className="text-sm font-semibold">
-                          ₦{amount.toLocaleString()}
+                          {formatCurrency(amount)}
                         </span>
                       </div>
                     )
@@ -272,10 +272,7 @@ export function ProductProfitability({
                   <div className="flex justify-between items-center py-2 pt-4 border-t-2 border-primary/20">
                     <span className="text-sm font-bold">Total Costs</span>
                     <span className="text-sm font-bold">
-                      ₦
-                      {(
-                        selectedProduct.cogs + selectedProduct.expenses
-                      ).toLocaleString()}
+                      {formatCurrency(selectedProduct.cogs + selectedProduct.expenses)}
                     </span>
                   </div>
                 </div>
@@ -301,7 +298,7 @@ export function ProductProfitability({
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedProduct.roi > 1
-                        ? `Earning ${selectedProduct.roi.toFixed(2)}x on every ₦1 invested`
+                        ? `Earning ${selectedProduct.roi.toFixed(2)}x on every ${formatCurrency(1)} invested`
                         : "Investment not yet profitable"}
                     </p>
                   </div>
@@ -320,7 +317,7 @@ export function ProductProfitability({
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedProduct.adSpend > 0
-                        ? `Generating ₦${selectedProduct.roas.toFixed(2)} for every ₦1 spent on ads`
+                        ? `Generating ${formatCurrency(selectedProduct.roas)} for every ${formatCurrency(1)} spent on ads`
                         : "No ad spend recorded for this period"}
                     </p>
                   </div>
@@ -407,21 +404,20 @@ export function ProductProfitability({
                         {product.unitsSold.toLocaleString()}
                       </td>
                       <td className="p-4 text-right text-sm font-medium">
-                        ₦{product.revenue.toLocaleString()}
+                        {formatCurrency(product.revenue)}
                       </td>
                       <td className="p-4 text-right text-sm text-muted-foreground">
-                        ₦{product.cogs.toLocaleString()}
+                        {formatCurrency(product.cogs)}
                       </td>
                       <td className="p-4 text-right text-sm text-muted-foreground">
-                        ₦{product.expenses.toLocaleString()}
+                        {formatCurrency(product.expenses)}
                       </td>
                       <td
                         className={`p-4 text-right text-sm font-bold ${getProfitColor(
                           product.netProfit
                         )}`}
                       >
-                        {product.netProfit < 0 ? "-" : ""}₦
-                        {Math.abs(product.netProfit).toLocaleString()}
+                        {formatCurrency(product.netProfit)}
                       </td>
                       <td className="p-4 text-right">
                         <span
@@ -534,10 +530,10 @@ export function ProductProfitability({
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-green-600">
-                  ₦{insights.topPerformer.netProfit.toLocaleString()} profit
+                  {formatCurrency(insights.topPerformer.netProfit)} profit
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  ₦{insights.topPerformer.revenue.toLocaleString()} revenue
+                  {formatCurrency(insights.topPerformer.revenue)} revenue
                 </span>
               </div>
             </CardContent>
@@ -559,14 +555,14 @@ export function ProductProfitability({
                 <span className="text-foreground font-bold">
                   {insights.worstPerformer.name}
                 </span>{" "}
-                is currently operating at a loss. COGS (₦
-                {insights.worstPerformer.cogs.toLocaleString()}) plus expenses
-                (₦{insights.worstPerformer.expenses.toLocaleString()}) exceed
+                is currently operating at a loss. COGS (
+                {formatCurrency(insights.worstPerformer.cogs)}) plus expenses
+                ({formatCurrency(insights.worstPerformer.expenses)}) exceed
                 revenue.
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-red-600">
-                  Losing ₦{Math.abs(insights.worstPerformer.netProfit).toLocaleString()}{" "}
+                  Losing {formatCurrency(Math.abs(insights.worstPerformer.netProfit))}{" "}
                   this period
                 </span>
                 <span className="text-xs text-muted-foreground">

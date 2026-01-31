@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Currency } from "@prisma/client";
 import { calculateRevenue, calculateProfit } from "@/lib/calculations";
 import {
   getDateRange,
@@ -21,7 +21,10 @@ import type {
 /**
  * Get comprehensive dashboard statistics with period comparison
  */
-export async function getDashboardStats(period: TimePeriod = "today") {
+export async function getDashboardStats(
+  period: TimePeriod = "today",
+  currency?: Currency
+) {
   try {
     const { startDate, endDate } = getDateRange(period);
     const previousRange = getPreviousPeriodRange(period);
@@ -38,14 +41,15 @@ export async function getDashboardStats(period: TimePeriod = "today") {
       previousOrdersCount,
     ] = await Promise.all([
       // Current period metrics
-      calculateRevenue(startDate, endDate),
-      calculateProfit(startDate, endDate),
+      calculateRevenue(startDate, endDate, undefined, currency),
+      calculateProfit(startDate, endDate, undefined, currency),
       db.order.count({
         where: {
           createdAt: {
             gte: startDate,
             lte: endDate,
           },
+          ...(currency && { currency }),
         },
       }),
       db.order.count({
@@ -55,6 +59,7 @@ export async function getDashboardStats(period: TimePeriod = "today") {
             gte: startDate,
             lte: endDate,
           },
+          ...(currency && { currency }),
         },
       }),
       db.order.count({
@@ -64,17 +69,19 @@ export async function getDashboardStats(period: TimePeriod = "today") {
             gte: startDate,
             lte: endDate,
           },
+          ...(currency && { currency }),
         },
       }),
       // Previous period for comparison
-      calculateRevenue(previousRange.startDate, previousRange.endDate),
-      calculateProfit(previousRange.startDate, previousRange.endDate),
+      calculateRevenue(previousRange.startDate, previousRange.endDate, undefined, currency),
+      calculateProfit(previousRange.startDate, previousRange.endDate, undefined, currency),
       db.order.count({
         where: {
           createdAt: {
             gte: previousRange.startDate,
             lte: previousRange.endDate,
           },
+          ...(currency && { currency }),
         },
       }),
     ]);
@@ -132,7 +139,10 @@ export async function getDashboardStats(period: TimePeriod = "today") {
 /**
  * Get revenue trend data for charts (current vs previous period)
  */
-export async function getRevenueTrend(period: TimePeriod = "today") {
+export async function getRevenueTrend(
+  period: TimePeriod = "today",
+  currency?: Currency
+) {
   try {
     const { startDate, endDate } = getDateRange(period);
     const previousRange = getPreviousPeriodRange(period);
@@ -150,6 +160,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
           gte: startDate,
           lte: endDate,
         },
+        ...(currency && { currency }),
       },
       select: {
         deliveredAt: true,
@@ -170,6 +181,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
           gte: previousRange.startDate,
           lte: previousRange.endDate,
         },
+        ...(currency && { currency }),
       },
       select: {
         deliveredAt: true,
@@ -243,6 +255,7 @@ export async function getRevenueTrend(period: TimePeriod = "today") {
 export async function getTopProducts(
   period: TimePeriod = "today",
   limit: number = 3,
+  currency?: Currency
 ) {
   try {
     const { startDate, endDate } = getDateRange(period);
@@ -255,6 +268,7 @@ export async function getTopProducts(
           gte: startDate,
           lte: endDate,
         },
+        ...(currency && { currency }),
       },
       select: {
         items: {

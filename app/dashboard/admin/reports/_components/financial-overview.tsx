@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TimePeriod } from "@/lib/types";
 import { DollarSign, Download, TrendingDown, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 import {
   Area,
   AreaChart,
@@ -147,7 +148,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              ₦{kpis.revenue.value.toLocaleString()}
+              {formatCurrency(kpis.revenue.value)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -178,7 +179,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              ₦{kpis.grossProfit.value.toLocaleString()}
+              {formatCurrency(kpis.grossProfit.value)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -211,7 +212,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              ₦{kpis.netProfit.value.toLocaleString()}
+              {formatCurrency(kpis.netProfit.value)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -238,7 +239,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
               <DollarSign className="w-5 h-5 text-muted-foreground" />
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              ₦{kpis.burnRate.value.toLocaleString()}
+              {formatCurrency(kpis.burnRate.value)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -310,7 +311,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
                   border: "1px solid #e7edf3",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => `₦${value.toLocaleString()}`}
+                formatter={(value: number) => formatCurrency(value)}
               />
               <Area
                 type="monotone"
@@ -360,7 +361,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-xs text-muted-foreground">Total</span>
                   <span className="text-xl font-bold">
-                    ₦{(totalExpenses / 1000).toFixed(1)}k
+                    {formatCurrency(totalExpenses)}
                   </span>
                 </div>
               </div>
@@ -382,7 +383,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">
-                        ₦{item.value.toLocaleString()}
+                        {formatCurrency(item.value)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {((item.value / totalExpenses) * 100).toFixed(1)}%

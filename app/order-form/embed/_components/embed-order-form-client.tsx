@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createOrderV2 } from "@/app/actions/orders";
 import { PackageSelector } from "@/app/order-form/_components/package-selector";
 import { PayOnDeliveryBadge } from "@/app/order-form/_components/pay-on-delivery-badge";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import { GHANA_REGIONS } from "@/lib/ghana-regions";
 import type { ProductWithPackages, Currency } from "@/lib/types";
 import type { UTMParams } from "@/lib/utm-parser";
 import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
@@ -33,6 +34,13 @@ export function EmbedOrderFormClient({
     state: "",
     city: "",
   });
+
+  // Get appropriate states/regions based on currency
+  const stateOptions = useMemo(() => {
+    return currency === "GHS" ? GHANA_REGIONS : NIGERIA_STATES;
+  }, [currency]);
+
+  const stateLabel = currency === "GHS" ? "Region" : "State";
 
   // Capture UTM params and referrer on mount
   useEffect(() => {
@@ -218,7 +226,7 @@ export function EmbedOrderFormClient({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    State *
+                    {stateLabel} *
                   </label>
                   <select
                     required
@@ -228,8 +236,8 @@ export function EmbedOrderFormClient({
                     }
                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
-                    <option value="">Select state</option>
-                    {NIGERIA_STATES.map((state) => (
+                    <option value="">Select {stateLabel.toLowerCase()}</option>
+                    {stateOptions.map((state) => (
                       <option key={state} value={state}>
                         {state}
                       </option>

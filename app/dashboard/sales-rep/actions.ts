@@ -262,6 +262,7 @@ export async function getAvailableProducts() {
         name: true,
         price: true,
         currentStock: true,
+        currency: true,
       },
       orderBy: {
         name: "asc",

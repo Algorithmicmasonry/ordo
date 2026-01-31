@@ -4,6 +4,7 @@ import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 import { getInitials } from "@/lib/utils";
 import {
@@ -137,10 +138,7 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
               <DollarSign className="w-5 h-5 text-warning" />
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              ₦
-              {teamMetrics.avgCPA.toLocaleString(undefined, {
-                maximumFractionDigits: 2,
-              })}
+              {formatCurrency(teamMetrics.avgCPA)}
             </p>
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground italic">
@@ -163,7 +161,7 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
             </p>
             <div className="flex items-center gap-1">
               <span className="text-sm font-semibold text-green-600">
-                ₦{teamMetrics.topPerformer?.revenue.toLocaleString() || "0"}
+                {formatCurrency(teamMetrics.topPerformer?.revenue || 0)}
               </span>
               <span className="text-xs text-muted-foreground">Net Revenue</span>
             </div>
@@ -219,7 +217,7 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
                   border: "1px solid #e7edf3",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => `₦${value.toLocaleString()}`}
+                formatter={(value: number) => formatCurrency(value)}
               />
               <Bar dataKey="revenue" fill="#137fec" radius={[4, 4, 0, 0]} />
               <Bar dataKey="costs" fill="#94a3b8" radius={[4, 4, 0, 0]} />
@@ -293,7 +291,7 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-medium">
-                        ₦{rep.revenue.toLocaleString()}
+                        {formatCurrency(rep.revenue)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         {rep.deliveredCount}
@@ -303,14 +301,10 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
                           rep.netProfit >= 0 ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        {rep.netProfit >= 0 ? "+" : ""}₦
-                        {rep.netProfit.toLocaleString()}
+                        {rep.netProfit >= 0 ? "+" : ""}{formatCurrency(rep.netProfit)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        ₦
-                        {rep.cpa.toLocaleString(undefined, {
-                          maximumFractionDigits: 2,
-                        })}
+                        {formatCurrency(rep.cpa)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span

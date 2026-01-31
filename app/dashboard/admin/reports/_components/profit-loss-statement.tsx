@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { DateRangePicker } from "./date-range-picker";
+import { formatCurrency } from "@/lib/currency";
 
 interface ProfitLossStatementProps {
   data: {
@@ -130,10 +131,10 @@ export function ProfitLossStatement({
                 <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="p-4 pl-8 text-sm font-medium">Delivered Orders</td>
                   <td className="p-4 text-right font-bold">
-                    ₦{revenue.current.toLocaleString()}
+                    {formatCurrency(revenue.current)}
                   </td>
                   <td className="p-4 text-right text-muted-foreground">
-                    ₦{revenue.previous.toLocaleString()}
+                    {formatCurrency(revenue.previous)}
                   </td>
                   <td className="p-4 text-center">
                     <span
@@ -158,10 +159,10 @@ export function ProfitLossStatement({
                     Product Sourcing Costs
                   </td>
                   <td className="p-4 text-right font-bold">
-                    (₦{cogs.current.toLocaleString()})
+                    ({formatCurrency(cogs.current)})
                   </td>
                   <td className="p-4 text-right text-muted-foreground">
-                    (₦{cogs.previous.toLocaleString()})
+                    ({formatCurrency(cogs.previous)})
                   </td>
                   <td className="p-4 text-center">
                     <span
@@ -179,10 +180,10 @@ export function ProfitLossStatement({
                 <tr className="bg-primary/10 border-t-2 border-primary/20 font-bold">
                   <td className="p-4 text-sm font-bold uppercase">Gross Profit</td>
                   <td className="p-4 text-right text-lg font-bold">
-                    ₦{grossProfit.current.toLocaleString()}
+                    {formatCurrency(grossProfit.current)}
                   </td>
                   <td className="p-4 text-right text-muted-foreground text-lg">
-                    ₦{grossProfit.previous.toLocaleString()}
+                    {formatCurrency(grossProfit.previous)}
                   </td>
                   <td className="p-4 text-center">
                     <span
@@ -213,10 +214,10 @@ export function ProfitLossStatement({
                         {EXPENSE_LABELS[expense.type] || expense.type}
                       </td>
                       <td className="p-4 text-right font-bold">
-                        (₦{expense.current.toLocaleString()})
+                        ({formatCurrency(expense.current)})
                       </td>
                       <td className="p-4 text-right text-muted-foreground">
-                        (₦{expense.previous.toLocaleString()})
+                        ({formatCurrency(expense.previous)})
                       </td>
                       <td className="p-4 text-center">
                         <span
@@ -237,10 +238,10 @@ export function ProfitLossStatement({
                     Net Profit
                   </td>
                   <td className="p-6 text-right text-2xl font-bold">
-                    ₦{netProfit.current.toLocaleString()}
+                    {formatCurrency(netProfit.current)}
                   </td>
                   <td className="p-6 text-right opacity-80 text-2xl">
-                    ₦{netProfit.previous.toLocaleString()}
+                    {formatCurrency(netProfit.previous)}
                   </td>
                   <td className="p-6 text-center">
                     <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-primary dark:bg-slate-900">

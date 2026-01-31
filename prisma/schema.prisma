@@ -132,6 +132,7 @@ model Product {
   description String?
   price       Float // Selling price
   cost        Float // Cost per unit (for profit calculation)
+  currency    Currency  @default(NGN) // Base currency for product pricing
   sku         String?   @unique
   isActive    Boolean   @default(true)
   isDeleted   Boolean   @default(false) // Soft delete flag
@@ -153,6 +154,7 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([currency])
   @@map("products")
 }
 

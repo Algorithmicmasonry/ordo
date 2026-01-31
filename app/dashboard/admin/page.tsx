@@ -7,10 +7,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 import { Download } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  CurrencyFilter,
   DashboardHeader,
   PeriodFilter,
   RecentOrders,
@@ -21,7 +23,7 @@ import {
 import { InstallPrompt } from "@/app/_components/install-prompt";
 
 interface AdminDashboardPageProps {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; currency?: string }>;
 }
 
 export default async function AdminDashboardPage({
@@ -39,9 +41,10 @@ export default async function AdminDashboardPage({
     redirect("/dashboard");
   }
 
-  // Get period from search params
+  // Get period and currency from search params
   const params = await searchParams;
   const period = (params?.period || "today") as TimePeriod;
+  const currency = params?.currency as Currency | undefined;
 
   // Validate period
   const validPeriods: TimePeriod[] = ["today", "week", "month", "year"];
@@ -50,9 +53,9 @@ export default async function AdminDashboardPage({
   // Fetch all dashboard data in parallel
   const [statsResult, revenueResult, productsResult, ordersResult] =
     await Promise.all([
-      getDashboardStats(currentPeriod),
-      getRevenueTrend(currentPeriod),
-      getTopProducts(currentPeriod, 3),
+      getDashboardStats(currentPeriod, currency),
+      getRevenueTrend(currentPeriod, currency),
+      getTopProducts(currentPeriod, 3, currency),
       getRecentOrders(5),
     ]);
 
@@ -70,7 +73,10 @@ export default async function AdminDashboardPage({
 
       {/* Filters */}
       <div className="flex items-center justify-between mb-4">
-        <PeriodFilter currentPeriod={currentPeriod} />
+        <div className="flex items-center gap-2">
+          <PeriodFilter currentPeriod={currentPeriod} />
+          <CurrencyFilter />
+        </div>
 
         <Button>
           <Download className="size-4 mr-2" />
@@ -79,7 +85,10 @@ export default async function AdminDashboardPage({
       </div>
 
       <div className="space-y-8">
-        <StatsCards stats={statsResult.success ? statsResult.data : null} />
+        <StatsCards
+          stats={statsResult.success ? statsResult.data : null}
+          currency={currency}
+        />
 
         <div className="grid gap-6 lg:grid-cols-3">
           <RevenueChart

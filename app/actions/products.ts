@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { UnknownKeysParam } from "zod";
+import type { Currency } from "@prisma/client";
 
 /**
  * Create a new product (Admin only)
@@ -13,6 +14,7 @@ export async function createProduct(data: {
   description?: string;
   price: number;
   cost: number;
+  currency?: Currency;
   sku?: string;
   openingStock: number;
   reorderPoint?: number;
@@ -104,6 +106,7 @@ export async function updateProduct(
     description?: string;
     price?: number;
     cost?: number;
+    currency?: Currency;
     sku?: string;
     isActive?: boolean;
   },

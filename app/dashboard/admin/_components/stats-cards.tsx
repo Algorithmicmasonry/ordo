@@ -1,14 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Wallet, DollarSign, ShoppingBag, TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, getCurrencyName } from "@/lib/currency";
 import { formatPercentage } from "@/lib/date-utils";
 import type { DashboardStats } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 
 interface StatsCardsProps {
   stats: DashboardStats | null;
+  currency?: Currency;
 }
 
-export function StatsCards({ stats }: StatsCardsProps) {
+export function StatsCards({ stats, currency }: StatsCardsProps) {
   if (!stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -30,7 +33,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
   const statsData = [
     {
       name: "Total Revenue",
-      value: formatCurrency(stats.revenue),
+      value: formatCurrency(stats.revenue, currency || "NGN"),
       change: stats.revenueChange,
       icon: Wallet,
       iconColor: "text-blue-600",
@@ -39,7 +42,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     },
     {
       name: "Net Profit",
-      value: formatCurrency(stats.profit),
+      value: formatCurrency(stats.profit, currency || "NGN"),
       change: stats.profitChange,
       icon: DollarSign,
       iconColor: "text-emerald-600",
@@ -68,48 +71,57 @@ export function StatsCards({ stats }: StatsCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statsData.map((stat) => {
-        const isPositive = stat.change >= 0;
-        const showChange = !stat.isNeutral;
+    <div className="space-y-4">
+      {currency && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            Showing {getCurrencyName(currency)} only
+          </Badge>
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statsData.map((stat) => {
+          const isPositive = stat.change >= 0;
+          const showChange = !stat.isNeutral;
 
-        return (
-          <Card key={stat.name}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span
-                  className={`p-2 ${stat.iconBg} ${stat.iconColor} rounded-lg`}
-                >
-                  <stat.icon className="size-5" />
-                </span>
-                {showChange && (
+          return (
+            <Card key={stat.name}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
                   <span
-                    className={`text-xs font-bold flex items-center px-2 py-1 rounded-full ${
-                      isPositive
-                        ? "text-green-600 bg-green-50 dark:bg-green-900/20"
-                        : "text-red-600 bg-red-50 dark:bg-red-900/20"
-                    }`}
+                    className={`p-2 ${stat.iconBg} ${stat.iconColor} rounded-lg`}
                   >
-                    {isPositive ? (
-                      <TrendingUp className="size-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="size-3 mr-1" />
-                    )}
-                    {formatPercentage(stat.change)}
+                    <stat.icon className="size-5" />
                   </span>
-                )}
-              </div>
-              <p className="text-sm font-medium">{stat.name}</p>
-              <h3 className="text-2xl font-bold mt-1 text-foreground/80">
-                {stat.value}
-              </h3>
-              <p className="text-xs text-foreground/80 mt-2">
-                {stat.previousValue}
-              </p>
-            </CardContent>
-          </Card>
-        );
-      })}
+                  {showChange && (
+                    <span
+                      className={`text-xs font-bold flex items-center px-2 py-1 rounded-full ${
+                        isPositive
+                          ? "text-green-600 bg-green-50 dark:bg-green-900/20"
+                          : "text-red-600 bg-red-50 dark:bg-red-900/20"
+                      }`}
+                    >
+                      {isPositive ? (
+                        <TrendingUp className="size-3 mr-1" />
+                      ) : (
+                        <TrendingDown className="size-3 mr-1" />
+                      )}
+                      {formatPercentage(stat.change)}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-medium">{stat.name}</p>
+                <h3 className="text-2xl font-bold mt-1 text-foreground/80">
+                  {stat.value}
+                </h3>
+                <p className="text-xs text-foreground/80 mt-2">
+                  {stat.previousValue}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

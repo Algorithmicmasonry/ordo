@@ -24,14 +24,18 @@ import { PlusCircle, Loader2, Trash2, Plus } from "lucide-react";
 import { createManualOrder, getAvailableProducts } from "../actions";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import type { OrderSource } from "@prisma/client";
+import type { OrderSource, Currency } from "@prisma/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getAvailableCurrencies, getCurrencySymbol } from "@/lib/currency";
+import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import { GHANA_REGIONS } from "@/lib/ghana-regions";
 
 interface Product {
   id: string;
   name: string;
   price: number;
   currentStock: number;
+  currency: Currency; // Optional until Prisma client regenerates
 }
 
 interface OrderItem {
@@ -85,7 +89,11 @@ export function CreateOrderDialog() {
     }
   };
 
-  const updateOrderItem = (index: number, field: keyof OrderItem, value: string | number) => {
+  const updateOrderItem = (
+    index: number,
+    field: keyof OrderItem,
+    value: string | number,
+  ) => {
     const updated = [...orderItems];
     updated[index] = { ...updated[index], [field]: value };
     setOrderItems(updated);
@@ -122,7 +130,9 @@ export function CreateOrderDialog() {
       return;
     }
 
-    const validItems = orderItems.filter((item) => item.productId && item.quantity > 0);
+    const validItems = orderItems.filter(
+      (item) => item.productId && item.quantity > 0,
+    );
     if (validItems.length === 0) {
       toast.error("Please add at least one product");
       return;
@@ -172,7 +182,8 @@ export function CreateOrderDialog() {
         <DialogHeader>
           <DialogTitle>Create New Order</DialogTitle>
           <DialogDescription>
-            Manually create an order for a customer. The order will be assigned to you.
+            Manually create an order for a customer. The order will be assigned
+            to you.
           </DialogDescription>
         </DialogHeader>
 
@@ -203,7 +214,10 @@ export function CreateOrderDialog() {
                     type="tel"
                     value={formData.customerPhone}
                     onChange={(e) =>
-                      setFormData({ ...formData, customerPhone: e.target.value })
+                      setFormData({
+                        ...formData,
+                        customerPhone: e.target.value,
+                      })
                     }
                     placeholder="+234 XXX XXX XXXX"
                     disabled={isPending}
@@ -212,13 +226,18 @@ export function CreateOrderDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="customerWhatsapp">WhatsApp Number (Optional)</Label>
+                <Label htmlFor="customerWhatsapp">
+                  WhatsApp Number (Optional)
+                </Label>
                 <Input
                   id="customerWhatsapp"
                   type="tel"
                   value={formData.customerWhatsapp}
                   onChange={(e) =>
-                    setFormData({ ...formData, customerWhatsapp: e.target.value })
+                    setFormData({
+                      ...formData,
+                      customerWhatsapp: e.target.value,
+                    })
                   }
                   placeholder="+234 XXX XXX XXXX"
                   disabled={isPending}
@@ -236,7 +255,10 @@ export function CreateOrderDialog() {
                   id="deliveryAddress"
                   value={formData.deliveryAddress}
                   onChange={(e) =>
-                    setFormData({ ...formData, deliveryAddress: e.target.value })
+                    setFormData({
+                      ...formData,
+                      deliveryAddress: e.target.value,
+                    })
                   }
                   placeholder="123 Main Street, Apartment 4B"
                   rows={3}
@@ -250,7 +272,9 @@ export function CreateOrderDialog() {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
                     placeholder="Lagos"
                     disabled={isPending}
                   />
@@ -261,7 +285,9 @@ export function CreateOrderDialog() {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
                     placeholder="Lagos State"
                     disabled={isPending}
                   />
@@ -311,7 +337,9 @@ export function CreateOrderDialog() {
                           <SelectContent>
                             {products.map((product) => (
                               <SelectItem key={product.id} value={product.id}>
-                                {product.name} - ₦{product.price.toLocaleString()} (Stock: {product.currentStock})
+                                {product.name} - ₦
+                                {product.price.toLocaleString()} (Stock:{" "}
+                                {product.currentStock})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -329,7 +357,7 @@ export function CreateOrderDialog() {
                             updateOrderItem(
                               index,
                               "quantity",
-                              parseInt(e.target.value) || 1
+                              parseInt(e.target.value) || 1,
                             )
                           }
                           disabled={isPending}

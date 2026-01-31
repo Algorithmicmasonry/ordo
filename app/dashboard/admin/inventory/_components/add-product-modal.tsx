@@ -28,6 +28,9 @@ import toast from "react-hot-toast";
 import * as z from "zod";
 import { createProduct } from "@/app/actions/products";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAvailableCurrencies, getCurrencySymbol } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 
 // SOLUTION: Remove .default() from schema and handle defaults in the form
 const productFormSchema = z.object({
@@ -35,6 +38,7 @@ const productFormSchema = z.object({
   description: z.string().optional(),
   price: z.coerce.number().min(0, "Price must be positive"),
   cost: z.coerce.number().min(0, "Cost must be positive"),
+  currency: z.enum(["NGN", "GHS", "USD", "GBP", "EUR"]),
   sku: z.string().optional(),
   openingStock: z.coerce.number().int().min(0, "Stock must be positive"),
   reorderPoint: z.coerce
@@ -61,6 +65,7 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
       description: "",
       price: 0,
       cost: 0,
+      currency: "NGN" as Currency,
       sku: "",
       openingStock: 0,
       reorderPoint: 0,
@@ -164,6 +169,36 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
                 )}
               />
 
+              {/* Currency */}
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency *</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {getAvailableCurrencies().map((curr) => (
+                          <SelectItem key={curr.code} value={curr.code}>
+                            {curr.symbol} - {curr.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>Base currency for pricing</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Is Active */}
               <FormField
                 control={form.control}
@@ -201,7 +236,9 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Cost per unit (₦)</FormDescription>
+                    <FormDescription>
+                      Cost per unit ({getCurrencySymbol(form.watch("currency") as Currency)})
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -222,7 +259,9 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Selling price (₦)</FormDescription>
+                    <FormDescription>
+                      Selling price ({getCurrencySymbol(form.watch("currency") as Currency)})
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

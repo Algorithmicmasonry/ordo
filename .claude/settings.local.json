@@ -19,7 +19,9 @@
       "Bash(pnpm add:*)",
       "Bash(npx web-push:*)",
       "Bash(git push)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(npm run lint)"
     ]
   }
 }

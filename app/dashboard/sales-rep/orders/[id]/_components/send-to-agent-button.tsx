@@ -34,25 +34,28 @@ export function SendToAgentButton({ order }: SendToAgentButtonProps) {
       ? `\n📅 *Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}`
       : "";
 
-    // Create WhatsApp message
+    // Create WhatsApp message formatted like a form
     const message = `🚚 *DELIVERY ASSIGNMENT - ${storeName}*
 
-📦 *Order #${order.orderNumber}*
-${order.dispatchedAt ? `🕐 Dispatched: ${format(new Date(order.dispatchedAt), "MMM dd, yyyy h:mm a")}` : ""}
+*Order Number:* ${order.orderNumber}
+${order.dispatchedAt ? `*Dispatched:* ${format(new Date(order.dispatchedAt), "MMM dd, yyyy h:mm a")}` : ""}
 
-👤 *CUSTOMER DETAILS:*
-Name: ${order.customerName}
-Phone: ${order.customerPhone}
-${order.customerWhatsapp ? `WhatsApp: ${order.customerWhatsapp}` : ""}
+*Full Name:* ${order.customerName}
 
-📍 *DELIVERY ADDRESS:*
-${order.deliveryAddress}
-${order.city}, ${order.state}${deliverySlot}
+*Phone Number:* ${order.customerPhone}
+${order.customerWhatsapp ? `\n*WhatsApp Number:* ${order.customerWhatsapp}` : ""}
 
-📋 *ORDER ITEMS:*
+*Delivery Address:* ${order.deliveryAddress}
+
+*City:* ${order.city}
+
+*State:* ${order.state}
+${deliverySlot ? `\n*Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}` : ""}
+
+*Order Items:*
 ${itemsList}
 
-💰 *TOTAL AMOUNT: ₦${totalAmount.toLocaleString()}*
+*Total Amount:* ₦${totalAmount.toLocaleString()}
 
 ${order.status === "DISPATCHED" ? "✅ Please proceed with delivery and update status upon completion." : "⏳ Please prepare for dispatch."}
 

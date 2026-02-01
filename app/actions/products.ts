@@ -296,3 +296,53 @@ export async function getProductWithPackages(productId: string) {
     return { success: false, error: "Failed to fetch product" };
   }
 }
+
+/**
+ * Update package selector note for a product (Admin only)
+ */
+export async function updatePackageSelectorNote(
+  productId: string,
+  note: string | null
+) {
+  try {
+    // Authorization: ADMIN only
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: session.user.id } });
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Insufficient permissions" };
+    }
+
+    // Check if product exists
+    const product = await db.product.findUnique({
+      where: { id: productId, isDeleted: false },
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    // Update the package selector note
+    const updatedProduct = await db.product.update({
+      where: { id: productId },
+      data: {
+        packageSelectorNote: note,
+      },
+    });
+
+    revalidatePath(`/dashboard/admin/inventory/${productId}/packages`);
+    revalidatePath("/order-form");
+    revalidatePath("/order-form/embed");
+
+    return { success: true, product: updatedProduct };
+  } catch (error) {
+    console.error("Error updating package selector note:", error);
+    return {
+      success: false,
+      error: "Failed to update package selector note",
+    };
+  }
+}

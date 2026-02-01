@@ -26,9 +26,15 @@ export function PackageSelector({
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium mb-2">
-        Select Your Package:{" "}
-        {note && <span className="text-muted-foreground">({note})</span>} *
+        Select Your Package: *
       </label>
+      {note && (
+        <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+          <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+            {note}
+          </p>
+        </div>
+      )}
       {filteredPackages.length === 0 ? (
         <div className="p-4 bg-muted rounded-lg text-center">
           <p className="text-sm text-muted-foreground">

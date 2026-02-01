@@ -37,6 +37,7 @@ interface Product {
   currentStock: number;
   currency: Currency; // Optional until Prisma client regenerates
 }
+// Check how revenue generated is calculated with ghana cedis as well in orders route
 
 interface OrderItem {
   productId: string;

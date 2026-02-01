@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PackageList, CreatePackageButton } from "./_components";
+import { PackageList, CreatePackageButton, PackageSelectorNote } from "./_components";
 
 interface PageProps {
   params: Promise<{ productId: string }>;
@@ -107,6 +107,12 @@ export default async function ProductPackagesPage({ params }: PageProps) {
         </div>
         <CreatePackageButton productId={product.id} />
       </div>
+
+      {/* General Package Description */}
+      <PackageSelectorNote
+        productId={product.id}
+        currentNote={product.packageSelectorNote}
+      />
 
       {/* Package List */}
       <PackageList packages={product.packages} productId={product.id} />

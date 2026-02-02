@@ -84,6 +84,7 @@ export default async function InventoryAgentsPage() {
         <AgentsTable
           agents={agentsResponse.data}
           zones={zonesResponse.data || []}
+          basePath="/dashboard/inventory"
         />
       )}
     </div>

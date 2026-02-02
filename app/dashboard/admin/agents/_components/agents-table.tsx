@@ -53,6 +53,7 @@ interface Agent {
 interface AgentsTableProps {
   agents: Agent[];
   zones: string[];
+  basePath?: string; // e.g., "/dashboard/admin" or "/dashboard/inventory"
 }
 
 const getStatusBadge = (status: AgentStatus) => {
@@ -107,7 +108,7 @@ const toPrismaAgent = (agent: Agent | null): PrismaAgent | null => {
   };
 };
 
-export function AgentsTable({ agents, zones }: AgentsTableProps) {
+export function AgentsTable({ agents, zones, basePath = "/dashboard/admin" }: AgentsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedZone, setSelectedZone] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -298,7 +299,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                         <p
                           className="font-bold cursor-pointer hover:text-primary transition-colors"
                           onClick={() =>
-                            router.push(`/dashboard/admin/agents/${agent.id}`)
+                            router.push(`${basePath}/agents/${agent.id}`)
                           }
                         >
                           {agent.name}
@@ -340,7 +341,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onClick={() =>
-                            router.push(`/dashboard/admin/agents/${agent.id}`)
+                            router.push(`${basePath}/agents/${agent.id}`)
                           }
                         >
                           View Profile
@@ -359,7 +360,7 @@ export function AgentsTable({ agents, zones }: AgentsTableProps) {
                               // Navigate to agent detail page for stock reconciliation
                               // ReconcileStockModal requires full stock details with products
                               router.push(
-                                `/dashboard/admin/agents/${agent.id}?tab=stock`,
+                                `${basePath}/agents/${agent.id}?tab=stock`,
                               );
                             }}
                           >

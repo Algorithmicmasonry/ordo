@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Download } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/currency";
 import type { Order, OrderItem, Product, Agent } from "@prisma/client";
 import { format } from "date-fns";
@@ -14,21 +14,21 @@ interface PrintInvoiceButtonProps {
 }
 
 export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
-  const handlePrint = () => {
+  const getInvoiceHTML = () => {
     const totalAmount = order.items.reduce(
       (sum, item) => sum + item.quantity * item.price,
-      0
+      0,
     );
 
     const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "Ordo Store";
     const currencySymbol = getCurrencySymbol(order.currency);
 
-    // Create print content
-    const printContent = `
+    return `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Invoice - ${order.orderNumber}</title>
+          <meta charset="UTF-8">
           <style>
             * {
               margin: 0;
@@ -203,7 +203,7 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
                     <td>${currencySymbol}${item.price.toLocaleString()}</td>
                     <td>${currencySymbol}${(item.quantity * item.price).toLocaleString()}</td>
                   </tr>
-                `
+                `,
                   )
                   .join("")}
                 <tr class="total-row">
@@ -237,6 +237,10 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
         </body>
       </html>
     `;
+  };
+
+  const handlePrint = () => {
+    const printContent = getInvoiceHTML();
 
     // Open print window
     const printWindow = window.open("", "_blank");
@@ -252,10 +256,37 @@ export function PrintInvoiceButton({ order }: PrintInvoiceButtonProps) {
     }
   };
 
+  const handleDownload = () => {
+    const htmlContent = getInvoiceHTML();
+
+    // Create a Blob from the HTML content
+    const blob = new Blob([htmlContent], { type: "text/html" });
+
+    // Create a download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Invoice-${order.orderNumber}-${format(new Date(), "yyyy-MM-dd")}.html`;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <Button variant="outline" onClick={handlePrint}>
-      <Printer className="size-4 mr-2" />
-      Print Invoice
-    </Button>
+    <div className="flex gap-2">
+      <Button variant="outline" onClick={handlePrint}>
+        <Printer className="size-4 mr-2" />
+        Print Invoice
+      </Button>
+      <Button variant="outline" onClick={handleDownload}>
+        <Download className="size-4 mr-2" />
+        Download Invoice
+      </Button>
+    </div>
   );
 }

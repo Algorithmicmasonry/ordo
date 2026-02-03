@@ -20,6 +20,7 @@ import {
   Code2,
   HatGlasses,
   LayoutDashboard,
+  LogOut,
   Menu,
   PackageOpen,
   PanelLeftClose,
@@ -33,10 +34,11 @@ import {
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { getCurrentUser } from "@/app/actions/user";
 import type { UserRole } from "@prisma/client";
+import { authClient } from "@/lib/auth-client";
 
 const routes = [
   {
@@ -111,10 +113,12 @@ interface UserData {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -130,6 +134,18 @@ export function Sidebar() {
 
     fetchUser();
   }, []);
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await authClient.signOut();
+      router.push("/login");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -207,7 +223,7 @@ export function Sidebar() {
       </TooltipProvider>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         {isLoading ? (
           <div className="flex items-center gap-3 p-2 animate-pulse">
             <div className="size-8 rounded-full bg-muted" />
@@ -219,29 +235,53 @@ export function Sidebar() {
             )}
           </div>
         ) : (
-          <div
-            className={cn(
-              "flex items-center gap-3 p-2",
-              isCollapsed && "flex-col gap-2",
-            )}
-          >
-            <Avatar className="size-8 shrink-0">
-              <AvatarImage src={user?.image || undefined} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                {user?.name ? getInitials(user.name) : "??"}
-              </AvatarFallback>
-            </Avatar>
-            {!isCollapsed && user && (
-              <>
+          <>
+            <div
+              className={cn(
+                "flex items-center gap-3 p-2",
+                isCollapsed && "flex-col gap-2",
+              )}
+            >
+              <Avatar className="size-8 shrink-0">
+                <AvatarImage src={user?.image || undefined} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                  {user?.name ? getInitials(user.name) : "??"}
+                </AvatarFallback>
+              </Avatar>
+              {!isCollapsed && user && (
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate">{user.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate">
                     {formatRole(user.role)}
                   </p>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size={isCollapsed ? "icon" : "sm"}
+                    onClick={handleSignOut}
+                    disabled={isSigningOut}
+                    className={cn(
+                      "w-full text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20",
+                      isCollapsed && "h-8 w-8",
+                    )}
+                  >
+                    <LogOut className="size-4" />
+                    {!isCollapsed && <span className="ml-2">Sign Out</span>}
+                  </Button>
+                </TooltipTrigger>
+                {isCollapsed && (
+                  <TooltipContent side="right">
+                    <p>Sign Out</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </>
         )}
       </div>
     </div>

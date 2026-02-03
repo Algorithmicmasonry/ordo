@@ -50,7 +50,7 @@ ${order.customerWhatsapp ? `\n*WhatsApp Number:* ${order.customerWhatsapp}` : ""
 *City:* ${order.city}
 
 *State:* ${order.state}
-${deliverySlot ? `\n*Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}` : ""}
+${order.deliverySlot ? `\n*Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}` : ""}
 
 *Order Items:*
 ${itemsList}

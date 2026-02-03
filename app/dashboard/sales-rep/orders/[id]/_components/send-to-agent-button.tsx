@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import type { Order, OrderItem, Product, Agent } from "@prisma/client";
@@ -21,47 +20,45 @@ export function SendToAgentButton({ order }: SendToAgentButtonProps) {
     // Calculate total
     const totalAmount = order.items.reduce(
       (sum, item) => sum + item.quantity * item.price,
-      0
+      0,
     );
 
-    // Format items list
+    // Format items list (keep it concise)
     const itemsList = order.items
-      .map((item) => `• ${item.quantity}x ${item.product.name} - ₦${(item.quantity * item.price).toLocaleString()}`)
-      .join("\n");
+      .map((item) => `${item.quantity}x ${item.product.name}`)
+      .join(", ");
 
-    // Format delivery slot
-    const deliverySlot = order.deliverySlot
-      ? `\n📅 *Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}`
-      : "";
+    // Create a shorter, more concise WhatsApp message
+    const message = `🚚 *DELIVERY ASSIGNMENT*
 
-    // Create WhatsApp message formatted like a form
-    const message = `🚚 *DELIVERY ASSIGNMENT - ${storeName}*
+*Order:* ${order.orderNumber}
 
-*Order Number:* ${order.orderNumber}
-${order.dispatchedAt ? `*Dispatched:* ${format(new Date(order.dispatchedAt), "MMM dd, yyyy h:mm a")}` : ""}
+*Customer:* ${order.customerName}
+*Phone:* ${order.customerPhone}
 
-*Full Name:* ${order.customerName}
+*Address:* ${order.deliveryAddress}, ${order.city}, ${order.state}
 
-*Phone Number:* ${order.customerPhone}
-${order.customerWhatsapp ? `\n*WhatsApp Number:* ${order.customerWhatsapp}` : ""}
+*Items:* ${itemsList}
 
-*Delivery Address:* ${order.deliveryAddress}
+*Total:* ₦${totalAmount.toLocaleString()}
 
-*City:* ${order.city}
+Please proceed with delivery. Thank you!`;
 
-*State:* ${order.state}
-${order.deliverySlot ? `\n*Delivery Slot:* ${order.deliverySlot.charAt(0).toUpperCase() + order.deliverySlot.slice(1)}` : ""}
+    // Clean phone number - remove all non-digits
+    const cleanPhone = order.agent.phone.replace(/\D/g, "");
 
-*Order Items:*
-${itemsList}
+    // Ensure phone number doesn't start with +
+    const phoneNumber = cleanPhone.startsWith("234")
+      ? cleanPhone
+      : `234${cleanPhone.replace(/^0+/, "")}`;
 
-*Total Amount:* ₦${totalAmount.toLocaleString()}
+    // Create WhatsApp URL
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
-${order.status === "DISPATCHED" ? "✅ Please proceed with delivery and update status upon completion." : "⏳ Please prepare for dispatch."}
+    // Debug: log the URL length
+    console.log("WhatsApp URL length:", whatsappUrl.length);
+    console.log("Phone number:", phoneNumber);
 
-Thank you!`;
-
-    const whatsappUrl = `https://wa.me/${order.agent.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 

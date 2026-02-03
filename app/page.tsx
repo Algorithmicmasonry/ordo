@@ -55,7 +55,8 @@ export default function Home() {
 
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Comprehensive order management, inventory tracking, and sales
-            analytics all in one powerful platform. Built for growing businesses.
+            analytics all in one powerful platform. Built for growing
+            businesses.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -81,7 +82,8 @@ export default function Home() {
             Everything You Need to Succeed
           </h3>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Powerful features designed to help you manage your business efficiently
+            Powerful features designed to help you manage your business
+            efficiently
           </p>
         </div>
 
@@ -186,7 +188,9 @@ export default function Home() {
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <span>Role-based access control for team collaboration</span>
+                      <span>
+                        Role-based access control for team collaboration
+                      </span>
                     </li>
                     <li className="flex items-start gap-3">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -209,7 +213,9 @@ export default function Home() {
 
                 <div className="space-y-6">
                   <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-6">
-                    <div className="text-4xl font-bold text-primary mb-2">3</div>
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      3
+                    </div>
                     <div className="font-semibold mb-1">User Roles</div>
                     <div className="text-sm text-muted-foreground">
                       Admin, Sales Rep, and Inventory Manager access levels
@@ -217,7 +223,9 @@ export default function Home() {
                   </div>
 
                   <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-6">
-                    <div className="text-4xl font-bold text-primary mb-2">∞</div>
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      ∞
+                    </div>
                     <div className="font-semibold mb-1">Scalable</div>
                     <div className="text-sm text-muted-foreground">
                       Handle unlimited products, orders, and team members
@@ -225,7 +233,9 @@ export default function Home() {
                   </div>
 
                   <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-6">
-                    <div className="text-4xl font-bold text-primary mb-2">24/7</div>
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      24/7
+                    </div>
                     <div className="font-semibold mb-1">Always Available</div>
                     <div className="text-sm text-muted-foreground">
                       Cloud-based platform accessible anytime, anywhere

@@ -25,19 +25,19 @@ export function PackageSelector({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium mb-2">
+      <label className="block text-sm font-medium text-gray-900 mb-2">
         Select Your Package: *
       </label>
       {note && (
-        <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+        <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <p className="text-sm font-medium text-amber-900">
             {note}
           </p>
         </div>
       )}
       {filteredPackages.length === 0 ? (
-        <div className="p-4 bg-muted rounded-lg text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="p-4 bg-gray-50 rounded-lg text-center">
+          <p className="text-sm text-gray-600">
             No packages available for {getCurrencyName(currency)}. Please select
             a different currency or contact support.
           </p>
@@ -49,8 +49,8 @@ export function PackageSelector({
           className={cn(
             "flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-colors",
             selectedPackages.includes(pkg.id)
-              ? "border-primary bg-primary/5"
-              : "border-border hover:bg-muted/50",
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-300 hover:bg-gray-50",
           )}
         >
           <input
@@ -62,14 +62,14 @@ export function PackageSelector({
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
-                <p className="font-bold">{pkg.name}:</p>
+                <p className="font-bold text-gray-900">{pkg.name}:</p>
                 {pkg.description && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     {pkg.description}
                   </p>
                 )}
               </div>
-              <p className="font-bold text-lg whitespace-nowrap ml-4">
+              <p className="font-bold text-lg text-gray-900 whitespace-nowrap ml-4">
                 = {currencySymbol}
                 {pkg.price.toLocaleString()}
               </p>

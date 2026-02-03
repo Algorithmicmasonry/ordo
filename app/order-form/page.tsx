@@ -147,24 +147,24 @@ export default function OrderFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 p-4 md:p-8">
+    <div className="min-h-screen bg-white p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">
             Place Your Order
           </h1>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
-              <p className="text-green-800 dark:text-green-200 font-medium">
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-green-800 font-medium">
                 Order submitted successfully! We'll contact you shortly.
               </p>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md">
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800">{error}</p>
             </div>
           )}
 
@@ -174,14 +174,14 @@ export default function OrderFormPage() {
 
             {/* Currency Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-2">
                 Select Currency *
               </label>
               <select
                 required
                 value={selectedCurrency}
                 onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
               >
                 {getAvailableCurrencies().map((curr) => (
                   <option key={curr.code} value={curr.code}>
@@ -193,14 +193,14 @@ export default function OrderFormPage() {
 
             {/* Product Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-2">
                 Select Product *
               </label>
               <select
                 required
                 value={selectedProductId}
                 onChange={(e) => handleProductChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
               >
                 <option value="">Choose a product</option>
                 {products.map((product) => (
@@ -214,7 +214,7 @@ export default function OrderFormPage() {
             {/* Package Selection */}
             {loadingPackages && (
               <div className="text-center py-4">
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 text-gray-600">
                   Loading packages...
                 </p>
               </div>
@@ -232,13 +232,13 @@ export default function OrderFormPage() {
 
             {/* Customer Information */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 text-gray-900 mb-4">
                 Customer Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     Full Name *
                   </label>
                   <input
@@ -248,12 +248,12 @@ export default function OrderFormPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, customerName: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     Phone Number *
                   </label>
                   <input
@@ -263,12 +263,12 @@ export default function OrderFormPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, customerPhone: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     WhatsApp Number (Optional)
                   </label>
                   <input
@@ -280,7 +280,7 @@ export default function OrderFormPage() {
                         customerWhatsapp: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   />
                 </div>
               </div>
@@ -288,13 +288,13 @@ export default function OrderFormPage() {
 
             {/* Delivery Information */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 text-gray-900 mb-4">
                 Delivery Information
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     Delivery Address *
                   </label>
                   <textarea
@@ -307,13 +307,13 @@ export default function OrderFormPage() {
                         deliveryAddress: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                       State *
                     </label>
                     <select
@@ -322,7 +322,7 @@ export default function OrderFormPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                     >
                       <option value="">Select state</option>
                       {NIGERIA_STATES.map((state) => (
@@ -334,7 +334,7 @@ export default function OrderFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                       City *
                     </label>
                     <input
@@ -344,7 +344,7 @@ export default function OrderFormPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                     />
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function OrderFormPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-500 text-gray-600 mt-6">
           By submitting this form, you agree to be contacted by our sales team.
         </p>
       </div>

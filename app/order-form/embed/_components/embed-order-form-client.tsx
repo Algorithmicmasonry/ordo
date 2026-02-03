@@ -118,39 +118,39 @@ export function EmbedOrderFormClient({
       {/* Rest of your JSX remains the same */}
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 text-gray-900 mb-2">
             Order {product.name}
           </h1>
           {product.description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 text-gray-600">
               {product.description}
             </p>
           )}
         </div>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
-            <p className="text-green-800 dark:text-green-200 text-sm font-medium">
+          <div className="mb-4 p-3 bg-green-50 bg-green-50 border border-green-200 border-green-200 rounded-md">
+            <p className="text-green-800 text-green-800 text-sm font-medium">
               Order submitted successfully! We&apos;ll contact you shortly.
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+          <div className="mb-4 p-3 bg-red-50 bg-red-50 border border-red-200 border-red-200 rounded-md">
+            <p className="text-red-800 text-red-800 text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 text-gray-900 mb-3">
               Customer Information
             </h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                   Full Name *
                 </label>
                 <input
@@ -160,12 +160,12 @@ export function EmbedOrderFormClient({
                   onChange={(e) =>
                     setFormData({ ...formData, customerName: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                   Phone Number *
                 </label>
                 <input
@@ -175,12 +175,12 @@ export function EmbedOrderFormClient({
                   onChange={(e) =>
                     setFormData({ ...formData, customerPhone: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                   WhatsApp Number *
                 </label>
                 <input
@@ -193,20 +193,20 @@ export function EmbedOrderFormClient({
                       customerWhatsapp: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 text-gray-900 mb-3">
               Delivery Information
             </h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                   Delivery Address *
                 </label>
                 <textarea
@@ -219,13 +219,13 @@ export function EmbedOrderFormClient({
                       deliveryAddress: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     {stateLabel} *
                   </label>
                   <select
@@ -234,7 +234,7 @@ export function EmbedOrderFormClient({
                     onChange={(e) =>
                       setFormData({ ...formData, state: e.target.value })
                     }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   >
                     <option value="">Select {stateLabel.toLowerCase()}</option>
                     {stateOptions.map((state) => (
@@ -246,7 +246,7 @@ export function EmbedOrderFormClient({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
                     City *
                   </label>
                   <input
@@ -256,7 +256,7 @@ export function EmbedOrderFormClient({
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
                     }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ export function EmbedOrderFormClient({
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
+        <p className="text-center text-xs text-gray-500 text-gray-600 mt-4">
           By submitting this form, you agree to be contacted by our sales team.
         </p>
       </div>

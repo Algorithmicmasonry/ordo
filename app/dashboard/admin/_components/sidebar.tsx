@@ -3,6 +3,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -15,6 +20,7 @@ import {
   Code2,
   HatGlasses,
   LayoutDashboard,
+  Menu,
   PackageOpen,
   PanelLeftClose,
   PanelLeftOpen,
@@ -108,6 +114,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -124,13 +131,8 @@ export function Sidebar() {
     fetchUser();
   }, []);
 
-  return (
-    <aside
-      className={cn(
-        "shrink-0 border-r border-border bg-card flex flex-col transition-all duration-300",
-        isCollapsed ? "w-20" : "w-64",
-      )}
-    >
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
       {/* Logo */}
       <div
         className={cn(
@@ -155,7 +157,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8"
+          className="h-8 w-8 hidden lg:flex"
         >
           {isCollapsed ? (
             <PanelLeftOpen className="size-6 text-primary" />
@@ -174,6 +176,7 @@ export function Sidebar() {
               <Link
                 key={route.href}
                 href={route.href}
+                onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive
@@ -238,21 +241,37 @@ export function Sidebar() {
                 </div>
               </>
             )}
-            {/*{isCollapsed && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href={`/dashboard/admin/settings`}>
-                    <Settings className="size-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Settings</p>
-                </TooltipContent>
-              </Tooltip>
-            )}*/}
           </div>
         )}
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-4 left-4 z-40">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="bg-card">
+              <Menu className="size-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64">
+            {sidebarContent}
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          "hidden lg:flex shrink-0 border-r border-border bg-card flex-col transition-all duration-300",
+          isCollapsed ? "w-20" : "w-64",
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

@@ -9,6 +9,7 @@ import {
   Wallet,
   ArrowRight,
   CheckCircle2,
+  Rocket,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,7 +21,9 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Package className="h-6 w-6 text-primary" />
+              <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+                <Rocket className="size-5" />
+              </div>
               <h1 className="text-2xl font-bold">Ordo</h1>
             </div>
             <div className="flex items-center gap-4">
@@ -261,7 +264,9 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
+              <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+                <Rocket className="size-5" />
+              </div>
               <span className="font-semibold">Ordo</span>
             </div>
             <p className="text-sm text-muted-foreground">

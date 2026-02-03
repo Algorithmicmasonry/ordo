@@ -61,33 +61,33 @@ export default async function OrderDetailsPage({ params }: PageProps) {
   const totalAmount = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen pb-20 md:pb-0">
       <div className="flex-1">
-        <div className="max-w-[1440px] mx-auto px-6 py-6 flex flex-col gap-6">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard/sales-rep" className="text-muted-foreground hover:text-primary font-medium">
+          <div className="flex items-center gap-2 text-sm overflow-x-auto">
+            <Link href="/dashboard/sales-rep" className="text-muted-foreground hover:text-primary font-medium whitespace-nowrap">
               Dashboard
             </Link>
-            <ChevronRight className="size-4 text-muted-foreground" />
-            <Link href="/dashboard/sales-rep" className="text-muted-foreground hover:text-primary font-medium">
+            <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+            <Link href="/dashboard/sales-rep" className="text-muted-foreground hover:text-primary font-medium whitespace-nowrap">
               Orders
             </Link>
-            <ChevronRight className="size-4 text-muted-foreground" />
-            <span className="font-medium">Order {order.orderNumber}</span>
+            <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+            <span className="font-medium whitespace-nowrap">Order {order.orderNumber}</span>
           </div>
 
           {/* Page Heading */}
-          <div className="flex flex-wrap justify-between items-end gap-3">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <h1 className="text-4xl font-black leading-tight tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight">
                 Order {order.orderNumber}
               </h1>
-              <p className="text-muted-foreground text-base">
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Created on {format(new Date(order.createdAt), "MMM dd, yyyy h:mm a")}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2">
               <ChangeStatusDialog
                 orderId={order.id}
                 currentStatus={order.status}
@@ -99,15 +99,15 @@ export default async function OrderDetailsPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* 3 Column Layout */}
-          <div className="grid grid-cols-12 gap-6">
+          {/* 3 Column Layout - Stack on mobile, grid on larger screens */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
             {/* Left Column: Customer Info */}
-            <div className="col-span-12 lg:col-span-3">
+            <div className="lg:col-span-3">
               <CustomerInfoCard order={order} />
             </div>
 
             {/* Center Column: Order Items & Workflow */}
-            <div className="col-span-12 lg:col-span-6 flex flex-col gap-6">
+            <div className="lg:col-span-6 flex flex-col gap-4 sm:gap-6">
               <OrderItemsTable
                 items={order.items}
                 totalAmount={totalAmount}
@@ -118,7 +118,7 @@ export default async function OrderDetailsPage({ params }: PageProps) {
             </div>
 
             {/* Right Column: Communication Timeline */}
-            <div className="col-span-12 lg:col-span-3">
+            <div className="lg:col-span-3">
               <CommunicationTimeline order={order} />
             </div>
           </div>
@@ -126,77 +126,77 @@ export default async function OrderDetailsPage({ params }: PageProps) {
       </div>
 
       {/* Sticky Footer Actions */}
-      <footer className="bg-card border-t p-4 sticky bottom-0 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-        <div className="max-w-[1440px] mx-auto flex justify-between items-center px-6">
-          <div className="flex items-center gap-4">
+      <footer className="bg-card border-t p-3 sm:p-4 sticky bottom-0 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="max-w-[1440px] mx-auto flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 px-4 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-4">
             {order.status === "NEW" && (
               <>
-                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>
                   Action Required
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   Order is ready for confirmation.
                 </p>
               </>
             )}
             {order.status === "CONFIRMED" && !order.agentId && (
               <>
-                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>
                   Action Required
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   Order is ready for dispatch assignment.
                 </p>
               </>
             )}
             {order.status === "DISPATCHED" && (
               <>
-                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></span>
                   In Transit
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   Order is out for delivery.
                 </p>
               </>
             )}
             {order.status === "DELIVERED" && (
               <>
-                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
                   Completed
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   Order has been delivered successfully.
                 </p>
               </>
             )}
             {order.status === "CANCELLED" && (
               <>
-                <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5"></span>
                   Cancelled
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   This order has been cancelled.
                 </p>
               </>
             )}
             {order.status === "POSTPONED" && (
               <>
-                <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
+                <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-gray-500 mr-1.5"></span>
                   Postponed
                 </Badge>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                   This order has been postponed.
                 </p>
               </>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 flex-wrap sm:flex-nowrap">
             {/* Show Postpone option for non-terminal statuses */}
             {order.status !== "CANCELLED" &&
              order.status !== "DELIVERED" &&

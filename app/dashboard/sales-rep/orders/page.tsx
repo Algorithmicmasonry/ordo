@@ -47,7 +47,7 @@ export default async function SalesRepOrdersPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
         <Link
@@ -61,12 +61,12 @@ export default async function SalesRepOrdersPage({ searchParams }: PageProps) {
       </div>
 
       {/* Page Header */}
-      <div className="flex justify-between items-end gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-black leading-tight tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
             My Orders
           </h1>
-          <p className="text-muted-foreground text-base">
+          <p className="text-muted-foreground text-sm md:text-base">
             Manage and track all your assigned orders
           </p>
         </div>

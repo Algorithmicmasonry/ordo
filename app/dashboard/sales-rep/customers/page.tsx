@@ -56,7 +56,7 @@ export default async function SalesRepCustomersPage({
   const { customers, pagination, stats } = customersResult.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
         <Link
@@ -85,7 +85,7 @@ export default async function SalesRepCustomersPage({
       {/* Info Alert */}
       <Alert className="bg-primary/5 border-primary/20">
         <Info className="size-4 text-primary" />
-        <AlertDescription className="text-sm">
+        <AlertDescription className="text-xs sm:text-sm">
           <strong className="font-bold text-primary">
             Data Policy Enforcement:
           </strong>{" "}

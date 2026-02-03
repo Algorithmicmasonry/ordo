@@ -55,7 +55,7 @@ export default async function SalesRepProductsPage({ searchParams }: PageProps) 
   const { products, pagination, stats } = productsResult.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
         <Link

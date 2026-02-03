@@ -248,9 +248,9 @@ export function AssignedOrdersTable({
           </div>
         )}
 
-        <CardHeader className="px-6 pt-6 pb-0">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <h2 className="text-xl font-bold">Assigned Orders</h2>
+        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold">Assigned Orders</h2>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -258,8 +258,8 @@ export function AssignedOrdersTable({
                 onClick={() => setShowFilters(!showFilters)}
                 disabled={isPending}
               >
-                <Filter className="size-4 mr-2" />
-                Filter
+                <Filter className="size-4 sm:mr-2" />
+                <span className="hidden sm:inline">Filter</span>
               </Button>
               <Button
                 variant="outline"
@@ -267,8 +267,8 @@ export function AssignedOrdersTable({
                 onClick={handleExport}
                 disabled={isPending || orders.length === 0}
               >
-                <Download className="size-4 mr-2" />
-                Export
+                <Download className="size-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
           </div>
@@ -306,23 +306,25 @@ export function AssignedOrdersTable({
           )}
 
           {/* Tabs */}
-          <div className="flex border-b border-border gap-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => handleStatusFilter(tab.value)}
-                disabled={isPending}
-                className={cn(
-                  "border-b-2 pb-3 text-sm font-semibold transition-colors cursor-pointer",
-                  currentStatus === tab.value
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                  isPending && "opacity-50 cursor-not-allowed",
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+            <div className="flex border-b border-border gap-4 sm:gap-8 min-w-max">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => handleStatusFilter(tab.value)}
+                  disabled={isPending}
+                  className={cn(
+                    "border-b-2 pb-3 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap",
+                    currentStatus === tab.value
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                    isPending && "opacity-50 cursor-not-allowed",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </CardHeader>
 
@@ -431,13 +433,13 @@ export function AssignedOrdersTable({
                         {format(new Date(order.createdAt), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   size="icon"
-                                  className="bg-green-500 hover:bg-green-600 text-white size-8"
+                                  className="bg-green-500 hover:bg-green-600 text-white size-9 sm:size-8"
                                   onClick={() =>
                                     handleWhatsAppClick(
                                       order.customerWhatsapp ||
@@ -456,10 +458,10 @@ export function AssignedOrdersTable({
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Button size="sm" asChild>
+                          <Button size="sm" asChild className="h-9 sm:h-8">
                             <Link href={`/dashboard/sales-rep/orders/${order.id}`}>
-                              <Eye className="size-4 mr-2" />
-                              Details
+                              <Eye className="size-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Details</span>
                             </Link>
                           </Button>
                         </div>
@@ -473,8 +475,8 @@ export function AssignedOrdersTable({
 
           {/* Pagination */}
           {orders.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/50">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t bg-muted/50">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                 Showing{" "}
                 <span className="font-medium text-foreground">
                   {(pagination.page - 1) * pagination.limit + 1}

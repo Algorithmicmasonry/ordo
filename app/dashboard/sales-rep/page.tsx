@@ -77,7 +77,7 @@ export default async function SalesRepDashboardPage({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* Dashboard Header */}
       <div>
         <DashboardHeader
@@ -93,7 +93,7 @@ export default async function SalesRepDashboardPage({
       </div>
 
       {/* Period Filter */}
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
         <PeriodFilter currentPeriod={period} />
         <CreateOrderDialog />
       </div>

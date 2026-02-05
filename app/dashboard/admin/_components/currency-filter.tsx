@@ -27,6 +27,7 @@ export function CurrencyFilter() {
       params.set("currency", currency);
     }
     router.push(`?${params.toString()}`);
+    setIsLoading(false);
   };
 
   const currencies = getAvailableCurrencies();

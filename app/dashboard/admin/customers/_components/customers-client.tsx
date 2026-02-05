@@ -48,6 +48,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { SourceIcon, sourceNames } from "../../orders/_components/orders-table";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+} from "@/lib/export-utils";
 
 interface Customer {
   name: string;
@@ -129,9 +134,47 @@ export default function CustomersClient({
   );
 
   const handleExportData = () => {
-    toast("Export feature coming soon!", {
-      icon: "ℹ️",
-    });
+    try {
+      // Export filtered customers to CSV
+      const headers = [
+        "Name",
+        "Phone",
+        "WhatsApp",
+        "Location",
+        "Total Orders",
+        "Successful Orders",
+        "Cancelled Orders",
+        "Total Spent",
+        "Reliability",
+        "Reliability Rate",
+        "Preferred Source",
+      ];
+
+      const rows = filteredCustomers.map((customer) => [
+        customer.name,
+        customer.phone,
+        customer.whatsapp,
+        customer.location || "Not specified",
+        customer.totalOrders.toString(),
+        customer.successfulOrders.toString(),
+        customer.cancelledOrders.toString(),
+        formatCurrencyForExport(customer.totalSpent),
+        reliabilityConfig[customer.reliability].label,
+        `${customer.reliabilityRate.toFixed(1)}%`,
+        customer.preferredSource
+          ? sourceNames[customer.preferredSource as keyof typeof sourceNames] ||
+            customer.preferredSource
+          : "Unknown",
+      ]);
+
+      const filename = generateFilename("customers");
+      exportToCSV(headers, rows, filename);
+
+      toast.success(`Exported ${filteredCustomers.length} customers successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export customers");
+    }
   };
 
   const handleWhatsApp = (phone: string, name: string) => {

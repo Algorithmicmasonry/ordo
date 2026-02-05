@@ -31,6 +31,12 @@ import {
   YAxis,
 } from "recharts";
 import { DateRangePicker } from "./date-range-picker";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+} from "@/lib/export-utils";
+import toast from "react-hot-toast";
 
 interface AgentCostAnalysisProps {
   data: {
@@ -134,6 +140,49 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
     return "text-red-600";
   };
 
+  const handleExportCSV = () => {
+    try {
+      const dateRange = hasCustomDateRange
+        ? `${searchParams.get("startDate")} to ${searchParams.get("endDate")}`
+        : period.charAt(0).toUpperCase() + period.slice(1);
+
+      // Prepare agent performance data
+      const headers = [
+        "Agent Name",
+        "Location",
+        "Total Deliveries",
+        "Success Rate",
+        "Stock Value",
+        "Profit Contribution",
+        "Total Stock Issues",
+        "Stock Issues Value",
+        "Defective Count",
+        "Missing Count",
+      ];
+
+      const rows = agentPerformance.map((agent) => [
+        agent.agentName,
+        agent.location,
+        agent.totalDeliveries.toString(),
+        `${agent.successRate.toFixed(1)}%`,
+        formatCurrencyForExport(agent.stockValue),
+        formatCurrencyForExport(agent.profitContribution),
+        agent.totalStockIssues.toString(),
+        formatCurrencyForExport(agent.totalStockIssuesValue),
+        agent.defectiveCount.toString(),
+        agent.missingCount.toString(),
+      ]);
+
+      const filename = generateFilename("agent_cost_analysis");
+      exportToCSV(headers, rows, filename);
+
+      toast.success(`Exported ${agentPerformance.length} agents successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export agent cost analysis");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Filters */}
@@ -142,7 +191,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
           {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
           <DateRangePicker />
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={handleExportCSV}>
           <Download className="w-4 h-4 mr-2" />
           Export CSV
         </Button>

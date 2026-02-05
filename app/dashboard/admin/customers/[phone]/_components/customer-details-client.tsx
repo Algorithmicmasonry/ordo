@@ -55,6 +55,12 @@ import {
   OrderDetailsModal,
   type OrderWithRelations,
 } from "../../../orders/_components/orders-table";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+  formatDateOnlyForExport,
+} from "@/lib/export-utils";
 
 interface CustomerDetailsClientProps {
   data: {
@@ -177,7 +183,78 @@ export default function CustomerDetailsClient({
   };
 
   const handleExport = () => {
-    toast("Export feature coming soon!", { icon: "ℹ️" });
+    try {
+      // Create comprehensive customer report
+      const headers = ["Metric", "Value"];
+      const rows = [
+        ["CUSTOMER PROFILE", ""],
+        ["Name", customer.name],
+        ["Phone", customer.phone],
+        ["WhatsApp", customer.whatsapp],
+        ["Location", customer.location || "Not specified"],
+        ["Status", customer.isActive ? "Active" : "Inactive"],
+        ["First Order", formatDateOnlyForExport(customer.firstOrderDate)],
+        ["Last Order", formatDateOnlyForExport(customer.lastOrderDate)],
+        ["Days Since Last Order", stats.daysSinceLastOrder.toString()],
+        ["", ""], // Empty row for spacing
+        ["STATISTICS", ""],
+        ["Total Orders", stats.totalOrders.toString()],
+        ["Delivered Orders", stats.deliveredOrders.toString()],
+        ["Cancelled Orders", stats.cancelledOrders.toString()],
+        ["Pending Orders", stats.pendingOrders.toString()],
+        ["Total Spent", formatCurrencyForExport(stats.totalSpent)],
+        ["Average Order Value", formatCurrencyForExport(stats.avgOrderValue)],
+        ["Conversion Rate", `${stats.conversionRate.toFixed(1)}%`],
+        ["", ""], // Empty row for spacing
+        ["INSIGHTS", ""],
+        [
+          "Purchase Frequency",
+          `${insights.purchaseFrequency.toFixed(1)} orders/month`,
+        ],
+        ["Preferred Source", insights.preferredSource],
+        ["VIP Customer", insights.badges.isVIP ? "Yes" : "No"],
+        ["Repeat Customer", insights.badges.isRepeat ? "Yes" : "No"],
+        ["At Risk", insights.badges.isAtRisk ? "Yes" : "No"],
+        ["High Value", insights.badges.isHighValue ? "Yes" : "No"],
+        ["Problematic", insights.badges.isProblematic ? "Yes" : "No"],
+        ["", ""], // Empty row for spacing
+        ["TOP PRODUCTS", ""],
+        ["Product", "Orders", "Total Spent"],
+        ...insights.topProducts.map((product) => [
+          product.name,
+          product.count.toString(),
+          formatCurrencyForExport(product.spent),
+        ]),
+        ["", ""], // Empty row for spacing
+        ["ORDER HISTORY", ""],
+        [
+          "Order Number",
+          "Date",
+          "Status",
+          "Source",
+          "Items",
+          "Total",
+          "Sales Rep",
+        ],
+        ...orders.map((order: any) => [
+          order.orderNumber,
+          formatDateOnlyForExport(order.createdAt),
+          order.status,
+          order.source,
+          order._count?.items?.toString() || "0",
+          formatCurrencyForExport(order.totalAmount, order.currency),
+          order.assignedTo?.name || "Unassigned",
+        ]),
+      ];
+
+      const filename = generateFilename(`customer_${customer.phone.replace(/\D/g, "")}`);
+      exportToCSV(headers, rows, filename);
+
+      toast.success("Customer report exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export customer report");
+    }
   };
 
   const handleViewDetails = (order: any) => {

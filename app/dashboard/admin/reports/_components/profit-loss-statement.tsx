@@ -13,6 +13,8 @@ import {
 import { useSearchParams } from "next/navigation";
 import { DateRangePicker } from "./date-range-picker";
 import { formatCurrency } from "@/lib/currency";
+import { exportToPDF, generateFilename } from "@/lib/export-utils";
+import toast from "react-hot-toast";
 
 interface ProfitLossStatementProps {
   data: {
@@ -86,6 +88,63 @@ export function ProfitLossStatement({
     return null;
   };
 
+  const handleExportPDF = () => {
+    try {
+      const dateRange = hasCustomDateRange
+        ? `${searchParams.get("startDate")} to ${searchParams.get("endDate")}`
+        : period.charAt(0).toUpperCase() + period.slice(1);
+
+      // Prepare table data
+      const headers = ["Account Description", "Current Period", "Previous Period", "% Change"];
+      const rows = [
+        ["REVENUE", "", "", ""],
+        ["  Delivered Orders", formatCurrency(revenue.current), formatCurrency(revenue.previous), `${revenue.change > 0 ? "+" : ""}${revenue.change.toFixed(1)}%`],
+        ["", "", "", ""],
+        ["COST OF GOODS SOLD", "", "", ""],
+        ["  Product Costs", formatCurrency(cogs.current), formatCurrency(cogs.previous), `${cogs.change > 0 ? "+" : ""}${cogs.change.toFixed(1)}%`],
+        ["", "", "", ""],
+        ["GROSS PROFIT", formatCurrency(grossProfit.current), formatCurrency(grossProfit.previous), `${grossProfit.change > 0 ? "+" : ""}${grossProfit.change.toFixed(1)}%`],
+        ["", "", "", ""],
+        ["OPERATING EXPENSES", "", "", ""],
+        ...expenses.map(exp => [
+          `  ${EXPENSE_LABELS[exp.type] || exp.type}`,
+          formatCurrency(exp.current),
+          formatCurrency(exp.previous),
+          `${exp.change > 0 ? "+" : ""}${exp.change.toFixed(1)}%`
+        ]),
+        ["Total Operating Expenses", formatCurrency(totalExpenses.current), formatCurrency(totalExpenses.previous), `${totalExpenses.change > 0 ? "+" : ""}${totalExpenses.change.toFixed(1)}%`],
+        ["", "", "", ""],
+        ["NET PROFIT", formatCurrency(netProfit.current), formatCurrency(netProfit.previous), `${netProfit.change > 0 ? "+" : ""}${netProfit.change.toFixed(1)}%`],
+        ["", "", "", ""],
+        ["PROFIT MARGINS", "", "", ""],
+        ["  Gross Margin", `${margins.gross.toFixed(2)}%`, "", ""],
+        ["  Net Margin", `${margins.net.toFixed(2)}%`, "", ""],
+      ];
+
+      const filename = generateFilename("profit_loss_statement");
+      exportToPDF(
+        "Profit & Loss Statement",
+        headers,
+        rows,
+        filename,
+        {
+          orientation: "portrait",
+          subtitle: `Period: ${dateRange}`,
+          metadata: [
+            { label: "Generated", value: new Date().toLocaleDateString() },
+            { label: "Gross Margin", value: `${margins.gross.toFixed(2)}%` },
+            { label: "Net Margin", value: `${margins.net.toFixed(2)}%` },
+          ],
+        }
+      );
+
+      toast.success("Profit & Loss Statement exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Filters */}
@@ -94,7 +153,7 @@ export function ProfitLossStatement({
           {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
           <DateRangePicker />
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={handleExportPDF}>
           <Download className="w-4 h-4 mr-2" />
           Export PDF
         </Button>

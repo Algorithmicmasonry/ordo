@@ -33,6 +33,12 @@ import { TimePeriod } from "@/lib/types";
 import { EditSalesRepModal } from "../../_components";
 import toast from "react-hot-toast";
 import { getCurrencySymbol } from "@/lib/currency";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+  formatDateForExport,
+} from "@/lib/export-utils";
 
 type SalesRepWithDetails = User & {
   orders: (Order & {
@@ -107,9 +113,71 @@ export default function SalesRepDetailsClient({
   );
 
   const handleExportReport = () => {
-    toast("Export feature coming soon!", {
-      icon: "ℹ️",
-    });
+    try {
+      // Create overview section data
+      const headers = ["Metric", "Value"];
+      const rows = [
+        ["Sales Representative", salesRep.name],
+        ["Email", salesRep.email],
+        ["Status", salesRep.isActive ? "Active" : "Inactive"],
+        ["Period", currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1)],
+        ["", ""], // Empty row for spacing
+        ["PERFORMANCE METRICS", ""],
+        ["Total Orders", salesRep.stats.totalOrders.toString()],
+        ["Delivered Orders", salesRep.stats.deliveredOrders.toString()],
+        [
+          "Revenue",
+          formatCurrencyForExport(salesRep.stats.revenue),
+        ],
+        [
+          "Profit",
+          formatCurrencyForExport(salesRep.stats.profit),
+        ],
+        [
+          "Conversion Rate",
+          `${salesRep.stats.conversionRate.toFixed(1)}%`,
+        ],
+        ["", ""], // Empty row for spacing
+        ["ORDERS BY STATUS", ""],
+        ...Object.entries(salesRep.stats.ordersByStatus).map(([status, count]) => [
+          status,
+          count.toString(),
+        ]),
+        ["", ""], // Empty row for spacing
+        ["ORDERS BY SOURCE", ""],
+        ...Object.entries(salesRep.stats.ordersBySource).map(([source, count]) => [
+          sourceNames[source as OrderSource] || source,
+          count.toString(),
+        ]),
+        ["", ""], // Empty row for spacing
+        ["TRENDS (vs Previous Period)", ""],
+        ["Orders Change", `${salesRep.stats.trends.orders > 0 ? "+" : ""}${salesRep.stats.trends.orders.toFixed(1)}%`],
+        ["Delivered Change", `${salesRep.stats.trends.delivered > 0 ? "+" : ""}${salesRep.stats.trends.delivered.toFixed(1)}%`],
+        ["Revenue Change", `${salesRep.stats.trends.revenue > 0 ? "+" : ""}${salesRep.stats.trends.revenue.toFixed(1)}%`],
+        ["Profit Change", `${salesRep.stats.trends.profit > 0 ? "+" : ""}${salesRep.stats.trends.profit.toFixed(1)}%`],
+        ["Conversion Change", `${salesRep.stats.trends.conversion > 0 ? "+" : ""}${salesRep.stats.trends.conversion.toFixed(1)}%`],
+        ["", ""], // Empty row for spacing
+        ["RECENT ORDERS", ""],
+        ["Order Number", "Customer", "Phone", "Status", "Source", "Total", "Date"],
+        ...recentOrders.map((order) => [
+          order.orderNumber,
+          order.customerName,
+          order.customerPhone,
+          order.status,
+          order.source,
+          formatCurrencyForExport(order.totalAmount, order.currency),
+          formatDateForExport(order.createdAt),
+        ]),
+      ];
+
+      const filename = generateFilename(`sales_rep_${salesRep.name.replace(/\s+/g, "_")}_report`);
+      exportToCSV(headers, rows, filename);
+
+      toast.success("Report exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export report");
+    }
   };
 
   return (

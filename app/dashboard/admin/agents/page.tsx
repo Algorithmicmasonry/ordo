@@ -2,10 +2,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "../_components";
-import { AgentsStats, AgentsTable } from "./_components";
+import { AgentsStats, AgentsTable, ExportAgentsButton } from "./_components";
 import { getAgentStats, getAgentsWithMetrics, getUniqueZones } from "./actions";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 
 export default async function AdminAgentsPage() {
   const session = await auth.api.getSession({
@@ -54,12 +52,11 @@ export default async function AdminAgentsPage() {
       />
 
       {/* Export Button */}
-      <div className="flex items-center justify-end">
-        <Button>
-          <Download className="size-4 mr-2" />
-          Export CSV
-        </Button>
-      </div>
+      {agentsResponse.data && (
+        <div className="flex items-center justify-end">
+          <ExportAgentsButton agents={agentsResponse.data} />
+        </div>
+      )}
 
       {/* KPI Cards */}
       {statsResponse.data && (

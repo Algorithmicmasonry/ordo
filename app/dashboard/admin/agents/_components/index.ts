@@ -6,3 +6,4 @@ export { DeleteAgentDialog } from "./delete-agent-dialog";
 export { AssignStockModal } from "./assign-stock-modal";
 export { ReconcileStockModal } from "./reconcile-stock-modal";
 export { SettlementDialog } from "./settlement-dialog";
+export { ExportAgentsButton } from "./export-agents-button";

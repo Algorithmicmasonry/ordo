@@ -39,6 +39,12 @@ import {
 } from "recharts";
 import { PeriodFilter } from "@/app/dashboard/admin/_components";
 import type { TimePeriod } from "@/lib/types";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+  formatDateForExport,
+} from "@/lib/export-utils";
 
 interface ProductAnalyticsClientProps {
   product: {
@@ -99,7 +105,83 @@ export default function ProductAnalyticsClient({
   currentPeriod,
 }: ProductAnalyticsClientProps) {
   const handleExport = () => {
-    toast("Export feature coming soon!", { icon: "ℹ️" });
+    try {
+      // Create comprehensive product analytics report
+      const headers = ["Metric", "Value"];
+      const rows = [
+        ["PRODUCT INFORMATION", ""],
+        ["Product Name", product.name],
+        ["Description", product.description || "N/A"],
+        ["Price", formatCurrencyForExport(product.price)],
+        ["Cost", formatCurrencyForExport(product.cost)],
+        ["Period", currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1)],
+        ["", ""], // Empty row for spacing
+        ["FINANCIAL SUMMARY", ""],
+        ["Total Revenue", formatCurrencyForExport(stats.totalRevenue)],
+        ["Total COGS", formatCurrencyForExport(stats.totalCOGS)],
+        ["Total Expenses", formatCurrencyForExport(stats.totalExpenses)],
+        ["Net Profit", formatCurrencyForExport(stats.netProfit)],
+        ["Profit Margin", `${stats.profitMargin.toFixed(2)}%`],
+        ["", ""], // Empty row for spacing
+        ["SALES METRICS", ""],
+        ["Total Units Sold", stats.totalUnitsSold.toString()],
+        [
+          "Average Revenue Per Unit",
+          formatCurrencyForExport(stats.averageRevenuePerUnit),
+        ],
+        [
+          "Average Cost Per Unit",
+          formatCurrencyForExport(stats.averageCostPerUnit),
+        ],
+        ["", ""], // Empty row for spacing
+        ["EXPENSES BY TYPE", ""],
+        ["Type", "Amount", "Percentage"],
+        ...Object.entries(expensesByType).map(([type, amount]) => [
+          expenseTypeConfig[type]?.label || type,
+          formatCurrencyForExport(amount),
+          `${((amount / stats.totalExpenses) * 100).toFixed(1)}%`,
+        ]),
+        ["", ""], // Empty row for spacing
+        ["MONTHLY BREAKDOWN", ""],
+        [
+          "Month",
+          "Revenue",
+          "COGS",
+          "Expenses",
+          "Profit",
+          "Units Sold",
+          "Profit Margin",
+        ],
+        ...monthlyBreakdown.map((month) => [
+          month.month,
+          formatCurrencyForExport(month.revenue),
+          formatCurrencyForExport(month.cogs),
+          formatCurrencyForExport(month.expenses),
+          formatCurrencyForExport(month.profit),
+          month.unitsSold.toString(),
+          month.revenue > 0
+            ? `${((month.profit / month.revenue) * 100).toFixed(1)}%`
+            : "0%",
+        ]),
+        ["", ""], // Empty row for spacing
+        ["RECENT EXPENSES", ""],
+        ["Date", "Type", "Amount", "Description"],
+        ...recentExpenses.map((expense) => [
+          formatDateForExport(expense.date),
+          expenseTypeConfig[expense.type]?.label || expense.type,
+          formatCurrencyForExport(expense.amount),
+          expense.description || "",
+        ]),
+      ];
+
+      const filename = generateFilename(`product_analytics_${product.name.replace(/\s+/g, "_")}`);
+      exportToCSV(headers, rows, filename);
+
+      toast.success("Product analytics report exported successfully!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export report");
+    }
   };
 
   // Prepare pie chart data

@@ -2,6 +2,9 @@
  * Utility functions for exporting data to various formats (CSV, PDF, etc.)
  */
 
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 /**
  * Export data to CSV format
  * @param headers - Array of column headers
@@ -118,4 +121,102 @@ export function formatDateOnlyForExport(date: Date | string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+/**
+ * Export data to PDF format with table
+ * @param title - Document title
+ * @param headers - Array of column headers
+ * @param rows - Array of data rows (each row is an array of values)
+ * @param filename - Name of the file to download (without extension)
+ * @param options - Optional configuration for the PDF
+ */
+export function exportToPDF(
+  title: string,
+  headers: string[],
+  rows: (string | number | boolean | null | undefined)[][],
+  filename: string,
+  options?: {
+    orientation?: "portrait" | "landscape";
+    subtitle?: string;
+    metadata?: Array<{ label: string; value: string }>;
+  },
+): void {
+  const doc = new jsPDF({
+    orientation: options?.orientation || "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  // Add title
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text(title, 14, 20);
+
+  let currentY = 30;
+
+  // Add subtitle if provided
+  if (options?.subtitle) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(options.subtitle, 14, currentY);
+    currentY += 10;
+  }
+
+  // Add metadata if provided
+  if (options?.metadata && options.metadata.length > 0) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    options.metadata.forEach((item) => {
+      doc.text(`${item.label}: ${item.value}`, 14, currentY);
+      currentY += 6;
+    });
+    currentY += 5;
+  }
+
+  // Add table
+  autoTable(doc, {
+    head: [headers],
+    body: rows.map((row) => row.map((cell) => cell?.toString() ?? "")),
+    startY: currentY,
+    theme: "grid",
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [71, 85, 105], // slate-600
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252], // slate-50
+    },
+    margin: { top: currentY, left: 14, right: 14 },
+  });
+
+  // Add footer with date and page numbers
+  const pageCount = doc.getNumberOfPages();
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.text(
+      `Generated on ${new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })}`,
+      14,
+      doc.internal.pageSize.height - 10,
+    );
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      doc.internal.pageSize.width - 30,
+      doc.internal.pageSize.height - 10,
+    );
+  }
+
+  // Save the PDF
+  doc.save(`${filename}.pdf`);
 }

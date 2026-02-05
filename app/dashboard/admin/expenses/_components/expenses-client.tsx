@@ -54,6 +54,12 @@ import { EditExpenseModal } from "./edit-expense-modal";
 import { DeleteExpenseDialog } from "./delete-expense-dialog";
 import { deleteExpense } from "@/app/actions/expenses";
 import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+  formatDateForExport,
+} from "@/lib/export-utils";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -274,7 +280,43 @@ export default function ExpensesClient({
   };
 
   const handleExport = () => {
-    toast("Export feature coming soon!", { icon: "ℹ️" });
+    try {
+      // Export filtered or selected expenses to CSV
+      const expensesToExport =
+        selectedExpenses.size > 0
+          ? expenses.filter((e) => selectedExpenses.has(e.id))
+          : filteredExpenses;
+
+      const headers = [
+        "Date",
+        "Type",
+        "Amount",
+        "Product",
+        "Description",
+        "Created At",
+      ];
+
+      const rows = expensesToExport.map((expense) => [
+        formatDateForExport(expense.date),
+        expenseTypeConfig[expense.type]?.label || expense.type,
+        formatCurrencyForExport(expense.amount),
+        expense.product?.name || "General Expense",
+        expense.description || "",
+        formatDateForExport(expense.createdAt),
+      ]);
+
+      const filename = generateFilename("expenses");
+      exportToCSV(headers, rows, filename);
+
+      const count =
+        selectedExpenses.size > 0
+          ? selectedExpenses.size
+          : filteredExpenses.length;
+      toast.success(`Exported ${count} expense(s) successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export expenses");
+    }
   };
 
   const handleTypeToggle = (type: string) => {

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { TimePeriod } from "@/lib/types";
 
 interface DashboardStatsProps {
   stats: {
@@ -8,12 +9,21 @@ interface DashboardStatsProps {
     percentageChange: number;
     pendingOrders: number;
     confirmedOrders: number;
-    deliveredThisWeek: number;
+    deliveredThisPeriod: number;
     conversionRate: number;
   };
+  period: TimePeriod;
 }
 
-export function DashboardStats({ stats }: DashboardStatsProps) {
+export function DashboardStats({ stats, period }: DashboardStatsProps) {
+  // Get period label for delivered stat
+  const periodLabels: Record<TimePeriod, string> = {
+    today: "Today",
+    week: "This Week",
+    month: "This Month",
+    year: "This Year",
+  };
+  const deliveredLabel = `Delivered ${periodLabels[period]}`;
   const isPositiveChange = stats.percentageChange >= 0;
   const confirmedPercentage =
     stats.totalOrders > 0
@@ -78,14 +88,14 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         </CardContent>
       </Card>
 
-      {/* Delivered This Week */}
+      {/* Delivered This Period */}
       <Card className="shadow-sm">
         <CardContent className="p-6 flex flex-col gap-1">
           <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-            Delivered This Week
+            {deliveredLabel}
           </p>
           <p className="text-3xl font-bold tracking-tight">
-            {stats.deliveredThisWeek}
+            {stats.deliveredThisPeriod}
           </p>
           <span className="text-xs text-blue-600 font-medium mt-1">
             On target

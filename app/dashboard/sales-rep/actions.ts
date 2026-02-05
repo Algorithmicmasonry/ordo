@@ -22,14 +22,6 @@ export async function getSalesRepDashboardStats(period: TimePeriod = "month") {
     const currentPeriodRange = getDateRange(period);
     const previousPeriodRange = getPreviousPeriodRange(period);
 
-    // Get current week start (Monday) for "Delivered This Week" stat
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-
     // Total orders for the selected period
     const totalOrders = await db.order.count({
       where: {
@@ -84,12 +76,15 @@ export async function getSalesRepDashboardStats(period: TimePeriod = "month") {
       },
     });
 
-    // Delivered this week (always shows this week regardless of period filter)
-    const deliveredThisWeek = await db.order.count({
+    // Delivered orders for the selected period
+    const deliveredThisPeriod = await db.order.count({
       where: {
         assignedToId: salesRepId,
         status: "DELIVERED",
-        deliveredAt: { gte: startOfWeek },
+        createdAt: {
+          gte: currentPeriodRange.startDate,
+          lte: currentPeriodRange.endDate,
+        },
       },
     });
 
@@ -130,7 +125,7 @@ export async function getSalesRepDashboardStats(period: TimePeriod = "month") {
         percentageChange,
         pendingOrders,
         confirmedOrders,
-        deliveredThisWeek,
+        deliveredThisPeriod,
         conversionRate,
         followUpOrders,
       },

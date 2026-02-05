@@ -99,7 +99,7 @@ export default async function SalesRepDashboardPage({
       </div>
 
       {/* Stats Cards */}
-      <DashboardStats stats={statsResult.data} />
+      <DashboardStats stats={statsResult.data} period={period} />
 
       {/* Follow-up Reminder */}
       {statsResult.data.followUpOrders > 0 && (

@@ -325,7 +325,7 @@ export const OrderDetailsModal = ({
   onClose: () => void;
 }) => {
   const totalAmount = order.items.reduce(
-    (sum, item) => sum + item.quantity * item.product.price,
+    (sum, item) => sum + item.quantity * item.price,
     0,
   );
 
@@ -429,11 +429,11 @@ export const OrderDetailsModal = ({
                       </TableCell>
                       <TableCell className="text-right">
                         {getCurrencySymbol(order.currency)}
-                        {item.product.price.toLocaleString()}
+                        {item.price.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
                         {getCurrencySymbol(order.currency)}
-                        {(item.quantity * item.product.price).toLocaleString()}
+                        {(item.quantity * item.price).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}

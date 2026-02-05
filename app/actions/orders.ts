@@ -168,11 +168,14 @@ export async function createOrderV2(data: OrderFormDataV2) {
     for (const pkg of product.packages) {
       totalAmount += pkg.price;
 
+      // Store unit price (package price / quantity) so that quantity × price = package price
+      const unitPrice = pkg.price / pkg.quantity;
+
       orderItems.push({
         product: { connect: { id: product.id } },
         quantity: pkg.quantity,
-        price: pkg.price,
-        cost: product.cost * pkg.quantity, // Total cost for this package
+        price: unitPrice, // Price per unit in package
+        cost: product.cost, // Cost per unit
       });
     }
 

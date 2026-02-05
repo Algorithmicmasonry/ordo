@@ -91,7 +91,8 @@ export function EditPriceDialog({
             Edit {getCurrencyName(initialPrice.currency)} Pricing
           </DialogTitle>
           <DialogDescription>
-            Update the pricing for {productName} in {getCurrencyName(initialPrice.currency)}.
+            Update the pricing for {productName} in{" "}
+            {getCurrencyName(initialPrice.currency)}.
           </DialogDescription>
         </DialogHeader>
 
@@ -100,9 +101,9 @@ export function EditPriceDialog({
             <div className="space-y-2">
               <Label htmlFor="edit-price">Selling Price *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {/*<span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {getCurrencySymbol(initialPrice.currency)}
-                </span>
+                </span>*/}
                 <Input
                   id="edit-price"
                   type="number"
@@ -120,9 +121,9 @@ export function EditPriceDialog({
             <div className="space-y-2">
               <Label htmlFor="edit-cost">Cost per Unit *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {/*<span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {getCurrencySymbol(initialPrice.currency)}
-                </span>
+                </span>*/}
                 <Input
                   id="edit-cost"
                   type="number"

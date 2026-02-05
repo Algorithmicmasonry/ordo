@@ -129,11 +129,11 @@ export function AddPriceDialog({
             <div className="space-y-2">
               <Label htmlFor="price">Selling Price *</Label>
               <div className="relative">
-                {currency && (
+                {/*{currency && (
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {getCurrencySymbol(currency as Currency)}
                   </span>
-                )}
+                )}*/}
                 <Input
                   id="price"
                   type="number"
@@ -150,11 +150,11 @@ export function AddPriceDialog({
             <div className="space-y-2">
               <Label htmlFor="cost">Cost per Unit *</Label>
               <div className="relative">
-                {currency && (
+                {/*{currency && (
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {getCurrencySymbol(currency as Currency)}
                   </span>
-                )}
+                )}*/}
                 <Input
                   id="cost"
                   type="number"
@@ -162,8 +162,7 @@ export function AddPriceDialog({
                   min="0"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  placeholder="0.00"
-                  className={currency ? "pl-8" : ""}
+                  className={currency ? "pl-8 font-semibold" : "font-semibold"}
                   required
                 />
               </div>

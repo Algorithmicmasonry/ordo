@@ -141,7 +141,6 @@ export function AddPriceDialog({
                   min="0"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
                   className={currency ? "pl-8" : ""}
                   required
                 />

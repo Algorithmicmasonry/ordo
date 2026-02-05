@@ -18,6 +18,7 @@ import {
   OrderDetailsModal,
   type OrderWithRelations,
 } from "@/app/dashboard/admin/orders/_components/orders-table";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface AgentOrdersTableProps {
   orders: OrderWithRelations[];
@@ -127,7 +128,7 @@ export function AgentOrdersTable({ orders, totalOrders }: AgentOrdersTableProps)
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell>{getStatusBadge(order.status)}</TableCell>
                     <TableCell className="text-right font-semibold">
-                      ₦{totalAmount.toLocaleString()}
+                      {getCurrencySymbol(order.currency)}{totalAmount.toLocaleString()}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(order.createdAt).toLocaleDateString("en-US", {

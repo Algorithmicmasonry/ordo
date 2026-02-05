@@ -72,13 +72,14 @@ export function StatsCards({ stats, currency }: StatsCardsProps) {
 
   return (
     <div className="space-y-4">
-      {currency && (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
-            Showing {getCurrencyName(currency)} only
-          </Badge>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary" className="text-xs font-medium">
+          Currency: {getCurrencyName(currency || "NGN")}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          All amounts shown in this currency only
+        </span>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsData.map((stat) => {
           const isPositive = stat.change >= 0;

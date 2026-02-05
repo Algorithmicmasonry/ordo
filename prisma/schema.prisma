@@ -130,9 +130,9 @@ model Product {
   id          String    @id @default(cuid())
   name        String
   description String?
-  price       Float // Selling price
-  cost        Float // Cost per unit (for profit calculation)
-  currency    Currency  @default(NGN) // Base currency for product pricing
+  price       Float // Selling price (deprecated - use ProductPrice table)
+  cost        Float // Cost per unit (deprecated - use ProductPrice table)
+  currency    Currency  @default(NGN) // Primary/default currency
   sku         String?   @unique
   isActive    Boolean   @default(true)
   isDeleted   Boolean   @default(false) // Soft delete flag
@@ -146,16 +146,37 @@ model Product {
   currentStock Int @default(0)
   reorderPoint Int @default(0)
 
-  orders     OrderItem[]
-  agentStock AgentStock[]
-  expenses   Expense[]
-  packages   ProductPackage[]
+  orders       OrderItem[]
+  agentStock   AgentStock[]
+  expenses     Expense[]
+  packages     ProductPackage[]
+  productPrices ProductPrice[] // Multi-currency pricing
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([currency])
   @@map("products")
+}
+
+// Product Price Model (Multi-currency support)
+model ProductPrice {
+  id String @id @default(cuid())
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  currency Currency // Currency for this price
+  price    Float // Selling price in this currency
+  cost     Float // Cost per unit in this currency
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, currency])
+  @@index([productId])
+  @@index([currency])
+  @@map("product_prices")
 }
 
 // Product Package Model (for product variants/bundles)

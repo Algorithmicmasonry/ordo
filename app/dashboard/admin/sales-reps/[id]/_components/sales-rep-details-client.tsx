@@ -32,6 +32,7 @@ import { PeriodFilter } from "../../../_components";
 import { TimePeriod } from "@/lib/types";
 import { EditSalesRepModal } from "../../_components";
 import toast from "react-hot-toast";
+import { getCurrencySymbol } from "@/lib/currency";
 
 type SalesRepWithDetails = User & {
   orders: (Order & {
@@ -245,7 +246,7 @@ export default function SalesRepDetailsClient({
             </p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold">
-                ₦{salesRep.stats.revenue.toLocaleString()}
+                Mixed Currency
               </p>
               {salesRep.stats.trends.revenue > 0 ? (
                 <p className="text-green-500 text-sm font-medium flex items-center">
@@ -269,7 +270,7 @@ export default function SalesRepDetailsClient({
             </p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold">
-                ₦{salesRep.stats.profit.toLocaleString()}
+                Mixed Currency
               </p>
               {salesRep.stats.trends.profit > 0 ? (
                 <p className="text-green-500 text-sm font-medium flex items-center">
@@ -419,7 +420,7 @@ export default function SalesRepDetailsClient({
                         {format(new Date(order.createdAt), "MMM dd, HH:mm")}
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        ₦{order.totalAmount.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}{order.totalAmount.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {sourceNames[order.source]}

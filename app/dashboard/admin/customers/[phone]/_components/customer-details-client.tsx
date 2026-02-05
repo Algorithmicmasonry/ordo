@@ -50,6 +50,7 @@ import {
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { OrderStatus } from "@prisma/client";
+import { getCurrencySymbol } from "@/lib/currency";
 import {
   OrderDetailsModal,
   type OrderWithRelations,
@@ -631,7 +632,7 @@ export default function CustomerDetailsClient({
                       {order.items.length}
                     </TableCell>
                     <TableCell className="font-bold">
-                      ₦{order.totalAmount.toLocaleString()}
+                      {getCurrencySymbol(order.currency)}{order.totalAmount.toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusInfo.color}>

@@ -338,7 +338,7 @@ export function CreateOrderDialog() {
                           <SelectContent>
                             {products.map((product) => (
                               <SelectItem key={product.id} value={product.id}>
-                                {product.name} - ₦
+                                {product.name} - {getCurrencySymbol(product.currency)}
                                 {product.price.toLocaleString()} (Stock:{" "}
                                 {product.currentStock})
                               </SelectItem>
@@ -410,7 +410,10 @@ export function CreateOrderDialog() {
               <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
                 <span className="font-semibold">Total Amount:</span>
                 <span className="text-2xl font-bold text-primary">
-                  ₦{calculateTotal().toLocaleString()}
+                  {(() => {
+                    const firstProduct = products.find((p) => p.id === orderItems.find(i => i.productId)?.productId);
+                    return firstProduct ? getCurrencySymbol(firstProduct.currency) : '₦';
+                  })()}{calculateTotal().toLocaleString()}
                 </span>
               </div>
             )}

@@ -15,6 +15,7 @@ import { getAllSalesReps } from "@/app/actions/user";
 import { OrderStatus, OrderSource } from "@prisma/client";
 import type { OrderWithDetails } from "@/lib/types";
 import { formatDateTime } from "@/lib/date-utils";
+import { getCurrencySymbol } from "@/lib/currency";
 import {
   Search,
   X,
@@ -965,7 +966,7 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                        ₦{order.totalAmount.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}{order.totalAmount.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -1274,13 +1275,13 @@ export default function OrdersPage() {
                                 {item.quantity}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100">
-                                ₦{item.price.toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}{item.price.toLocaleString()}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
-                                ₦{item.cost.toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}{item.cost.toLocaleString()}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100 font-medium">
-                                ₦{(item.price * item.quantity).toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}{(item.price * item.quantity).toLocaleString()}
                               </td>
                             </tr>
                           ))}
@@ -1294,7 +1295,7 @@ export default function OrdersPage() {
                               Total
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">
-                              ₦{selectedOrder.totalAmount.toLocaleString()}
+                              {getCurrencySymbol(selectedOrder.currency)}{selectedOrder.totalAmount.toLocaleString()}
                             </td>
                           </tr>
                         </tfoot>

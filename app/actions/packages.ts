@@ -79,6 +79,23 @@ export async function createPackage({
       return { success: false, error: "Unauthorized" };
     }
 
+    // VALIDATION: Check if product has pricing for the selected currency
+    const productPrice = await db.productPrice.findUnique({
+      where: {
+        productId_currency: {
+          productId,
+          currency,
+        },
+      },
+    });
+
+    if (!productPrice) {
+      return {
+        success: false,
+        error: `Cannot create ${currency} package. Please add ${currency} pricing to this product first.`,
+      };
+    }
+
     // Check for duplicate package name + currency combination
     const existingPackage = await db.productPackage.findFirst({
       where: {

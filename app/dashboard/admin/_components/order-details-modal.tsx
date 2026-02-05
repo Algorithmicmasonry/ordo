@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { OrderWithRelations } from "@/lib/types";
+import { getCurrencySymbol } from "@/lib/currency";
 
 export const OrderDetailsModal = ({
   order,
@@ -138,10 +139,10 @@ export const OrderDetailsModal = ({
                         {item.quantity}
                       </TableCell>
                       <TableCell className="text-right">
-                        ₦{item.price.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}{item.price.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        ₦{(item.quantity * item.price).toLocaleString()}
+                        {getCurrencySymbol(order.currency)}{(item.quantity * item.price).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -150,7 +151,7 @@ export const OrderDetailsModal = ({
                       Total Amount
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      ₦{totalAmount.toLocaleString()}
+                      {getCurrencySymbol(order.currency)}{totalAmount.toLocaleString()}
                     </TableCell>
                   </TableRow>
                 </TableBody>

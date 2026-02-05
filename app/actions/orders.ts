@@ -8,10 +8,7 @@ import { OrderStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { notifySalesRep, notifyAdmins } from "./push-notifications";
 import { createNotification, createBulkNotifications } from "./notifications";
-import {
-  determineOrderSource,
-  formatUTMSource,
-} from "@/lib/utm-parser";
+import { determineOrderSource, formatUTMSource } from "@/lib/utm-parser";
 import { formatCurrency } from "@/lib/currency";
 
 /**
@@ -252,7 +249,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
     // Send push notifications to admins
     await notifyAdmins({
       title: "New Order Received 📦",
-      body: `Order ${order.orderNumber} from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
+      body: `Order from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/admin/orders/${order.id}`,
       orderId: order.id,
     });

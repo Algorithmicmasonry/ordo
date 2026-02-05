@@ -33,12 +33,15 @@ export default async function ProductPackagesPage({ params }: PageProps) {
   // Get product ID
   const { productId } = await params;
 
-  // Fetch product with packages
+  // Fetch product with packages and prices
   const product = await db.product.findUnique({
     where: { id: productId, isDeleted: false },
     include: {
       packages: {
         orderBy: { displayOrder: "asc" },
+      },
+      productPrices: {
+        select: { currency: true },
       },
     },
   });
@@ -105,7 +108,10 @@ export default async function ProductPackagesPage({ params }: PageProps) {
             </p>
           )}
         </div>
-        <CreatePackageButton productId={product.id} />
+        <CreatePackageButton
+          productId={product.id}
+          availableCurrencies={product.productPrices.map((p) => p.currency)}
+        />
       </div>
 
       {/* General Package Description */}

@@ -16,24 +16,18 @@ export function CurrencyFilter() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const currentCurrency = searchParams.get("currency") as Currency | null;
+  const currentCurrency = (searchParams.get("currency") as Currency) || "NGN"; // Default to NGN
 
-  const handleCurrencyChange = (currency: Currency | "all") => {
+  const handleCurrencyChange = (currency: Currency) => {
     setIsLoading(true);
     const params = new URLSearchParams(searchParams.toString());
-    if (currency === "all") {
-      params.delete("currency");
-    } else {
-      params.set("currency", currency);
-    }
+    params.set("currency", currency);
     router.push(`?${params.toString()}`);
     setIsLoading(false);
   };
 
   const currencies = getAvailableCurrencies();
-  const selectedCurrency = currentCurrency
-    ? currencies.find((c) => c.code === currentCurrency)
-    : null;
+  const selectedCurrency = currencies.find((c) => c.code === currentCurrency) || currencies[0];
 
   return (
     <DropdownMenu>
@@ -46,16 +40,13 @@ export function CurrencyFilter() {
             </>
           ) : (
             <>
-              Currency: {selectedCurrency ? selectedCurrency.name : "All"}
+              {selectedCurrency.symbol} {selectedCurrency.name}
               <ChevronDown className="ml-2 size-4" />
             </>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuItem onClick={() => handleCurrencyChange("all")}>
-          All Currencies
-        </DropdownMenuItem>
         {currencies.map((currency) => (
           <DropdownMenuItem
             key={currency.code}

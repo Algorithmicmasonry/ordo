@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import type { Order, OrderItem, Product, OrderStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { getCurrencySymbol } from "@/lib/currency";
 
 type OrderWithItems = Order & {
   items: (OrderItem & { product: Product })[];
@@ -100,7 +101,7 @@ export function OrderHistoryTab({ orders }: OrderHistoryTabProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm font-semibold text-right">
-                        ₦{total.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}{total.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   );

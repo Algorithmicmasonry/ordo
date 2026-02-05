@@ -21,23 +21,30 @@ import type { ProductPackage, Currency } from "@prisma/client";
 interface PackageFormProps {
   productId: string;
   package?: ProductPackage;
+  availableCurrencies?: Currency[]; // Currencies with configured pricing
   onSuccess?: () => void;
 }
 
 export function PackageForm({
   productId,
   package: existingPackage,
+  availableCurrencies,
   onSuccess,
 }: PackageFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  // Use availableCurrencies or all currencies (for edit mode)
+  const currencyOptions = availableCurrencies || getAvailableCurrencies().map(c => c.code as Currency);
+  const defaultCurrency = availableCurrencies?.[0] || "NGN";
+
   const [formData, setFormData] = useState({
     name: existingPackage?.name || "",
     description: existingPackage?.description || "",
     quantity: existingPackage?.quantity.toString() || "1",
     price: existingPackage?.price.toString() || "0",
     displayOrder: existingPackage?.displayOrder.toString() || "0",
-    currency: (existingPackage?.currency || "NGN") as Currency,
+    currency: (existingPackage?.currency || defaultCurrency) as Currency,
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -159,20 +166,26 @@ export function PackageForm({
           onValueChange={(value) =>
             setFormData({ ...formData, currency: value as Currency })
           }
+          disabled={!!existingPackage} // Cannot change currency when editing
         >
           <SelectTrigger>
             <SelectValue placeholder="Select currency" />
           </SelectTrigger>
           <SelectContent>
-            {getAvailableCurrencies().map((curr) => (
-              <SelectItem key={curr.code} value={curr.code}>
-                {curr.symbol} - {curr.name}
-              </SelectItem>
-            ))}
+            {currencyOptions.map((currCode) => {
+              const curr = getAvailableCurrencies().find(c => c.code === currCode);
+              return curr ? (
+                <SelectItem key={curr.code} value={curr.code}>
+                  {curr.symbol} - {curr.name}
+                </SelectItem>
+              ) : null;
+            })}
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Currency for this package pricing
+          {existingPackage
+            ? "Currency cannot be changed after creation"
+            : "Only currencies with configured pricing are shown"}
         </p>
       </div>
 

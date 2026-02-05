@@ -44,7 +44,7 @@ export default async function AdminDashboardPage({
   // Get period and currency from search params
   const params = await searchParams;
   const period = (params?.period || "today") as TimePeriod;
-  const currency = params?.currency as Currency | undefined;
+  const currency = (params?.currency as Currency) || "NGN"; // Default to NGN, never show mixed currencies
 
   // Validate period
   const validPeriods: TimePeriod[] = ["today", "week", "month", "year"];

@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
+  DollarSign,
   Download,
   Filter,
   Loader2,
@@ -380,6 +381,15 @@ export default function AdminInventoryClient({
                               <ProductDetailsModal product={product} />
                             </DialogContent>
                           </Dialog>
+
+                          <Link
+                            href={`/dashboard/admin/inventory/${product.id}/pricing`}
+                          >
+                            <Button size="sm" variant="outline" className="gap-2">
+                              <DollarSign className="size-4" />
+                              Pricing
+                            </Button>
+                          </Link>
 
                           <Link
                             href={`/dashboard/admin/inventory/${product.id}/packages`}

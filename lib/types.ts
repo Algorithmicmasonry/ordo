@@ -6,6 +6,7 @@ import {
   UserRole,
   Product,
   ProductPackage,
+  ProductPrice,
   Agent,
   OrderItem,
   OrderNote,
@@ -87,6 +88,11 @@ export interface OrderFormDataV2 {
 // Product with packages
 export interface ProductWithPackages extends Product {
   packages: ProductPackage[];
+  productPrices?: ProductPrice[]; // Multi-currency pricing
+}
+
+export interface ProductWithPrices extends Product {
+  productPrices: ProductPrice[];
 }
 
 // Expense types

@@ -19,7 +19,7 @@ export function EmbedOrderFormClient({
   product,
   currency,
 }: EmbedOrderFormClientProps) {
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -45,13 +45,10 @@ export function EmbedOrderFormClient({
   // Capture UTM params and referrer on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Use startTransition or batch the updates
       const params = parseUTMParams(window.location.href);
       const ref = extractReferrerDomain();
 
-      // Batch state updates using a single effect execution
       if (params.source || ref) {
-        // Use a microtask to batch updates
         Promise.resolve().then(() => {
           if (params.source) setUtmParams(params);
           if (ref) setReferrer(ref);
@@ -60,12 +57,8 @@ export function EmbedOrderFormClient({
     }
   }, []);
 
-  function handlePackageToggle(packageId: string) {
-    setSelectedPackages((prev) =>
-      prev.includes(packageId)
-        ? prev.filter((id) => id !== packageId)
-        : [...prev, packageId],
-    );
+  function handlePackageSelect(packageId: string) {
+    setSelectedPackageId(packageId);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -73,8 +66,8 @@ export function EmbedOrderFormClient({
     setLoading(true);
     setError("");
 
-    if (selectedPackages.length === 0) {
-      setError("Please select at least one package");
+    if (!selectedPackageId) {
+      setError("Please select a package");
       setLoading(false);
       return;
     }
@@ -87,7 +80,7 @@ export function EmbedOrderFormClient({
       state: formData.state,
       city: formData.city,
       productId: product.id,
-      selectedPackages,
+      selectedPackages: [selectedPackageId],
       currency,
       utmParams,
       referrer,
@@ -105,7 +98,7 @@ export function EmbedOrderFormClient({
         state: "",
         city: "",
       });
-      setSelectedPackages([]);
+      setSelectedPackageId("");
 
       setTimeout(() => setSuccess(false), 5000);
     } else {
@@ -115,42 +108,39 @@ export function EmbedOrderFormClient({
 
   return (
     <div className="w-full p-4 md:p-6">
-      {/* Rest of your JSX remains the same */}
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 text-gray-900 mb-2">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
             Order {product.name}
           </h1>
           {product.description && (
-            <p className="text-sm text-gray-600 text-gray-600">
-              {product.description}
-            </p>
+            <p className="text-sm text-gray-600">{product.description}</p>
           )}
         </div>
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 bg-green-50 border border-green-200 border-green-200 rounded-md">
-            <p className="text-green-800 text-green-800 text-sm font-medium">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-green-800 text-sm font-medium">
               Order submitted successfully! We&apos;ll contact you shortly.
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 bg-red-50 border border-red-200 border-red-200 rounded-md">
-            <p className="text-red-800 text-red-800 text-sm">{error}</p>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-800 text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <h2 className="text-base font-semibold text-gray-900 text-gray-900 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 mb-3">
               Customer Information
             </h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name *
                 </label>
                 <input
@@ -160,12 +150,12 @@ export function EmbedOrderFormClient({
                   onChange={(e) =>
                     setFormData({ ...formData, customerName: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number *
                 </label>
                 <input
@@ -175,12 +165,12 @@ export function EmbedOrderFormClient({
                   onChange={(e) =>
                     setFormData({ ...formData, customerPhone: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   WhatsApp Number *
                 </label>
                 <input
@@ -193,20 +183,20 @@ export function EmbedOrderFormClient({
                       customerWhatsapp: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <h2 className="text-base font-semibold text-gray-900 text-gray-900 mb-3">
+            <h2 className="text-base font-semibold text-gray-900 mb-3">
               Delivery Information
             </h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Delivery Address *
                 </label>
                 <textarea
@@ -219,13 +209,13 @@ export function EmbedOrderFormClient({
                       deliveryAddress: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     {stateLabel} *
                   </label>
                   <select
@@ -234,7 +224,7 @@ export function EmbedOrderFormClient({
                     onChange={(e) =>
                       setFormData({ ...formData, state: e.target.value })
                     }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   >
                     <option value="">Select {stateLabel.toLowerCase()}</option>
                     {stateOptions.map((state) => (
@@ -246,7 +236,7 @@ export function EmbedOrderFormClient({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     City *
                   </label>
                   <input
@@ -256,7 +246,7 @@ export function EmbedOrderFormClient({
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
                     }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   />
                 </div>
               </div>
@@ -266,23 +256,29 @@ export function EmbedOrderFormClient({
           <div>
             <PackageSelector
               packages={product.packages}
-              selectedPackages={selectedPackages}
-              onToggle={handlePackageToggle}
-              note={product.packageSelectorNote}
+              selectedPackageId={selectedPackageId}
+              onSelect={handlePackageSelect}
               currency={currency}
             />
+            {product.packageSelectorNote && (
+              <p className="mt-2 text-sm text-gray-600">
+                {product.packageSelectorNote}
+              </p>
+            )}
           </div>
+
           <PayOnDeliveryBadge />
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md text-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer "
+            className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md text-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {loading ? "Submitting..." : "PLACE MY ORDER"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-500 text-gray-600 mt-4">
+        <p className="text-center text-xs text-gray-500 mt-4">
           By submitting this form, you agree to be contacted by our sales team.
         </p>
       </div>

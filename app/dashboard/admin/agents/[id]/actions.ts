@@ -19,7 +19,13 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
       where: { id: agentId },
       include: {
         stock: {
-          include: { product: true },
+          include: {
+            product: {
+              include: {
+                productPrices: true,
+              },
+            },
+          },
         },
         orders: {
           where: {
@@ -52,11 +58,15 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
     const currentStats = calculateOrderStats(currentOrders);
     const previousStats = calculateOrderStats(previousOrders);
 
-    // Calculate stock value
-    const stockValue = agent.stock.reduce(
-      (sum, s) => sum + s.quantity * s.product.cost,
-      0
-    );
+    // Calculate stock value using ProductPrice table
+    const stockValue = agent.stock.reduce((sum, s) => {
+      // Get the cost for the product's primary currency
+      const productPrice = s.product.productPrices.find(
+        (p) => p.currency === s.product.currency
+      );
+      const cost = productPrice?.cost || 0;
+      return sum + s.quantity * cost;
+    }, 0);
 
     // Generate chart data
     const chartData = generateDeliveryChartData(currentOrders, period);

@@ -130,8 +130,8 @@ model Product {
   id          String    @id @default(cuid())
   name        String
   description String?
-  price       Float // Selling price (deprecated - use ProductPrice table)
-  cost        Float // Cost per unit (deprecated - use ProductPrice table)
+  price       Float? // DEPRECATED - use ProductPrice table instead. Kept for legacy compatibility only.
+  cost        Float? // DEPRECATED - use ProductPrice table instead. Kept for legacy compatibility only.
   currency    Currency  @default(NGN) // Primary/default currency
   sku         String?   @unique
   isActive    Boolean   @default(true)

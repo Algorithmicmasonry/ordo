@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Agent, AgentStock, Product } from "@prisma/client";
+import { Agent, AgentStock, Product, ProductPrice } from "@prisma/client";
 import { AgentProfileHeader } from "./agent-profile-header";
 import { AgentStatsCards } from "./agent-stats-cards";
 import { AgentPerformanceChart } from "./agent-performance-chart";
@@ -30,7 +30,7 @@ interface ChartDataPoint {
 }
 
 interface AgentWithRelations extends Agent {
-  stock: (AgentStock & { product: Product })[];
+  stock: (AgentStock & { product: Product & { productPrices: ProductPrice[] } })[];
   orders: any[];
 }
 

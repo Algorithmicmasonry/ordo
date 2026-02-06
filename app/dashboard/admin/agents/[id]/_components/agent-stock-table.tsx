@@ -9,27 +9,33 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AgentStock, Product } from "@prisma/client";
+import { AgentStock, Product, ProductPrice } from "@prisma/client";
 import { Package, RefreshCw } from "lucide-react";
 
 interface AgentStockTableProps {
-  stock: (AgentStock & { product: Product })[];
-  onReconcile?: (stock: AgentStock & { product: Product }) => void;
+  stock: (AgentStock & { product: Product & { productPrices: ProductPrice[] } })[];
+  onReconcile?: (stock: AgentStock & { product: Product & { productPrices: ProductPrice[] } }) => void;
 }
 
 export function AgentStockTable({ stock, onReconcile }: AgentStockTableProps) {
+  // Helper function to get cost from ProductPrice table
+  const getCost = (product: Product & { productPrices: ProductPrice[] }) => {
+    const productPrice = product.productPrices.find(p => p.currency === product.currency);
+    return productPrice?.cost || 0;
+  };
+
   const totalStockValue = stock.reduce(
-    (sum, s) => sum + s.quantity * s.product.cost,
+    (sum, s) => sum + s.quantity * getCost(s.product),
     0
   );
 
   const totalDefectiveValue = stock.reduce(
-    (sum, s) => sum + s.defective * s.product.cost,
+    (sum, s) => sum + s.defective * getCost(s.product),
     0
   );
 
   const totalMissingValue = stock.reduce(
-    (sum, s) => sum + s.missing * s.product.cost,
+    (sum, s) => sum + s.missing * getCost(s.product),
     0
   );
 
@@ -81,7 +87,8 @@ export function AgentStockTable({ stock, onReconcile }: AgentStockTableProps) {
           <TableBody>
             {stock.map((item) => {
               const hasIssues = item.defective > 0 || item.missing > 0;
-              const totalValue = item.quantity * item.product.cost;
+              const cost = getCost(item.product);
+              const totalValue = item.quantity * cost;
 
               return (
                 <TableRow
@@ -123,7 +130,7 @@ export function AgentStockTable({ stock, onReconcile }: AgentStockTableProps) {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    ₦{item.product.cost.toLocaleString()}
+                    ₦{cost.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right font-semibold">
                     ₦{totalValue.toLocaleString()}

@@ -34,6 +34,9 @@ export async function createOrder(data: OrderFormData) {
     for (const item of data.items) {
       const product = await db.product.findUnique({
         where: { id: item.productId },
+        include: {
+          productPrices: true,
+        },
       });
 
       if (!product) {
@@ -43,13 +46,25 @@ export async function createOrder(data: OrderFormData) {
         };
       }
 
-      totalAmount += product.price * item.quantity;
+      // Get pricing for the product's primary currency
+      const productPrice = product.productPrices.find(
+        (p) => p.currency === product.currency
+      );
+
+      if (!productPrice) {
+        return {
+          success: false,
+          error: `Pricing not configured for product: ${product.name}`,
+        };
+      }
+
+      totalAmount += productPrice.price * item.quantity;
 
       orderItems.push({
         product: { connect: { id: product.id } },
         quantity: item.quantity,
-        price: product.price,
-        cost: product.cost,
+        price: productPrice.price,
+        cost: productPrice.cost,
       });
     }
 
@@ -130,7 +145,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
       };
     }
 
-    // Get product and packages (filter by currency)
+    // Get product, packages, and pricing (filter by currency)
     const product = await db.product.findUnique({
       where: { id: data.productId },
       include: {
@@ -138,6 +153,11 @@ export async function createOrderV2(data: OrderFormDataV2) {
           where: {
             id: { in: data.selectedPackages },
             isActive: true,
+            currency: data.currency,
+          },
+        },
+        productPrices: {
+          where: {
             currency: data.currency,
           },
         },
@@ -158,6 +178,15 @@ export async function createOrderV2(data: OrderFormDataV2) {
       };
     }
 
+    // Get product cost from ProductPrice table
+    const productPrice = product.productPrices[0];
+    if (!productPrice) {
+      return {
+        success: false,
+        error: `Pricing not configured for ${data.currency}. Please contact support.`,
+      };
+    }
+
     // Calculate total amount and create order items
     let totalAmount = 0;
     const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = [];
@@ -172,7 +201,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
         product: { connect: { id: product.id } },
         quantity: pkg.quantity,
         price: unitPrice, // Price per unit in package
-        cost: product.cost, // Cost per unit
+        cost: productPrice.cost, // Cost per unit from ProductPrice table
       });
     }
 

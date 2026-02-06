@@ -49,23 +49,30 @@ export async function createProduct(data: {
 
     // Create the product and its price entry in a transaction
     const product = await db.$transaction(async (tx) => {
-      // Create the product
+      // Extract pricing data from the input
+      const { price, cost, currency = "NGN", ...productData } = data;
+
+      // Create the product WITHOUT the deprecated price/cost fields
       const newProduct = await tx.product.create({
         data: {
-          ...data,
+          ...productData,
+          currency, // Keep currency as it's the primary currency
           currentStock: data.openingStock,
           reorderPoint: data.reorderPoint ?? 0,
           isActive: data.isActive ?? true,
+          // Deprecated fields - explicitly set to null (not used)
+          price: null,
+          cost: null,
         },
       });
 
-      // Create the ProductPrice entry for the primary currency
+      // Create the ProductPrice entry - SINGLE SOURCE OF TRUTH for pricing
       await tx.productPrice.create({
         data: {
           productId: newProduct.id,
-          currency: data.currency || "NGN",
-          price: data.price,
-          cost: data.cost,
+          currency,
+          price,
+          cost,
         },
       });
 
@@ -149,15 +156,22 @@ export async function updateProduct(
     }
 
     const product = await db.$transaction(async (tx) => {
-      // Update the product
+      // Extract pricing data from the input
+      const { price, cost, currency, ...productDataWithoutPricing } = data;
+
+      // Update the product WITHOUT the deprecated price/cost fields
       const updatedProduct = await tx.product.update({
         where: { id: productId },
-        data,
+        data: {
+          ...productDataWithoutPricing,
+          // Only update currency if provided (it's the primary currency)
+          ...(currency && { currency }),
+        },
       });
 
-      // If price, cost, or currency were updated, sync with ProductPrice table
-      if (data.price !== undefined || data.cost !== undefined || data.currency !== undefined) {
-        const targetCurrency = data.currency || currentProduct.currency;
+      // If price, cost, or currency were updated, update ProductPrice table (SINGLE SOURCE OF TRUTH)
+      if (price !== undefined || cost !== undefined || currency !== undefined) {
+        const targetCurrency = currency || currentProduct.currency;
         const currentPrice = await tx.productPrice.findUnique({
           where: {
             productId_currency: {
@@ -176,14 +190,14 @@ export async function updateProduct(
             },
           },
           update: {
-            price: data.price ?? currentPrice?.price ?? updatedProduct.price,
-            cost: data.cost ?? currentPrice?.cost ?? updatedProduct.cost,
+            ...(price !== undefined && { price }),
+            ...(cost !== undefined && { cost }),
           },
           create: {
             productId: productId,
             currency: targetCurrency,
-            price: data.price ?? updatedProduct.price,
-            cost: data.cost ?? updatedProduct.cost,
+            price: price ?? currentPrice?.price ?? 0,
+            cost: cost ?? currentPrice?.cost ?? 0,
           },
         });
       }

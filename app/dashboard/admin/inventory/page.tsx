@@ -151,6 +151,7 @@ export default async function InventoryManagementPage({
           products={data.products}
           stats={data.stats}
           lowStockProducts={data.lowStockProducts}
+          currency={currency}
         />
       </Suspense>
 

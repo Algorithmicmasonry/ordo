@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Agent, AgentStock, Product, ProductPrice } from "@prisma/client";
+import type { Agent, AgentStock, Product, ProductPrice, Currency } from "@prisma/client";
 import {
   AlertTriangle,
   ChevronDown,
@@ -36,7 +36,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { DashboardHeader } from "../../_components";
+import { DashboardHeader, CurrencyFilter } from "../../_components";
 import { AddProductModal } from "./add-product-modal";
 import { UpdateStockModal } from "./update-stock-modal";
 import {
@@ -52,6 +52,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { softDeleteProduct } from "@/app/actions/products";
 import toast from "react-hot-toast";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+} from "@/lib/export-utils";
+import { formatCurrency } from "@/lib/currency";
 
 type ProductWithStock = Product & {
   agentStock: (AgentStock & {
@@ -72,12 +78,14 @@ interface InventoryPageProps {
     distributionRate: number;
   };
   lowStockProducts: ProductWithStock[];
+  currency?: Currency;
 }
 
 export default function AdminInventoryClient({
   products,
   stats,
   lowStockProducts,
+  currency,
 }: InventoryPageProps) {
   // Helper function to get price/cost from ProductPrice table
   const getProductPricing = (product: ProductWithStock) => {
@@ -142,6 +150,56 @@ export default function AdminInventoryClient({
     }
   };
 
+  const handleExportInventory = () => {
+    try {
+      const headers = [
+        "Product Name",
+        "SKU",
+        "Description",
+        "Currency",
+        "Unit Cost",
+        "Selling Price",
+        "Current Stock",
+        "Opening Stock",
+        "Reorder Point",
+        "Stock with Agents",
+        "Total Orders",
+        "Status",
+      ];
+
+      const rows = products.map((product) => {
+        const { price, cost } = getProductPricing(product);
+        const agentStock = product.agentStock.reduce(
+          (sum, stock) => sum + stock.quantity,
+          0
+        );
+
+        return [
+          product.name,
+          product.sku || "N/A",
+          product.description || "No description",
+          product.currency,
+          formatCurrencyForExport(cost, product.currency),
+          formatCurrencyForExport(price, product.currency),
+          product.currentStock.toString(),
+          product.openingStock.toString(),
+          product.reorderPoint.toString(),
+          agentStock.toString(),
+          product._count.orders.toString(),
+          product.isActive ? "Active" : "Inactive",
+        ];
+      });
+
+      const currencySuffix = currency ? `_${currency}` : "";
+      const filename = generateFilename(`inventory${currencySuffix}`);
+      exportToCSV(headers, rows, filename);
+      toast.success(`Exported ${products.length} products successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export inventory data");
+    }
+  };
+
   console.log("This is the selected product: ", selectedProduct);
 
   return (
@@ -176,6 +234,11 @@ export default function AdminInventoryClient({
         text="Centralized management for global balance and localized agent
         distribution."
       />
+
+      {/* Currency Filter */}
+      <div className="flex items-center gap-2">
+        <CurrencyFilter />
+      </div>
 
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -251,7 +314,7 @@ export default function AdminInventoryClient({
               Total Inventory Value
             </p>
             <p className="text-3xl font-bold mt-2">
-              ₦{stats.totalValue.toLocaleString()}
+              {formatCurrency(stats.totalValue, currency || "NGN")}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Warehouse + Agent stock
@@ -307,7 +370,7 @@ export default function AdminInventoryClient({
               Global Inventory
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" onClick={handleExportInventory}>
                 <Download className="size-4" />
               </Button>
             </div>
@@ -358,10 +421,10 @@ export default function AdminInventoryClient({
                         {product.sku || "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        ₦{cost.toLocaleString()}
+                        {formatCurrency(cost, product.currency)}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        ₦{price.toLocaleString()}
+                        {formatCurrency(price, product.currency)}
                       </TableCell>
                       <TableCell className="text-right">
                         <span
@@ -515,11 +578,11 @@ function ProductDetailsModal({ product }: { product: ProductWithStock }) {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Unit Cost</p>
-          <p className="font-semibold">₦{cost.toLocaleString()}</p>
+          <p className="font-semibold">{formatCurrency(cost, product.currency)}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Selling Price</p>
-          <p className="font-semibold">₦{price.toLocaleString()}</p>
+          <p className="font-semibold">{formatCurrency(price, product.currency)}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Current Stock</p>

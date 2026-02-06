@@ -1,14 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/auth";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DashboardHeader } from "../_components";
+import { DashboardHeader, CurrencyFilter } from "../_components";
 import { FinancialOverview, SalesRepFinance, AgentCostAnalysis, ProfitLossStatement, ProductProfitability } from "./_components";
 import { getFinancialOverview, getSalesRepFinance, getAgentCostAnalysis, getProfitLossStatement, getProductProfitability } from "./actions";
 
 interface PageProps {
-  searchParams: Promise<{ period?: string; startDate?: string; endDate?: string }>;
+  searchParams: Promise<{ period?: string; startDate?: string; endDate?: string; currency?: Currency }>;
 }
 
 export default async function ReportsPage({ searchParams }: PageProps) {
@@ -23,21 +24,22 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   const period = (query.period || "month") as TimePeriod;
   const startDate = query.startDate ? new Date(query.startDate) : undefined;
   const endDate = query.endDate ? new Date(query.endDate) : undefined;
+  const currency = query.currency;
 
   // Fetch financial overview data
-  const financialData = await getFinancialOverview(period, startDate, endDate);
+  const financialData = await getFinancialOverview(period, startDate, endDate, currency);
 
   // Fetch sales rep finance data
-  const salesRepData = await getSalesRepFinance(period, startDate, endDate);
+  const salesRepData = await getSalesRepFinance(period, startDate, endDate, currency);
 
   // Fetch agent cost analysis data
-  const agentCostData = await getAgentCostAnalysis(period, startDate, endDate);
+  const agentCostData = await getAgentCostAnalysis(period, startDate, endDate, currency);
 
   // Fetch profit and loss statement data
-  const profitLossData = await getProfitLossStatement(period, startDate, endDate);
+  const profitLossData = await getProfitLossStatement(period, startDate, endDate, currency);
 
   // Fetch product profitability data
-  const productProfitData = await getProductProfitability(period, startDate, endDate);
+  const productProfitData = await getProductProfitability(period, startDate, endDate, currency);
 
   if (!financialData.success || !financialData.data) {
     return (
@@ -62,6 +64,11 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         text="Comprehensive financial analytics and performance tracking"
       />
 
+      {/* Currency Filter */}
+      <div className="flex items-center gap-2">
+        <CurrencyFilter />
+      </div>
+
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
@@ -74,13 +81,13 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
         {/* Financial Overview Tab */}
         <TabsContent value="overview" className="mt-6">
-          <FinancialOverview data={financialData.data} period={period} />
+          <FinancialOverview data={financialData.data} period={period} currency={currency} />
         </TabsContent>
 
         {/* Sales Rep Financial Performance Tab */}
         <TabsContent value="sales-rep" className="mt-6">
           {salesRepData.success && salesRepData.data ? (
-            <SalesRepFinance data={salesRepData.data} period={period} />
+            <SalesRepFinance data={salesRepData.data} period={period} currency={currency} />
           ) : (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
@@ -98,7 +105,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         {/* Agent Cost Analysis Tab */}
         <TabsContent value="agent-costs" className="mt-6">
           {agentCostData.success && agentCostData.data ? (
-            <AgentCostAnalysis data={agentCostData.data} period={period} />
+            <AgentCostAnalysis data={agentCostData.data} period={period} currency={currency} />
           ) : (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
@@ -116,7 +123,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         {/* Profit & Loss Tab */}
         <TabsContent value="profit-loss" className="mt-6">
           {profitLossData.success && profitLossData.data ? (
-            <ProfitLossStatement data={profitLossData.data} period={period} />
+            <ProfitLossStatement data={profitLossData.data} period={period} currency={currency} />
           ) : (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">
@@ -134,7 +141,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         {/* Product Profitability Tab */}
         <TabsContent value="product" className="mt-6">
           {productProfitData.success && productProfitData.data ? (
-            <ProductProfitability data={productProfitData.data} period={period} />
+            <ProductProfitability data={productProfitData.data} period={period} currency={currency} />
           ) : (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center">

@@ -3,12 +3,13 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getAgentDetails } from "./actions";
 import { AgentDetailsClient } from "./_components";
+import type { Currency } from "@prisma/client";
 
 type TimePeriod = "week" | "month" | "year";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; currency?: Currency }>;
 }
 
 export default async function AgentDetailPage({
@@ -18,6 +19,7 @@ export default async function AgentDetailPage({
   const { id } = await params;
   const query = await searchParams;
   const period = (query.period || "month") as TimePeriod;
+  const currency = query.currency;
 
   // Authentication check
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,7 +28,7 @@ export default async function AgentDetailPage({
   }
 
   // Fetch agent data with metrics
-  const agentData = await getAgentDetails(id, period);
+  const agentData = await getAgentDetails(id, period, currency);
 
   if (!agentData.success || !agentData.data) {
     return (
@@ -43,7 +45,7 @@ export default async function AgentDetailPage({
     );
   }
 
-  return <AgentDetailsClient {...agentData.data} period={period} />;
+  return <AgentDetailsClient {...agentData.data} period={period} currency={currency} />;
 }
 
 // Generate metadata for SEO

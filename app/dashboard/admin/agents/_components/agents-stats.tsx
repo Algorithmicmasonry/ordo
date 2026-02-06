@@ -1,5 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Users, Circle, Package, Truck, AlertTriangle, XCircle } from "lucide-react";
+import { formatCurrency, getCurrencyName } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 
 interface AgentStatsProps {
   totalAgents: number;
@@ -8,6 +11,7 @@ interface AgentStatsProps {
   totalDefectiveValue: number;
   totalMissingValue: number;
   pendingDeliveries: number;
+  currency?: Currency;
 }
 
 export function AgentsStats({
@@ -17,9 +21,19 @@ export function AgentsStats({
   totalDefectiveValue,
   totalMissingValue,
   pendingDeliveries,
+  currency,
 }: AgentStatsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary" className="text-xs font-medium">
+          Currency: {getCurrencyName(currency || "NGN")}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          All amounts shown in this currency only
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Card>
         <CardContent className="p-6 space-y-2">
           <div className="flex items-center justify-between">
@@ -58,11 +72,7 @@ export function AgentsStats({
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold">
-              ₦
-              {totalStockValue.toLocaleString("en-NG", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {formatCurrency(totalStockValue, currency || "NGN")}
             </p>
           </div>
         </CardContent>
@@ -92,11 +102,7 @@ export function AgentsStats({
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold text-red-600">
-              ₦
-              {totalDefectiveValue.toLocaleString("en-NG", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {formatCurrency(totalDefectiveValue, currency || "NGN")}
             </p>
           </div>
         </CardContent>
@@ -112,15 +118,12 @@ export function AgentsStats({
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold text-amber-600">
-              ₦
-              {totalMissingValue.toLocaleString("en-NG", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {formatCurrency(totalMissingValue, currency || "NGN")}
             </p>
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

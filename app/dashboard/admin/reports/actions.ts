@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { getDateRange } from "@/lib/date-utils";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 
 /**
  * Get financial overview data
@@ -10,7 +11,8 @@ import type { TimePeriod } from "@/lib/types";
 export async function getFinancialOverview(
   period: TimePeriod = "month",
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
+  currency?: Currency
 ) {
   try {
     // Use custom dates if provided, otherwise calculate from period
@@ -35,6 +37,7 @@ export async function getFinancialOverview(
     const currentOrders = await db.order.findMany({
       where: {
         createdAt: { gte: startDate, lte: endDate },
+        ...(currency && { currency }),
       },
       include: {
         items: { include: { product: true } },
@@ -45,6 +48,7 @@ export async function getFinancialOverview(
     const previousOrders = await db.order.findMany({
       where: {
         createdAt: { gte: previousStartDate, lte: previousEndDate },
+        ...(currency && { currency }),
       },
       include: {
         items: { include: { product: true } },
@@ -55,6 +59,7 @@ export async function getFinancialOverview(
     const currentExpenses = await db.expense.findMany({
       where: {
         date: { gte: startDate, lte: endDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -62,6 +67,7 @@ export async function getFinancialOverview(
     const previousExpenses = await db.expense.findMany({
       where: {
         date: { gte: previousStartDate, lte: previousEndDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -145,10 +151,10 @@ export async function getFinancialOverview(
         : currentTotalExpenses > 0 ? 100 : 0;
 
     // Generate revenue vs expenses chart data based on period
-    const chartData = await generateChartDataByPeriod(startDate, endDate, period);
+    const chartData = await generateChartDataByPeriod(startDate, endDate, period, currency);
 
     // Calculate expense categories
-    const expensesByCategory = await getExpensesByCategory(startDate, endDate);
+    const expensesByCategory = await getExpensesByCategory(startDate, endDate, currency);
 
     return {
       success: true,
@@ -190,7 +196,8 @@ export async function getFinancialOverview(
 async function generateChartDataByPeriod(
   startDate: Date,
   endDate: Date,
-  period: TimePeriod
+  period: TimePeriod,
+  currency?: Currency
 ) {
   const chartData: Array<{ label: string; revenue: number; expenses: number }> = [];
 
@@ -206,6 +213,7 @@ async function generateChartDataByPeriod(
         where: {
           createdAt: { gte: hourStart, lte: hourEnd },
           status: "DELIVERED",
+          ...(currency && { currency }),
         },
         include: { items: true },
       });
@@ -213,6 +221,7 @@ async function generateChartDataByPeriod(
       const expenses = await db.expense.findMany({
         where: {
           date: { gte: hourStart, lte: hourEnd },
+          ...(currency && { currency }),
         },
       });
 
@@ -241,6 +250,7 @@ async function generateChartDataByPeriod(
         where: {
           createdAt: { gte: dayStart, lte: dayEnd },
           status: "DELIVERED",
+          ...(currency && { currency }),
         },
         include: { items: true },
       });
@@ -248,6 +258,7 @@ async function generateChartDataByPeriod(
       const expenses = await db.expense.findMany({
         where: {
           date: { gte: dayStart, lte: dayEnd },
+          ...(currency && { currency }),
         },
       });
 
@@ -280,6 +291,7 @@ async function generateChartDataByPeriod(
         where: {
           createdAt: { gte: dayStart, lte: dayEnd },
           status: "DELIVERED",
+          ...(currency && { currency }),
         },
         include: { items: true },
       });
@@ -287,6 +299,7 @@ async function generateChartDataByPeriod(
       const expenses = await db.expense.findMany({
         where: {
           date: { gte: dayStart, lte: dayEnd },
+          ...(currency && { currency }),
         },
       });
 
@@ -320,6 +333,7 @@ async function generateChartDataByPeriod(
         where: {
           createdAt: { gte: monthStart, lte: monthEnd },
           status: "DELIVERED",
+          ...(currency && { currency }),
         },
         include: { items: true },
       });
@@ -327,6 +341,7 @@ async function generateChartDataByPeriod(
       const expenses = await db.expense.findMany({
         where: {
           date: { gte: monthStart, lte: monthEnd },
+          ...(currency && { currency }),
         },
       });
 
@@ -356,10 +371,11 @@ async function generateChartDataByPeriod(
 /**
  * Get expenses grouped by type
  */
-async function getExpensesByCategory(startDate: Date, endDate: Date) {
+async function getExpensesByCategory(startDate: Date, endDate: Date, currency?: Currency) {
   const expenses = await db.expense.findMany({
     where: {
       date: { gte: startDate, lte: endDate },
+      ...(currency && { currency }),
     },
   });
 
@@ -386,7 +402,8 @@ async function getExpensesByCategory(startDate: Date, endDate: Date) {
 export async function getSalesRepFinance(
   period: TimePeriod = "month",
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
+  currency?: Currency
 ) {
   try {
     // Use custom dates if provided, otherwise calculate from period
@@ -424,6 +441,7 @@ export async function getSalesRepFinance(
             assignedToId: rep.id,
             status: "DELIVERED",
             deliveredAt: { gte: startDate, lte: endDate },
+            ...(currency && { currency }),
           },
           include: {
             items: {
@@ -465,6 +483,7 @@ export async function getSalesRepFinance(
           where: {
             productId: { in: productIds },
             date: { gte: startDate, lte: endDate },
+            ...(currency && { currency }),
           },
         });
 
@@ -546,7 +565,8 @@ export async function getSalesRepFinance(
 export async function getAgentCostAnalysis(
   period: TimePeriod = "month",
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
+  currency?: Currency
 ) {
   try {
     // Use custom dates if provided, otherwise calculate from period
@@ -586,6 +606,7 @@ export async function getAgentCostAnalysis(
         status: "DELIVERED",
         agentId: { not: null },
         deliveredAt: { gte: startDate, lte: endDate },
+        ...(currency && { currency }),
       },
       include: {
         items: {
@@ -602,6 +623,7 @@ export async function getAgentCostAnalysis(
       where: {
         type: "delivery",
         date: { gte: startDate, lte: endDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -623,6 +645,7 @@ export async function getAgentCostAnalysis(
           where: {
             agentId: agent.id,
             createdAt: { gte: startDate, lte: endDate },
+            ...(currency && { currency }),
           },
         });
 
@@ -697,6 +720,7 @@ export async function getAgentCostAnalysis(
           where: {
             productId: { in: productIds },
             date: { gte: startDate, lte: endDate },
+            ...(currency && { currency }),
           },
         });
 
@@ -777,6 +801,7 @@ export async function getAgentCostAnalysis(
       where: {
         type: "delivery",
         date: { gte: previousStartDate, lte: previousEndDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -843,7 +868,8 @@ export async function getAgentCostAnalysis(
 export async function getProfitLossStatement(
   period: TimePeriod = "month",
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
+  currency?: Currency
 ) {
   try {
     // Use custom dates if provided, otherwise calculate from period
@@ -869,6 +895,7 @@ export async function getProfitLossStatement(
       where: {
         createdAt: { gte: startDate, lte: endDate },
         status: "DELIVERED",
+        ...(currency && { currency }),
       },
       include: {
         items: true,
@@ -880,6 +907,7 @@ export async function getProfitLossStatement(
       where: {
         createdAt: { gte: previousStartDate, lte: previousEndDate },
         status: "DELIVERED",
+        ...(currency && { currency }),
       },
       include: {
         items: true,
@@ -890,6 +918,7 @@ export async function getProfitLossStatement(
     const currentExpenses = await db.expense.findMany({
       where: {
         date: { gte: startDate, lte: endDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -897,6 +926,7 @@ export async function getProfitLossStatement(
     const previousExpenses = await db.expense.findMany({
       where: {
         date: { gte: previousStartDate, lte: previousEndDate },
+        ...(currency && { currency }),
       },
     });
 
@@ -1086,7 +1116,8 @@ export async function getProfitLossStatement(
 export async function getProductProfitability(
   period: TimePeriod = "month",
   customStartDate?: Date,
-  customEndDate?: Date
+  customEndDate?: Date,
+  currency?: Currency
 ) {
   try {
     // Use custom dates if provided, otherwise calculate from period
@@ -1121,6 +1152,7 @@ export async function getProductProfitability(
           gte: startDate,
           lte: endDate,
         },
+        ...(currency && { currency }),
       },
       include: {
         items: {
@@ -1136,6 +1168,7 @@ export async function getProductProfitability(
       where: {
         date: { gte: startDate, lte: endDate },
         productId: { not: null },
+        ...(currency && { currency }),
       },
     });
 

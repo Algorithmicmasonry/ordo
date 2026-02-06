@@ -4,6 +4,7 @@ import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 import { DollarSign, Download, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -21,6 +22,12 @@ import {
 } from "recharts";
 import { DateRangePicker } from "./date-range-picker";
 import { useSearchParams } from "next/navigation";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+} from "@/lib/export-utils";
+import toast from "react-hot-toast";
 
 interface FinancialOverviewProps {
   data: {
@@ -41,6 +48,7 @@ interface FinancialOverviewProps {
     }>;
   };
   period: TimePeriod;
+  currency?: Currency;
 }
 
 const EXPENSE_COLORS = {
@@ -59,7 +67,7 @@ const EXPENSE_LABELS = {
   other: "Other",
 };
 
-export function FinancialOverview({ data, period }: FinancialOverviewProps) {
+export function FinancialOverview({ data, period, currency }: FinancialOverviewProps) {
   const { kpis, chartData, expensesByCategory } = data;
   console.log("This is the chart data: ", chartData);
   const searchParams = useSearchParams();
@@ -67,6 +75,48 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
   // Check if using custom date range
   const hasCustomDateRange =
     searchParams.get("startDate") && searchParams.get("endDate");
+
+  const handleExportCSV = () => {
+    try {
+      const headers = ["Metric", "Current Period", "Change"];
+      const rows = [
+        [
+          "Revenue",
+          formatCurrencyForExport(kpis.revenue.value, currency),
+          `${kpis.revenue.change.toFixed(1)}%`,
+        ],
+        [
+          "Gross Profit",
+          formatCurrencyForExport(kpis.grossProfit.value, currency),
+          `${kpis.grossProfit.change.toFixed(1)}%`,
+        ],
+        [
+          "Net Profit",
+          formatCurrencyForExport(kpis.netProfit.value, currency),
+          `${kpis.netProfit.change.toFixed(1)}%`,
+        ],
+        [
+          "Burn Rate",
+          formatCurrencyForExport(kpis.burnRate.value, currency),
+          `${kpis.burnRate.change.toFixed(1)}%`,
+        ],
+        ["", "", ""],
+        ["Expense Categories", "", ""],
+        ...expensesByCategory.map((cat) => [
+          cat.category,
+          formatCurrencyForExport(cat.total, currency),
+          "",
+        ]),
+      ];
+      const currencySuffix = currency ? `_${currency}` : "";
+      const filename = generateFilename(`financial_overview${currencySuffix}`);
+      exportToCSV(headers, rows, filename);
+      toast.success("Financial overview exported!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export report");
+    }
+  };
 
   // Prepare donut chart data (top 5 for visual clarity)
   const donutData = expensesByCategory.slice(0, 5).map((item) => ({
@@ -127,7 +177,7 @@ export function FinancialOverview({ data, period }: FinancialOverviewProps) {
           {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
           <DateRangePicker />
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={handleExportCSV}>
           <Download className="w-4 h-4 mr-2" />
           Export Report
         </Button>

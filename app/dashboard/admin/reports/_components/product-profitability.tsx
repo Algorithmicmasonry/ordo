@@ -69,6 +69,7 @@ interface ProductProfitabilityProps {
     };
   };
   period: TimePeriod;
+  currency?: import("@prisma/client").Currency;
 }
 
 export function ProductProfitability({

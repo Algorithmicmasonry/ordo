@@ -48,7 +48,9 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { DashboardHeader } from "../../_components/dashboard-header";
 import { PeriodFilter } from "../../_components/period-filter";
+import { CurrencyFilter } from "../../_components/currency-filter";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 import { AddExpenseModal } from "./add-expense-modal";
 import { EditExpenseModal } from "./edit-expense-modal";
 import { DeleteExpenseDialog } from "./delete-expense-dialog";
@@ -59,6 +61,7 @@ import {
   formatCurrencyForExport,
   formatDateForExport,
 } from "@/lib/export-utils";
+import { formatCurrency, getCurrencyName } from "@/lib/currency";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -134,6 +137,7 @@ interface ExpensesClientProps {
     dailyExpenses: Record<string, number>;
   };
   currentPeriod: TimePeriod;
+  currency?: Currency;
 }
 
 const expenseTypeConfig: Record<string, { label: string; color: string }> = {
@@ -181,6 +185,7 @@ export default function ExpensesClient({
   maxMonthlyValue,
   charts,
   currentPeriod,
+  currency,
 }: ExpensesClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -367,7 +372,10 @@ export default function ExpensesClient({
 
       {/* Action Bar */}
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <PeriodFilter currentPeriod={currentPeriod} />
+        <div className="flex items-center gap-4">
+          <PeriodFilter currentPeriod={currentPeriod} />
+          <CurrencyFilter />
+        </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => router.refresh()}>
             <RefreshCw className="size-4 mr-2" />
@@ -378,6 +386,16 @@ export default function ExpensesClient({
             Add Expense
           </Button>
         </div>
+      </div>
+
+      {/* Currency Badge */}
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary" className="text-xs font-medium">
+          Currency: {getCurrencyName(currency || "NGN")}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          All amounts shown in this currency only
+        </span>
       </div>
 
       {/* Stats Cards */}
@@ -394,7 +412,7 @@ export default function ExpensesClient({
             </div>
             <div className="flex flex-col">
               <span className="text-3xl font-extrabold">
-                ₦{Math.round(stats.totalExpenses).toLocaleString()}
+                {formatCurrency(stats.totalExpenses, currency || "NGN")}
               </span>
               <div
                 className={`flex items-center mt-2 text-sm font-bold ${
@@ -429,7 +447,7 @@ export default function ExpensesClient({
             </div>
             <div className="flex flex-col">
               <span className="text-3xl font-extrabold">
-                ₦{Math.round(stats.productLinkedExpenses).toLocaleString()}
+                {formatCurrency(stats.productLinkedExpenses, currency || "NGN")}
               </span>
               <span className="text-muted-foreground text-xs mt-2">
                 {stats.totalExpenses > 0
@@ -456,7 +474,7 @@ export default function ExpensesClient({
             </div>
             <div className="flex flex-col">
               <span className="text-3xl font-extrabold">
-                ₦{Math.round(stats.generalExpenses).toLocaleString()}
+                {formatCurrency(stats.generalExpenses, currency || "NGN")}
               </span>
               <span className="text-muted-foreground text-xs mt-2">
                 Operations & Overhead
@@ -477,7 +495,7 @@ export default function ExpensesClient({
             </div>
             <div className="flex flex-col">
               <span className="text-3xl font-extrabold">
-                ₦{Math.round(stats.dailyBurnRate).toLocaleString()}
+                {formatCurrency(stats.dailyBurnRate, currency || "NGN")}
               </span>
               <span className="text-muted-foreground text-xs mt-2">
                 Average this period
@@ -499,7 +517,7 @@ export default function ExpensesClient({
                 Gross Revenue
               </span>
               <span className="text-2xl font-black text-foreground">
-                ₦{Math.round(profitImpact.grossRevenue).toLocaleString()}
+                {formatCurrency(profitImpact.grossRevenue, currency || "NGN")}
               </span>
             </div>
             <span className="text-2xl font-bold text-muted-foreground">−</span>
@@ -508,7 +526,7 @@ export default function ExpensesClient({
                 Cost of Goods
               </span>
               <span className="text-2xl font-black text-foreground">
-                ₦{Math.round(profitImpact.costOfGoods).toLocaleString()}
+                {formatCurrency(profitImpact.costOfGoods, currency || "NGN")}
               </span>
             </div>
             <span className="text-2xl font-bold text-muted-foreground">−</span>
@@ -517,7 +535,7 @@ export default function ExpensesClient({
                 Total Expenses
               </span>
               <span className="text-2xl font-black text-foreground">
-                ₦{Math.round(profitImpact.totalExpenses).toLocaleString()}
+                {formatCurrency(profitImpact.totalExpenses, currency || "NGN")}
               </span>
             </div>
             <span className="text-2xl font-bold text-muted-foreground">=</span>
@@ -526,7 +544,7 @@ export default function ExpensesClient({
                 Net Profit
               </span>
               <span className="text-4xl font-black text-primary">
-                ₦{Math.round(profitImpact.netProfit).toLocaleString()}
+                {formatCurrency(profitImpact.netProfit, currency || "NGN")}
               </span>
             </div>
           </div>
@@ -613,7 +631,7 @@ export default function ExpensesClient({
                           {product.name}
                         </span>
                         <span className="font-bold">
-                          ₦{Math.round(product.amount).toLocaleString()}{" "}
+                          {formatCurrency(product.amount, currency || "NGN")}{" "}
                           <span className="text-xs text-muted-foreground font-normal ml-1">
                             {expenseTypeConfig[product.primaryType]?.label ||
                               product.primaryType}
@@ -708,7 +726,7 @@ export default function ExpensesClient({
                               </span>
                             </div>
                             <span className="font-semibold">
-                              ₦{Math.round(month.operating).toLocaleString()}
+                              {formatCurrency(month.operating, currency || "NGN")}
                             </span>
                           </div>
                           <div className="flex justify-between items-center text-xs">
@@ -719,17 +737,17 @@ export default function ExpensesClient({
                               </span>
                             </div>
                             <span className="font-semibold">
-                              ₦{Math.round(month.marketing).toLocaleString()}
+                              {formatCurrency(month.marketing, currency || "NGN")}
                             </span>
                           </div>
                           <div className="pt-1.5 mt-1.5 border-t border-border">
                             <div className="flex justify-between items-center text-xs font-semibold">
                               <span>Total</span>
                               <span>
-                                ₦
-                                {Math.round(
+                                {formatCurrency(
                                   month.operating + month.marketing,
-                                ).toLocaleString()}
+                                  currency || "NGN"
+                                )}
                               </span>
                             </div>
                           </div>
@@ -756,7 +774,7 @@ export default function ExpensesClient({
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip
-                  formatter={(value: number) => `₦${value.toLocaleString()}`}
+                  formatter={(value: number) => formatCurrency(value, currency || "NGN")}
                 />
                 <Legend />
                 <Bar dataKey="amount" fill="#3b82f6" name="Expenses" />
@@ -788,7 +806,7 @@ export default function ExpensesClient({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => `₦${value.toLocaleString()}`}
+                  formatter={(value: number) => formatCurrency(value, currency || "NGN")}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -966,7 +984,7 @@ export default function ExpensesClient({
                       {expense.product?.name || "General Expense"}
                     </TableCell>
                     <TableCell className="text-sm font-bold whitespace-nowrap">
-                      ₦{expense.amount.toLocaleString()}
+                      {formatCurrency(expense.amount, currency || "NGN")}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                       {expense.description || "-"}

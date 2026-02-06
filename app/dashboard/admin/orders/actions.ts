@@ -236,6 +236,7 @@ export async function getOrders(
 
 export async function getOrderStats(
   period: TimePeriod = "month",
+  currency?: Currency,
 ): Promise<ActionResponse<StatsData>> {
   try {
     const session = await auth.api.getSession({
@@ -253,6 +254,10 @@ export async function getOrderStats(
     const where: Prisma.OrderWhereInput = {};
     if (session.user.role === "SALES_REP") {
       where.assignedToId = session.user.id;
+    }
+    // Filter by currency if provided (defaults to NGN in UI)
+    if (currency) {
+      where.currency = currency;
     }
 
     // Get date ranges based on period

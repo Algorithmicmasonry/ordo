@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { AdminInventoryClient, AgentInventoryBreakdown } from "./_components";
 import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/lib/db";
+import type { Currency } from "@prisma/client";
 
-async function getInventoryData() {
+async function getInventoryData(currency?: Currency) {
   // Fetch products with agent stock
   // When using `include`, Prisma automatically includes all base model fields
   // So reorderPoint, currentStock, and all other Product fields will be available
@@ -63,8 +64,11 @@ async function getInventoryData() {
   // Calculate stats using ProductPrice table
   // Total value includes both warehouse and agent stock
   const warehouseValue = products.reduce((sum, product) => {
+    // Filter by currency if provided
+    if (currency && product.currency !== currency) return sum;
+
     const productPrice = product.productPrices.find(
-      (p) => p.currency === product.currency
+      (p) => p.currency === (currency || product.currency)
     );
     const price = productPrice?.price || 0;
     return sum + product.currentStock * price;
@@ -74,8 +78,11 @@ async function getInventoryData() {
     (sum, agent) =>
       sum +
       agent.stock.reduce((stockSum, item) => {
+        // Filter by currency if provided
+        if (currency && item.product.currency !== currency) return stockSum;
+
         const productPrice = item.product.productPrices.find(
-          (p) => p.currency === item.product.currency
+          (p) => p.currency === (currency || item.product.currency)
         );
         const price = productPrice?.price || 0;
         return stockSum + item.quantity * price;
@@ -126,8 +133,16 @@ async function getInventoryData() {
   };
 }
 
-export default async function InventoryManagementPage() {
-  const data = await getInventoryData();
+interface InventoryPageProps {
+  searchParams: Promise<{ currency?: Currency }>;
+}
+
+export default async function InventoryManagementPage({
+  searchParams,
+}: InventoryPageProps) {
+  const params = await searchParams;
+  const currency = params?.currency;
+  const data = await getInventoryData(currency);
 
   return (
     <div className="space-y-8">

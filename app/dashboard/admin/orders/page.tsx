@@ -1,13 +1,11 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { OrdersStats } from "./_components";
+import { OrdersStats, ExportOrdersButton } from "./_components";
 import { OrdersTable } from "./_components";
 import { getOrders, getOrderStats, getUniqueLocations } from "./actions";
 import { OrderStatus, OrderSource, Currency } from "@prisma/client";
-import { DashboardHeader, PeriodFilter } from "../_components";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { DashboardHeader, PeriodFilter, CurrencyFilter } from "../_components";
 import type { TimePeriod } from "@/lib/types";
 
 type SearchParams = {
@@ -55,10 +53,10 @@ export default async function OrdersPage({
     currency: searchParameter.currency,
   };
 
-  // Fetch data with period
+  // Fetch data with period and currency
   const [ordersResponse, statsResponse, locationsResponse] = await Promise.all([
     getOrders(filters, { page, perPage: 10 }, currentPeriod),
-    getOrderStats(currentPeriod),
+    getOrderStats(currentPeriod, filters.currency),
     getUniqueLocations(),
   ]);
 
@@ -84,17 +82,20 @@ export default async function OrdersPage({
         text="Track and manage your assigned customer orders in real-time"
       />
 
-      {/* Period Filter and Export Button */}
-      <div className="flex items-center justify-between">
-        <PeriodFilter currentPeriod={currentPeriod} />
-        <Button>
-          <Download className="size-4 mr-2" />
-          Export CSV
-        </Button>
+      {/* Period and Currency Filters with Export Button */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <PeriodFilter currentPeriod={currentPeriod} />
+          <CurrencyFilter />
+        </div>
+        <ExportOrdersButton
+          orders={ordersResponse.data.orders}
+          currency={filters.currency}
+        />
       </div>
 
       {statsResponse.success && statsResponse.data && (
-        <OrdersStats stats={statsResponse.data} period={currentPeriod} />
+        <OrdersStats stats={statsResponse.data} period={currentPeriod} currency={filters.currency} />
       )}
 
       <OrdersTable

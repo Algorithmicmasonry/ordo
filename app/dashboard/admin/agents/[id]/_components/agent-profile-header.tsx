@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { getInitials } from "@/lib/utils";
 import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
+import { CurrencyFilter } from "@/app/dashboard/admin/_components/currency-filter";
 
 type TimePeriod = "week" | "month" | "year";
 
@@ -80,6 +81,7 @@ export function AgentProfileHeader({ agent, period, onAssignStock, onEdit }: Age
         {/* Actions */}
         <div className="flex items-center gap-3">
           <PeriodFilter currentPeriod={period} />
+          <CurrencyFilter />
           <Button variant="outline" size="sm" onClick={onAssignStock}>
             <Package className="w-4 h-4 mr-2" />
             Assign Stock

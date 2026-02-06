@@ -20,6 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatCurrency, getCurrencyName } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 import {
   Users,
   UserCheck,
@@ -40,6 +42,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { DashboardHeader } from "../../_components/dashboard-header";
 import { PeriodFilter } from "../../_components/period-filter";
+import { CurrencyFilter } from "../../_components/currency-filter";
 import type { TimePeriod } from "@/lib/types";
 import {
   Tooltip,
@@ -83,6 +86,7 @@ interface CustomersPageProps {
     };
   };
   currentPeriod: TimePeriod;
+  currency?: Currency;
 }
 
 const reliabilityConfig = {
@@ -104,6 +108,7 @@ export default function CustomersClient({
   customers,
   stats,
   currentPeriod,
+  currency,
 }: CustomersPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -217,13 +222,26 @@ export default function CustomersClient({
         text="Manage your customer relationships and track lifetime value performance"
       />
 
-      {/* Period Filter and Actions */}
+      {/* Period and Currency Filters with Actions */}
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <PeriodFilter currentPeriod={currentPeriod} />
+        <div className="flex items-center gap-4">
+          <PeriodFilter currentPeriod={currentPeriod} />
+          <CurrencyFilter />
+        </div>
         <Button onClick={handleExportData}>
           <Download className="size-4 mr-2" />
           Export Data
         </Button>
+      </div>
+
+      {/* Currency Badge */}
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary" className="text-xs font-medium">
+          Currency: {getCurrencyName(currency || "NGN")}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          All amounts shown in this currency only
+        </span>
       </div>
 
       {/* Stats Cards */}
@@ -328,7 +346,7 @@ export default function CustomersClient({
             </div>
             <div className="flex items-end gap-2">
               <span className="text-3xl font-extrabold">
-                ₦{Math.round(stats.avgLifetimeValue).toLocaleString()}
+                {formatCurrency(stats.avgLifetimeValue, currency || "NGN")}
               </span>
               <span
                 className={`text-xs font-bold flex items-center mb-1 ${
@@ -498,7 +516,7 @@ export default function CustomersClient({
                       {customer.cancelledOrders}
                     </TableCell>
                     <TableCell className="font-bold">
-                      ₦{customer.totalSpent.toLocaleString()}
+                      {formatCurrency(customer.totalSpent, currency || "NGN")}
                     </TableCell>
                     <TableCell>
                       <Badge

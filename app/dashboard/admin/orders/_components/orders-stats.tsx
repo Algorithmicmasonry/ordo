@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, getCurrencyName } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 
 type Stats = {
   totalHandled: number;
@@ -15,6 +17,7 @@ type Stats = {
 interface OrdersStatsProps {
   stats: Stats;
   period?: TimePeriod;
+  currency?: Currency;
 }
 
 const periodLabels = {
@@ -24,7 +27,7 @@ const periodLabels = {
   year: "this year",
 };
 
-export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
+export function OrdersStats({ stats, period = "month", currency }: OrdersStatsProps) {
   const statsData = [
     {
       label: `Total Handled (${periodLabels[period]})`,
@@ -41,14 +44,23 @@ export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
     },
     {
       label: "Revenue Generated",
-      value: formatCurrency(stats.revenue),
+      value: formatCurrency(stats.revenue, currency || "NGN"),
       change: `${stats.revenueChange > 0 ? "+" : ""}${stats.revenueChange}%`,
       trend: stats.revenueChange >= 0 ? ("up" as const) : ("down" as const),
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary" className="text-xs font-medium">
+          Currency: {getCurrencyName(currency || "NGN")}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          All amounts shown in this currency only
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {statsData.map((stat) => (
         <Card key={stat.label}>
           <CardContent className="p-6">
@@ -73,6 +85,7 @@ export function OrdersStats({ stats, period = "month" }: OrdersStatsProps) {
           </CardContent>
         </Card>
       ))}
+      </div>
     </div>
   );
 }

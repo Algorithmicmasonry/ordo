@@ -26,6 +26,12 @@ import {
   YAxis,
 } from "recharts";
 import { DateRangePicker } from "./date-range-picker";
+import {
+  exportToCSV,
+  generateFilename,
+  formatCurrencyForExport,
+} from "@/lib/export-utils";
+import toast from "react-hot-toast";
 
 interface SalesRepFinanceProps {
   data: {
@@ -51,9 +57,10 @@ interface SalesRepFinanceProps {
     }>;
   };
   period: TimePeriod;
+  currency?: import("@prisma/client").Currency;
 }
 
-export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
+export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps) {
   const { teamMetrics, repPerformance } = data;
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,6 +70,40 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
   // Check if using custom date range
   const hasCustomDateRange =
     searchParams.get("startDate") && searchParams.get("endDate");
+
+  const handleExportPayout = () => {
+    try {
+      const headers = [
+        "Sales Rep Name",
+        "Email",
+        "Revenue",
+        "Cost",
+        "Expenses",
+        "Delivered Orders",
+        "Net Profit",
+        "CPA",
+        "ROI %",
+      ];
+      const rows = repPerformance.map((rep) => [
+        rep.repName,
+        rep.repEmail,
+        formatCurrencyForExport(rep.revenue, currency),
+        formatCurrencyForExport(rep.cost, currency),
+        formatCurrencyForExport(rep.expenses, currency),
+        rep.deliveredCount.toString(),
+        formatCurrencyForExport(rep.netProfit, currency),
+        formatCurrencyForExport(rep.cpa, currency),
+        rep.roi.toFixed(1),
+      ]);
+      const currencySuffix = currency ? `_${currency}` : "";
+      const filename = generateFilename(`sales_rep_payout${currencySuffix}`);
+      exportToCSV(headers, rows, filename);
+      toast.success("Sales rep payout report exported!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export report");
+    }
+  };
 
   // Filter performance data based on search
   const filteredPerformance = repPerformance.filter((rep) =>
@@ -101,7 +142,7 @@ export function SalesRepFinance({ data, period }: SalesRepFinanceProps) {
           <DateRangePicker />
         </div>
         <div className="flex gap-3">
-          <Button size="sm">
+          <Button size="sm" onClick={handleExportPayout}>
             <Download className="w-4 h-4 mr-2" />
             Payout Report
           </Button>

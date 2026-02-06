@@ -1,11 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
+import type { Currency } from "@prisma/client";
 
 /**
  * Get agent statistics
  */
-export async function getAgentStats() {
+export async function getAgentStats(currency?: Currency) {
   try {
     // Total agents
     const totalAgents = await db.agent.count();
@@ -29,8 +30,11 @@ export async function getAgentStats() {
     });
 
     const totalStockValue = agentStocks.reduce((sum, stock) => {
+      // Filter by currency if provided
+      if (currency && stock.product.currency !== currency) return sum;
+
       const productPrice = stock.product.productPrices.find(
-        (p) => p.currency === stock.product.currency
+        (p) => p.currency === (currency || stock.product.currency)
       );
       const cost = productPrice?.cost || 0;
       return sum + stock.quantity * cost;
@@ -38,8 +42,11 @@ export async function getAgentStats() {
 
     // Calculate total defective stock value
     const totalDefectiveValue = agentStocks.reduce((sum, stock) => {
+      // Filter by currency if provided
+      if (currency && stock.product.currency !== currency) return sum;
+
       const productPrice = stock.product.productPrices.find(
-        (p) => p.currency === stock.product.currency
+        (p) => p.currency === (currency || stock.product.currency)
       );
       const cost = productPrice?.cost || 0;
       return sum + stock.defective * cost;
@@ -47,8 +54,11 @@ export async function getAgentStats() {
 
     // Calculate total missing stock value
     const totalMissingValue = agentStocks.reduce((sum, stock) => {
+      // Filter by currency if provided
+      if (currency && stock.product.currency !== currency) return sum;
+
       const productPrice = stock.product.productPrices.find(
-        (p) => p.currency === stock.product.currency
+        (p) => p.currency === (currency || stock.product.currency)
       );
       const cost = productPrice?.cost || 0;
       return sum + stock.missing * cost;

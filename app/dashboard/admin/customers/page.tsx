@@ -8,12 +8,13 @@ import {
   calculatePercentageChange,
 } from "@/lib/date-utils";
 import type { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 
 interface CustomersPageProps {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; currency?: Currency }>;
 }
 
-async function getCustomersData(period: TimePeriod = "month") {
+async function getCustomersData(period: TimePeriod = "month", currency?: Currency) {
   const { startDate, endDate } = getDateRange(period);
   const previousRange = getPreviousPeriodRange(period);
 
@@ -24,6 +25,7 @@ async function getCustomersData(period: TimePeriod = "month") {
         gte: previousRange.startDate,
         lte: endDate,
       },
+      ...(currency && { currency }),
     },
     select: {
       customerName: true,
@@ -228,7 +230,8 @@ export default async function CustomersPage({
 }: CustomersPageProps) {
   const params = await searchParams;
   const period = (params?.period || "month") as TimePeriod;
-  const data = await getCustomersData(period);
+  const currency = params?.currency;
+  const data = await getCustomersData(period, currency);
 
   return (
     <Suspense fallback={<CustomersPageSkeleton />}>
@@ -236,6 +239,7 @@ export default async function CustomersPage({
         customers={data.customers}
         stats={data.stats}
         currentPeriod={period}
+        currency={currency}
       />
     </Suspense>
   );

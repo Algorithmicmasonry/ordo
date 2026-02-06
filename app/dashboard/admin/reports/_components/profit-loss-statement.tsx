@@ -55,6 +55,7 @@ interface ProfitLossStatementProps {
     };
   };
   period: TimePeriod;
+  currency?: import("@prisma/client").Currency;
 }
 
 const EXPENSE_LABELS: Record<string, string> = {

@@ -3,13 +3,14 @@
 import { db } from "@/lib/db";
 import { getDateRange, getPreviousPeriodRange } from "@/lib/date-utils";
 import { revalidatePath } from "next/cache";
+import type { Currency } from "@prisma/client";
 
 type TimePeriod = "week" | "month" | "year";
 
 /**
  * Get detailed agent information with performance metrics
  */
-export async function getAgentDetails(agentId: string, period: TimePeriod = "month") {
+export async function getAgentDetails(agentId: string, period: TimePeriod = "month", currency?: Currency) {
   try {
     const { startDate, endDate } = getDateRange(period);
     const previousRange = getPreviousPeriodRange(period);
@@ -60,9 +61,12 @@ export async function getAgentDetails(agentId: string, period: TimePeriod = "mon
 
     // Calculate stock value using ProductPrice table
     const stockValue = agent.stock.reduce((sum, s) => {
+      // Filter by currency if provided
+      if (currency && s.product.currency !== currency) return sum;
+
       // Get the cost for the product's primary currency
       const productPrice = s.product.productPrices.find(
-        (p) => p.currency === s.product.currency
+        (p) => p.currency === (currency || s.product.currency)
       );
       const cost = productPrice?.cost || 0;
       return sum + s.quantity * cost;

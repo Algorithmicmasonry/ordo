@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Agent, AgentStock, Product, ProductPrice } from "@prisma/client";
+import { Agent, AgentStock, Product, ProductPrice, Currency } from "@prisma/client";
 import { AgentProfileHeader } from "./agent-profile-header";
 import { AgentStatsCards } from "./agent-stats-cards";
 import { AgentPerformanceChart } from "./agent-performance-chart";
@@ -43,6 +43,7 @@ interface AgentDetailsClientProps {
   recentOrders: any[];
   totalOrders: number;
   period: TimePeriod;
+  currency?: Currency;
 }
 
 export function AgentDetailsClient({
@@ -54,6 +55,7 @@ export function AgentDetailsClient({
   recentOrders,
   totalOrders,
   period,
+  currency,
 }: AgentDetailsClientProps) {
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [showAssignStockModal, setShowAssignStockModal] = useState(false);
@@ -83,6 +85,7 @@ export function AgentDetailsClient({
         currentStats={currentStats}
         previousStats={previousStats}
         stockValue={stockValue}
+        currency={currency}
       />
 
       <div className="grid lg:grid-cols-2 gap-6">

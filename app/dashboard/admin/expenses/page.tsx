@@ -8,13 +8,13 @@ import {
   calculatePercentageChange,
 } from "@/lib/date-utils";
 import type { TimePeriod } from "@/lib/types";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Currency } from "@prisma/client";
 
 interface ExpensesPageProps {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; currency?: Currency }>;
 }
 
-async function getExpensesData(period: TimePeriod = "month") {
+async function getExpensesData(period: TimePeriod = "month", currency?: Currency) {
   const { startDate, endDate } = getDateRange(period);
   const previousRange = getPreviousPeriodRange(period);
 
@@ -27,6 +27,7 @@ async function getExpensesData(period: TimePeriod = "month") {
           gte: previousRange.startDate,
           lte: endDate,
         },
+        ...(currency && { currency }),
       },
       include: {
         product: {
@@ -61,6 +62,7 @@ async function getExpensesData(period: TimePeriod = "month") {
           gte: previousRange.startDate,
           lte: endDate,
         },
+        ...(currency && { currency }),
       },
       include: {
         items: {
@@ -257,7 +259,8 @@ export default async function ExpensesPage({
 }: ExpensesPageProps) {
   const params = await searchParams;
   const period = (params?.period || "month") as TimePeriod;
-  const data = await getExpensesData(period);
+  const currency = params?.currency;
+  const data = await getExpensesData(period, currency);
 
   return (
     <Suspense fallback={<ExpensesPageSkeleton />}>
@@ -272,6 +275,7 @@ export default async function ExpensesPage({
         maxMonthlyValue={data.maxMonthlyValue}
         charts={data.charts}
         currentPeriod={period}
+        currency={currency}
       />
     </Suspense>
   );

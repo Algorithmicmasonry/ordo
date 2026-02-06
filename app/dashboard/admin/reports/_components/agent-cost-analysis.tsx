@@ -76,6 +76,7 @@ interface AgentCostAnalysisProps {
     }>;
   };
   period: TimePeriod;
+  currency?: import("@prisma/client").Currency;
 }
 
 export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {

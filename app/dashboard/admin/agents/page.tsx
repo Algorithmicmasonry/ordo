@@ -1,11 +1,20 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DashboardHeader } from "../_components";
+import { DashboardHeader, CurrencyFilter } from "../_components";
 import { AgentsStats, AgentsTable, ExportAgentsButton } from "./_components";
 import { getAgentStats, getAgentsWithMetrics, getUniqueZones } from "./actions";
+import type { Currency } from "@prisma/client";
 
-export default async function AdminAgentsPage() {
+type SearchParams = {
+  currency?: Currency;
+};
+
+export default async function AdminAgentsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -18,9 +27,12 @@ export default async function AdminAgentsPage() {
     redirect("/dashboard");
   }
 
+  const searchParameter = await searchParams;
+  const currency = searchParameter.currency;
+
   // Fetch data in parallel
   const [statsResponse, agentsResponse, zonesResponse] = await Promise.all([
-    getAgentStats(),
+    getAgentStats(currency),
     getAgentsWithMetrics(),
     getUniqueZones(),
   ]);
@@ -51,12 +63,13 @@ export default async function AdminAgentsPage() {
         text="Manage and monitor external delivery agents and their performance metrics across regions"
       />
 
-      {/* Export Button */}
-      {agentsResponse.data && (
-        <div className="flex items-center justify-end">
+      {/* Currency Filter and Export Button */}
+      <div className="flex items-center justify-between">
+        <CurrencyFilter />
+        {agentsResponse.data && (
           <ExportAgentsButton agents={agentsResponse.data} />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* KPI Cards */}
       {statsResponse.data && (
@@ -67,6 +80,7 @@ export default async function AdminAgentsPage() {
           totalDefectiveValue={statsResponse.data.totalDefectiveValue}
           totalMissingValue={statsResponse.data.totalMissingValue}
           pendingDeliveries={statsResponse.data.pendingDeliveries}
+          currency={currency}
         />
       )}
 

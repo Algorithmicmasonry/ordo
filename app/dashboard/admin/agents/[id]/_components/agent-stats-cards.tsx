@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
+import type { Currency } from "@prisma/client";
 
 interface OrderStats {
   total: number;
@@ -14,6 +16,7 @@ interface AgentStatsCardsProps {
   currentStats: OrderStats;
   previousStats: OrderStats;
   stockValue: number;
+  currency?: Currency;
 }
 
 function TrendBadge({
@@ -55,6 +58,7 @@ export function AgentStatsCards({
   currentStats,
   previousStats,
   stockValue,
+  currency,
 }: AgentStatsCardsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -111,7 +115,7 @@ export function AgentStatsCards({
           </div>
           <div className="flex items-baseline justify-between">
             <h3 className="text-2xl font-bold">
-              ₦{stockValue.toLocaleString()}
+              {formatCurrency(stockValue, currency || "NGN")}
             </h3>
           </div>
           <p className="text-xs text-muted-foreground mt-1">

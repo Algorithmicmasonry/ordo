@@ -109,17 +109,8 @@ export function EmbedOrderFormClient({
   }
 
   return (
-    <div className="w-full p-4 md:p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-            Order {product.name}
-          </h1>
-          {product.description && (
-            <p className="text-sm text-gray-600">{product.description}</p>
-          )}
-        </div>
-
+    <div className="w-full p-4 md:p-8 bg-white">
+      <div className="max-w-md mx-auto">
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
             <p className="text-green-800 text-sm font-medium">
@@ -134,155 +125,159 @@ export function EmbedOrderFormClient({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              Customer Information
-            </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Full Name */}
+          <input
+            type="text"
+            placeholder="Your Name *"
+            required
+            value={formData.customerName}
+            onChange={(e) =>
+              setFormData({ ...formData, customerName: e.target.value })
+            }
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
+          />
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.customerName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customerName: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.customerPhone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, customerPhone: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  WhatsApp Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.customerWhatsapp}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      customerWhatsapp: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              Delivery Information
-            </h2>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Delivery Address *
-                </label>
-                <textarea
-                  required
-                  rows={2}
-                  value={formData.deliveryAddress}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      deliveryAddress: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {stateLabel} *
-                  </label>
-                  <select
-                    required
-                    value={formData.state}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                  >
-                    <option value="">Select {stateLabel.toLowerCase()}</option>
-                    {stateOptions.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <PackageSelector
-              packages={product.packages}
-              selectedPackageId={selectedPackageId}
-              onSelect={handlePackageSelect}
-              currency={currency}
+          {/* Phone Number */}
+          <div className="flex gap-2">
+            <select className="px-3 py-2.5 border border-gray-400 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option>+234</option>
+            </select>
+            <input
+              type="tel"
+              placeholder="Your Phone Number *"
+              required
+              value={formData.customerPhone}
+              onChange={(e) =>
+                setFormData({ ...formData, customerPhone: e.target.value })
+              }
+              className="flex-1 px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
             />
-            {product.packageSelectorNote && (
-              <p className="mt-2 text-sm text-gray-600">
-                {product.packageSelectorNote}
-              </p>
-            )}
           </div>
 
-          <PayOnDeliveryBadge />
+          {/* WhatsApp Number */}
+          <div className="flex gap-2">
+            <select className="px-3 py-2.5 border border-gray-400 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option>+234</option>
+            </select>
+            <input
+              type="tel"
+              placeholder="Your WhatsApp Number *"
+              required
+              value={formData.customerWhatsapp}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  customerWhatsapp: e.target.value,
+                })
+              }
+              className="flex-1 px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
+            />
+          </div>
 
+          {/* Address */}
+          <input
+            type="text"
+            placeholder="Your Address *"
+            required
+            value={formData.deliveryAddress}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                deliveryAddress: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
+          />
+
+          {/* Delivery State */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">
+              Your Delivery State *
+            </label>
+          </div>
+          <select
+            required
+            value={formData.state}
+            onChange={(e) =>
+              setFormData({ ...formData, state: e.target.value })
+            }
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+          >
+            <option value="">Select {stateLabel.toLowerCase()}</option>
+            {stateOptions.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
+
+          {/* Package Selector */}
+          <div className="mt-6">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide">
+              SELECT YOUR PACKAGE *
+            </h3>
+            <div className="border-b border-gray-300 mb-4">
+              <div className="flex justify-between items-center pb-2 px-2">
+                <span className="text-sm font-bold text-gray-900">Product</span>
+                <span className="text-sm font-bold text-gray-900">Price</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {product.packages.map((pkg) => (
+                <div key={pkg.id} className="flex items-center gap-3 px-2 py-1">
+                  <input
+                    type="radio"
+                    id={pkg.id}
+                    name="package"
+                    value={pkg.id}
+                    checked={selectedPackageId === pkg.id}
+                    onChange={(e) => handlePackageSelect(e.target.value)}
+                    className="w-4 h-4 text-blue-600 cursor-pointer"
+                  />
+                  <label
+                    htmlFor={pkg.id}
+                    className="flex-1 text-sm font-bold text-gray-900 cursor-pointer"
+                  >
+                    {pkg.description}
+                  </label>
+                  <span className="text-sm font-bold text-gray-900">
+                    ₦{pkg.price.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Payment Method */}
+          <div className="flex items-center gap-3 mt-6 px-2">
+            <input
+              type="radio"
+              id="pod"
+              name="payment"
+              defaultChecked
+              className="w-4 h-4 text-green-600 cursor-pointer"
+            />
+            <label
+              htmlFor="pod"
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <div className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                <span>💳</span>
+                <span>Pay On Delivery</span>
+              </div>
+            </label>
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2.5 px-4 rounded-md text-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="w-full bg-green-500 text-white py-2.5 px-4 rounded-lg text-base font-bold hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors cursor-pointer mt-6"
           >
-            {loading ? "Submitting..." : "PLACE MY ORDER"}
+            {loading ? "SUBMITTING..." : "ORDER NOW"}
           </button>
         </form>
-
-        <p className="text-center text-xs text-gray-500 mt-4">
-          By submitting this form, you agree to be contacted by our sales team.
-        </p>
       </div>
     </div>
   );

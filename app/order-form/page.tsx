@@ -23,7 +23,7 @@ export default function OrderFormPage() {
   const [packages, setPackages] = useState<ProductPackage[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Store full product with packages
   const [selectedProductId, setSelectedProductId] = useState("");
-  const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("NGN");
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,9 @@ export default function OrderFormPage() {
 
   const [formData, setFormData] = useState({
     customerName: "",
+    phoneCountryCode: "+234",
     customerPhone: "",
+    whatsappCountryCode: "+234",
     customerWhatsapp: "",
     deliveryAddress: "",
     state: "",
@@ -56,14 +58,17 @@ export default function OrderFormPage() {
 
   async function loadProducts() {
     const result = await getActiveProducts();
-    if (result.success && result.products) {
+    if (result.success && result.products && result.products.length > 0) {
       setProducts(result.products);
+      // Auto-select the first product
+      const firstProduct = result.products[0];
+      await handleProductChange(firstProduct.id);
     }
   }
 
   async function handleProductChange(productId: string) {
     setSelectedProductId(productId);
-    setSelectedPackages([]);
+    setSelectedPackageId("");
     setPackages([]);
     setSelectedProduct(null);
     setError("");
@@ -85,12 +90,8 @@ export default function OrderFormPage() {
     }
   }
 
-  function handlePackageToggle(packageId: string) {
-    setSelectedPackages((prev) =>
-      prev.includes(packageId)
-        ? prev.filter((id) => id !== packageId)
-        : [...prev, packageId],
-    );
+  function handlePackageSelect(packageId: string) {
+    setSelectedPackageId(packageId);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -104,21 +105,26 @@ export default function OrderFormPage() {
       return;
     }
 
-    if (selectedPackages.length === 0) {
-      setError("Please select at least one package");
+    if (!selectedPackageId) {
+      setError("Please select a package");
       setLoading(false);
       return;
     }
 
+    const fullPhone = `${formData.phoneCountryCode}${formData.customerPhone}`;
+    const fullWhatsapp = formData.customerWhatsapp
+      ? `${formData.whatsappCountryCode}${formData.customerWhatsapp}`
+      : undefined;
+
     const result = await createOrderV2({
       customerName: formData.customerName,
-      customerPhone: formData.customerPhone,
-      customerWhatsapp: formData.customerWhatsapp || undefined,
+      customerPhone: fullPhone,
+      customerWhatsapp: fullWhatsapp,
       deliveryAddress: formData.deliveryAddress,
       state: formData.state,
       city: formData.city,
       productId: selectedProductId,
-      selectedPackages,
+      selectedPackages: [selectedPackageId],
       currency: selectedCurrency,
       utmParams,
       referrer,
@@ -130,14 +136,16 @@ export default function OrderFormPage() {
       setSuccess(true);
       setFormData({
         customerName: "",
+        phoneCountryCode: "+234",
         customerPhone: "",
+        whatsappCountryCode: "+234",
         customerWhatsapp: "",
         deliveryAddress: "",
         state: "",
         city: "",
       });
       setSelectedProductId("");
-      setSelectedPackages([]);
+      setSelectedPackageId("");
       setPackages([]);
 
       setTimeout(() => setSuccess(false), 5000);
@@ -147,15 +155,11 @@ export default function OrderFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            Place Your Order
-          </h1>
-
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 font-medium">
                 Order submitted successfully! We'll contact you shortly.
               </p>
@@ -163,49 +167,114 @@ export default function OrderFormPage() {
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-800">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Pay on Delivery Badge */}
-            <PayOnDeliveryBadge />
-
-            {/* Currency Selection */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-2">
-                Select Currency *
-              </label>
-              <select
+              <input
+                type="text"
                 required
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-                className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-              >
-                {getAvailableCurrencies().map((curr) => (
-                  <option key={curr.code} value={curr.code}>
-                    {curr.symbol} - {curr.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Your Name *"
+                value={formData.customerName}
+                onChange={(e) =>
+                  setFormData({ ...formData, customerName: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+              />
             </div>
 
-            {/* Product Selection */}
+            {/* Phone Number with Country Code */}
+            <div className="flex gap-3">
+              <select
+                value={formData.phoneCountryCode}
+                onChange={(e) =>
+                  setFormData({ ...formData, phoneCountryCode: e.target.value })
+                }
+                className="w-24 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="+234">+234</option>
+                <option value="+233">+233</option>
+                <option value="+1">+1</option>
+                <option value="+44">+44</option>
+              </select>
+              <input
+                type="tel"
+                required
+                placeholder="Your Phone Number *"
+                value={formData.customerPhone}
+                onChange={(e) =>
+                  setFormData({ ...formData, customerPhone: e.target.value })
+                }
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+              />
+            </div>
+
+            {/* WhatsApp Number with Country Code */}
+            <div className="flex gap-3">
+              <select
+                value={formData.whatsappCountryCode}
+                onChange={(e) =>
+                  setFormData({ ...formData, whatsappCountryCode: e.target.value })
+                }
+                className="w-24 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="+234">+234</option>
+                <option value="+233">+233</option>
+                <option value="+1">+1</option>
+                <option value="+44">+44</option>
+              </select>
+              <input
+                type="tel"
+                placeholder="Your WhatsApp Number *"
+                value={formData.customerWhatsapp}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    customerWhatsapp: e.target.value,
+                  })
+                }
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+              />
+            </div>
+
+            {/* Address Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-2">
-                Select Product *
+              <input
+                type="text"
+                required
+                placeholder="Your Address *"
+                value={formData.deliveryAddress}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    deliveryAddress: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+              />
+            </div>
+
+            {/* State Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-purple-900 mb-1">
+                Your Delivery State *
               </label>
               <select
                 required
-                value={selectedProductId}
-                onChange={(e) => handleProductChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
+                value={formData.state}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
               >
-                <option value="">Choose a product</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
+                <option value="">Select state</option>
+                {NIGERIA_STATES.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
                   </option>
                 ))}
               </select>
@@ -213,157 +282,37 @@ export default function OrderFormPage() {
 
             {/* Package Selection */}
             {loadingPackages && (
-              <div className="text-center py-4">
-                <p className="text-gray-600 text-gray-600">
-                  Loading packages...
-                </p>
+              <div className="text-center py-8">
+                <p className="text-gray-600">Loading packages...</p>
               </div>
             )}
 
             {packages.length > 0 && !loadingPackages && (
               <PackageSelector
                 packages={packages}
-                selectedPackages={selectedPackages}
-                onToggle={handlePackageToggle}
-                note={selectedProduct?.packageSelectorNote}
+                selectedPackageId={selectedPackageId}
+                onSelect={handlePackageSelect}
                 currency={selectedCurrency}
               />
             )}
 
-            {/* Customer Information */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 text-gray-900 mb-4">
-                Customer Information
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.customerName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerName: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.customerPhone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerPhone: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                    WhatsApp Number (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.customerWhatsapp}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        customerWhatsapp: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                  />
-                </div>
+            {/* Pay On Delivery Badge */}
+            {selectedPackageId && (
+              <div className="pt-4">
+                <PayOnDeliveryBadge />
               </div>
-            </div>
+            )}
 
-            {/* Delivery Information */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 text-gray-900 mb-4">
-                Delivery Information
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                    Delivery Address *
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={formData.deliveryAddress}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        deliveryAddress: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                      State *
-                    </label>
-                    <select
-                      required
-                      value={formData.state}
-                      onChange={(e) =>
-                        setFormData({ ...formData, state: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                    >
-                      <option value="">Select state</option>
-                      {NIGERIA_STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 text-gray-700 mb-1">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.city}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-white text-gray-900 text-gray-900"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !selectedProductId || selectedPackages.length === 0}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={loading || !selectedPackageId}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded-lg font-bold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md"
             >
-              {loading ? "Submitting..." : "Submit Order"}
+              {loading ? "SUBMITTING..." : "ORDER NOW"}
             </button>
           </form>
         </div>
-
-        <p className="text-center text-sm text-gray-500 text-gray-600 mt-6">
-          By submitting this form, you agree to be contacted by our sales team.
-        </p>
       </div>
     </div>
   );

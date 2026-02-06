@@ -1,18 +1,17 @@
-import { CheckCircle } from "lucide-react";
+import { Truck } from "lucide-react";
 
 export function PayOnDeliveryBadge() {
   return (
-    <div className="flex items-center gap-3 p-4 bg-green-50 border-2 border-green-500 rounded-lg">
-      <div className="flex items-center justify-center size-12 bg-green-500 rounded-full flex-shrink-0">
-        <CheckCircle className="size-6 text-white" />
-      </div>
-      <div>
-        <p className="font-bold text-green-900">
-          Pay on Delivery
-        </p>
-        <p className="text-sm text-green-700">
-          Payment accepted upon delivery
-        </p>
+    <div className="flex items-center gap-3">
+      <input
+        type="radio"
+        checked={true}
+        readOnly
+        className="w-4 h-4 text-blue-600"
+      />
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm">
+        <Truck className="w-4 h-4" />
+        <span className="font-semibold text-sm">Pay On Delivery</span>
       </div>
     </div>
   );

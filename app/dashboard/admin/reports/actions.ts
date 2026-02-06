@@ -570,7 +570,11 @@ export async function getAgentCostAnalysis(
       include: {
         stock: {
           include: {
-            product: true,
+            product: {
+              include: {
+                productPrices: true,
+              },
+            },
           },
         },
       },
@@ -627,9 +631,13 @@ export async function getAgentCostAnalysis(
         const successRate =
           totalAssigned > 0 ? (totalDeliveries / totalAssigned) * 100 : 0;
 
-        // Calculate stock value in hand
+        // Calculate stock value in hand using ProductPrice table
         const stockValue = agent.stock.reduce((sum, stock) => {
-          return sum + stock.quantity * stock.product.cost;
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return sum + stock.quantity * cost;
         }, 0);
 
         // Calculate defective and missing stock counts and values
@@ -641,14 +649,20 @@ export async function getAgentCostAnalysis(
           (sum, stock) => sum + stock.missing,
           0
         );
-        const defectiveValue = agent.stock.reduce(
-          (sum, stock) => sum + stock.defective * stock.product.cost,
-          0
-        );
-        const missingValue = agent.stock.reduce(
-          (sum, stock) => sum + stock.missing * stock.product.cost,
-          0
-        );
+        const defectiveValue = agent.stock.reduce((sum, stock) => {
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return sum + stock.defective * cost;
+        }, 0);
+        const missingValue = agent.stock.reduce((sum, stock) => {
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return sum + stock.missing * cost;
+        }, 0);
         const totalStockIssues = defectiveCount + missingCount;
         const totalStockIssuesValue = defectiveValue + missingValue;
 
@@ -708,22 +722,30 @@ export async function getAgentCostAnalysis(
     // Sort by total deliveries (most active first)
     agentPerformance.sort((a, b) => b.totalDeliveries - a.totalDeliveries);
 
-    // Calculate total stock value across all agents
+    // Calculate total stock value across all agents using ProductPrice table
     const totalStockValue = agents.reduce((sum, agent) => {
       return (
         sum +
         agent.stock.reduce((stockSum, stock) => {
-          return stockSum + stock.quantity * stock.product.cost;
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return stockSum + stock.quantity * cost;
         }, 0)
       );
     }, 0);
 
-    // Calculate defective and missing stock losses
+    // Calculate defective and missing stock losses using ProductPrice table
     const defectiveValue = agents.reduce((sum, agent) => {
       return (
         sum +
         agent.stock.reduce((stockSum, stock) => {
-          return stockSum + stock.defective * stock.product.cost;
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return stockSum + stock.defective * cost;
         }, 0)
       );
     }, 0);
@@ -732,7 +754,11 @@ export async function getAgentCostAnalysis(
       return (
         sum +
         agent.stock.reduce((stockSum, stock) => {
-          return stockSum + stock.missing * stock.product.cost;
+          const productPrice = stock.product.productPrices.find(
+            (p) => p.currency === stock.product.currency
+          );
+          const cost = productPrice?.cost || 0;
+          return stockSum + stock.missing * cost;
         }, 0)
       );
     }, 0);

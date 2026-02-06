@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Agent, AgentStock, Product } from "@prisma/client";
+import type { Agent, AgentStock, Product, ProductPrice } from "@prisma/client";
 import { AlertCircle, HatGlasses, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 import {
@@ -48,7 +48,9 @@ import { assignStockToAgent } from "@/app/actions/agents";
 
 type AgentWithStock = Agent & {
   stock: (AgentStock & {
-    product: Pick<Product, "id" | "name" | "price" | "cost">;
+    product: Pick<Product, "id" | "name" | "currency"> & {
+      productPrices: ProductPrice[];
+    };
   })[];
 };
 
@@ -217,10 +219,13 @@ function AgentCard({ agent }: { agent: AgentWithStock }) {
 
 function AgentDetailsModal({ agent }: { agent: AgentWithStock }) {
   const totalStock = agent.stock.reduce((sum, item) => sum + item.quantity, 0);
-  const totalValue = agent.stock.reduce(
-    (sum, item) => sum + item.quantity * item.product.price,
-    0,
-  );
+  const totalValue = agent.stock.reduce((sum, item) => {
+    const productPrice = item.product.productPrices.find(
+      (p) => p.currency === item.product.currency
+    );
+    const price = productPrice?.price || 0;
+    return sum + item.quantity * price;
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -307,8 +312,13 @@ function AgentDetailsModal({ agent }: { agent: AgentWithStock }) {
                   </TableCell>
                 </TableRow>
               ) : (
-                agent.stock.map((stock) => (
-                  <TableRow key={stock.id}>
+                agent.stock.map((stock) => {
+                  const productPrice = stock.product.productPrices.find(
+                    (p) => p.currency === stock.product.currency
+                  );
+                  const price = productPrice?.price || 0;
+                  return (
+                    <TableRow key={stock.id}>
                     <TableCell className="font-medium">
                       {stock.product.name}
                     </TableCell>
@@ -322,10 +332,11 @@ function AgentDetailsModal({ agent }: { agent: AgentWithStock }) {
                       {stock.missing}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      ₦{(stock.quantity * stock.product.price).toLocaleString()}
+                      ₦{(stock.quantity * price).toLocaleString()}
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

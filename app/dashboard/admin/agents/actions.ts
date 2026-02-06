@@ -20,26 +20,39 @@ export async function getAgentStats() {
     // Total stock value with agents
     const agentStocks = await db.agentStock.findMany({
       include: {
-        product: true,
+        product: {
+          include: {
+            productPrices: true,
+          },
+        },
       },
     });
 
-    const totalStockValue = agentStocks.reduce(
-      (sum, stock) => sum + stock.quantity * stock.product.cost,
-      0,
-    );
+    const totalStockValue = agentStocks.reduce((sum, stock) => {
+      const productPrice = stock.product.productPrices.find(
+        (p) => p.currency === stock.product.currency
+      );
+      const cost = productPrice?.cost || 0;
+      return sum + stock.quantity * cost;
+    }, 0);
 
     // Calculate total defective stock value
-    const totalDefectiveValue = agentStocks.reduce(
-      (sum, stock) => sum + stock.defective * stock.product.cost,
-      0,
-    );
+    const totalDefectiveValue = agentStocks.reduce((sum, stock) => {
+      const productPrice = stock.product.productPrices.find(
+        (p) => p.currency === stock.product.currency
+      );
+      const cost = productPrice?.cost || 0;
+      return sum + stock.defective * cost;
+    }, 0);
 
     // Calculate total missing stock value
-    const totalMissingValue = agentStocks.reduce(
-      (sum, stock) => sum + stock.missing * stock.product.cost,
-      0,
-    );
+    const totalMissingValue = agentStocks.reduce((sum, stock) => {
+      const productPrice = stock.product.productPrices.find(
+        (p) => p.currency === stock.product.currency
+      );
+      const cost = productPrice?.cost || 0;
+      return sum + stock.missing * cost;
+    }, 0);
 
     // Calculate total pending deliveries (CONFIRMED + DISPATCHED orders)
     const pendingDeliveries = await db.order.count({
@@ -102,7 +115,11 @@ export async function getAgentsWithMetrics(filters?: {
       include: {
         stock: {
           include: {
-            product: true,
+            product: {
+              include: {
+                productPrices: true,
+              },
+            },
           },
         },
         orders: {
@@ -120,11 +137,14 @@ export async function getAgentsWithMetrics(filters?: {
 
     // Calculate metrics for each agent
     const agentsWithMetrics = agents.map((agent) => {
-      // Calculate stock value
-      const stockValue = agent.stock.reduce(
-        (sum, stock) => sum + stock.quantity * stock.product.cost,
-        0,
-      );
+      // Calculate stock value using ProductPrice table
+      const stockValue = agent.stock.reduce((sum, stock) => {
+        const productPrice = stock.product.productPrices.find(
+          (p) => p.currency === stock.product.currency
+        );
+        const cost = productPrice?.cost || 0;
+        return sum + stock.quantity * cost;
+      }, 0);
 
       // Calculate success rate
       const completedOrders = agent.orders.filter(

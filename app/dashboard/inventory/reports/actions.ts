@@ -34,8 +34,8 @@ export async function getLowStockReport() {
         sku: true,
         currentStock: true,
         reorderPoint: true,
-        cost: true,
-        price: true,
+        currency: true,
+        productPrices: true,
         updatedAt: true,
       },
       orderBy: {
@@ -76,7 +76,8 @@ export async function getAgentDistributionStats() {
         id: true,
         name: true,
         currentStock: true,
-        cost: true,
+        currency: true,
+        productPrices: true,
       },
     });
 
@@ -84,10 +85,13 @@ export async function getAgentDistributionStats() {
       (sum, product) => sum + product.currentStock,
       0,
     );
-    const warehouseValue = products.reduce(
-      (sum, product) => sum + product.currentStock * product.cost,
-      0,
-    );
+    const warehouseValue = products.reduce((sum, product) => {
+      const productPrice = product.productPrices.find(
+        (p) => p.currency === product.currency
+      );
+      const cost = productPrice?.cost || 0;
+      return sum + product.currentStock * cost;
+    }, 0);
 
     // Get agent stock
     const agents = await db.agent.findMany({
@@ -99,8 +103,9 @@ export async function getAgentDistributionStats() {
           include: {
             product: {
               select: {
-                cost: true,
                 name: true,
+                currency: true,
+                productPrices: true,
               },
             },
           },
@@ -113,10 +118,13 @@ export async function getAgentDistributionStats() {
         (sum, item) => sum + item.quantity,
         0,
       );
-      const stockValue = agent.stock.reduce(
-        (sum, item) => sum + item.quantity * item.product.cost,
-        0,
-      );
+      const stockValue = agent.stock.reduce((sum, item) => {
+        const productPrice = item.product.productPrices.find(
+          (p) => p.currency === item.product.currency
+        );
+        const cost = productPrice?.cost || 0;
+        return sum + item.quantity * cost;
+      }, 0);
       const defectiveCount = agent.stock.reduce(
         (sum, item) => sum + item.defective,
         0,
@@ -246,7 +254,8 @@ export async function getReorderRecommendations() {
         sku: true,
         currentStock: true,
         reorderPoint: true,
-        cost: true,
+        currency: true,
+        productPrices: true,
         openingStock: true,
       },
     });
@@ -255,6 +264,11 @@ export async function getReorderRecommendations() {
     const recommendations = products
       .filter((product) => product.currentStock <= product.reorderPoint * 1.5)
       .map((product) => {
+        const productPrice = product.productPrices.find(
+          (p) => p.currency === product.currency
+        );
+        const cost = productPrice?.cost || 0;
+
         const stockDeficit = product.reorderPoint - product.currentStock;
         const recommendedOrderQty =
           stockDeficit > 0 ? stockDeficit + product.reorderPoint : 0;
@@ -272,7 +286,7 @@ export async function getReorderRecommendations() {
           currentStock: product.currentStock,
           reorderPoint: product.reorderPoint,
           recommendedOrderQty,
-          estimatedCost: recommendedOrderQty * product.cost,
+          estimatedCost: recommendedOrderQty * cost,
           daysUntilStockout: Math.max(0, daysUntilStockout),
           urgency: (product.currentStock === 0
             ? "critical"

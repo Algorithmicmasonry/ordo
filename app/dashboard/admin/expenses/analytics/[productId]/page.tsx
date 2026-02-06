@@ -27,20 +27,29 @@ export async function generateMetadata({ params }: { params: Promise<{ productId
 }
 
 async function getProductAnalytics(productId: string, period: TimePeriod = "month") {
-  // Verify product exists
+  // Verify product exists and get pricing from ProductPrice table
   const product = await db.product.findUnique({
     where: { id: productId },
     select: {
       id: true,
       name: true,
       description: true,
-      price: true,
-      cost: true,
+      currency: true,
+      productPrices: true,
     },
   });
 
   if (!product) {
     return null;
+  }
+
+  // Get price and cost from ProductPrice table for the product's primary currency
+  const productPrice = product.productPrices.find(
+    (p) => p.currency === product.currency
+  );
+
+  if (!productPrice) {
+    return null; // Product has no pricing configured
   }
 
   // Get date range for current period
@@ -199,7 +208,13 @@ async function getProductAnalytics(productId: string, period: TimePeriod = "mont
   const recentExpenses = currentExpenses.slice(0, 10);
 
   return {
-    product,
+    product: {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: productPrice.price,
+      cost: productPrice.cost,
+    },
     stats: {
       totalRevenue,
       totalCOGS,

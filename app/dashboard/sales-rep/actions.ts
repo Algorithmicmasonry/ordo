@@ -247,7 +247,7 @@ export async function getAvailableProducts() {
       return { success: false, error: "Unauthorized" };
     }
 
-    const products = await db.product.findMany({
+    const allProducts = await db.product.findMany({
       where: {
         isActive: true,
         isDeleted: false,
@@ -255,14 +255,32 @@ export async function getAvailableProducts() {
       select: {
         id: true,
         name: true,
-        price: true,
         currentStock: true,
         currency: true,
+        productPrices: true,
       },
       orderBy: {
         name: "asc",
       },
     });
+
+    // Only return products with valid pricing
+    const products = allProducts
+      .map((product) => {
+        const productPrice = product.productPrices.find(
+          (p) => p.currency === product.currency
+        );
+        if (!productPrice) return null;
+
+        return {
+          id: product.id,
+          name: product.name,
+          price: productPrice.price,
+          currentStock: product.currentStock,
+          currency: product.currency,
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
     return { success: true, data: products };
   } catch (error) {
@@ -303,6 +321,9 @@ export async function createManualOrder(data: {
     for (const item of data.items) {
       const product = await db.product.findUnique({
         where: { id: item.productId },
+        include: {
+          productPrices: true,
+        },
       });
 
       if (!product) {
@@ -319,13 +340,24 @@ export async function createManualOrder(data: {
         };
       }
 
-      totalAmount += product.price * item.quantity;
+      const productPrice = product.productPrices.find(
+        (p) => p.currency === product.currency
+      );
+
+      if (!productPrice) {
+        return {
+          success: false,
+          error: `Pricing not configured for product: ${product.name}`,
+        };
+      }
+
+      totalAmount += productPrice.price * item.quantity;
 
       orderItems.push({
         product: { connect: { id: product.id } },
         quantity: item.quantity,
-        price: product.price,
-        cost: product.cost,
+        price: productPrice.price,
+        cost: productPrice.cost,
       });
     }
 

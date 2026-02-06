@@ -276,14 +276,38 @@ export async function getAllProducts() {
  */
 export async function getActiveProducts() {
   try {
-    const products = await db.product.findMany({
+    const allProducts = await db.product.findMany({
       where: {
         isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        currentStock: true,
+        currency: true,
+        productPrices: true,
       },
       orderBy: {
         name: "asc",
       },
     });
+
+    // Only return products with valid pricing
+    const products = allProducts
+      .map((product) => {
+        const productPrice = product.productPrices.find(
+          (p) => p.currency === product.currency
+        );
+        if (!productPrice) return null;
+
+        return {
+          id: product.id,
+          name: product.name,
+          price: productPrice.price,
+          currentStock: product.currentStock,
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
     return { success: true, products };
   } catch (error) {

@@ -59,10 +59,9 @@ export async function getProductsCatalog({
         orderBy = { name: "asc" };
         break;
       case "price-asc":
-        orderBy = { price: "asc" };
-        break;
       case "price-desc":
-        orderBy = { price: "desc" };
+        // Price sorting will be done after fetching since price is in ProductPrice table
+        orderBy = { name: "asc" };
         break;
       case "stock-asc":
         orderBy = { currentStock: "asc" };
@@ -77,22 +76,48 @@ export async function getProductsCatalog({
     // Get total count
     const totalProducts = await db.product.count({ where: whereClause });
 
-    // Get paginated products
-    const products = await db.product.findMany({
+    // Get all matching products (will sort/paginate after price lookup)
+    const allProducts = await db.product.findMany({
       where: whereClause,
       orderBy,
-      skip,
-      take: limit,
       select: {
         id: true,
         name: true,
         description: true,
-        price: true,
         sku: true,
         currentStock: true,
         reorderPoint: true,
+        currency: true,
+        productPrices: true,
       },
     });
+
+    // Transform products to include price
+    let productsWithPrice = allProducts
+      .map((product) => {
+        const productPrice = product.productPrices.find(
+          (p) => p.currency === product.currency
+        );
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          sku: product.sku,
+          currentStock: product.currentStock,
+          reorderPoint: product.reorderPoint,
+          price: productPrice?.price || 0,
+        };
+      });
+
+    // Sort by price if needed
+    if (sort === "price-asc") {
+      productsWithPrice.sort((a, b) => a.price - b.price);
+    } else if (sort === "price-desc") {
+      productsWithPrice.sort((a, b) => b.price - a.price);
+    }
+
+    // Apply pagination after sorting
+    const products = productsWithPrice.slice(skip, skip + limit);
 
     // Get stats
     const totalActive = await db.product.count({

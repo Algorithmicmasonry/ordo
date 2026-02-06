@@ -22,9 +22,14 @@ interface Product {
   sku: string | null;
   currentStock: number;
   reorderPoint: number;
-  cost: number;
-  price: number;
   updatedAt: Date;
+  currency: string;
+  productPrices: {
+    id: string;
+    price: number;
+    cost: number;
+    currency: string;
+  }[];
 }
 
 interface LowStockReportProps {

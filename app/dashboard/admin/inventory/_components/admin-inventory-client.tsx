@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Agent, AgentStock, Product } from "@prisma/client";
+import type { Agent, AgentStock, Product, ProductPrice } from "@prisma/client";
 import {
   AlertTriangle,
   ChevronDown,
@@ -57,6 +57,7 @@ type ProductWithStock = Product & {
   agentStock: (AgentStock & {
     agent: Pick<Agent, "id" | "name" | "location">;
   })[];
+  productPrices: ProductPrice[];
   _count: {
     orders: number;
   };
@@ -78,6 +79,17 @@ export default function AdminInventoryClient({
   stats,
   lowStockProducts,
 }: InventoryPageProps) {
+  // Helper function to get price/cost from ProductPrice table
+  const getProductPricing = (product: ProductWithStock) => {
+    const productPrice = product.productPrices.find(
+      (p) => p.currency === product.currency
+    );
+    return {
+      price: productPrice?.price || 0,
+      cost: productPrice?.cost || 0,
+    };
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] =
     useState<ProductWithStock | null>(null);
@@ -325,8 +337,10 @@ export default function AdminInventoryClient({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayedProducts.map((product) => (
-                    <TableRow key={product.id}>
+                  displayedProducts.map((product) => {
+                    const { price, cost } = getProductPricing(product);
+                    return (
+                      <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="size-10 rounded bg-muted flex items-center justify-center">
@@ -344,10 +358,10 @@ export default function AdminInventoryClient({
                         {product.sku || "N/A"}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        ₦{product.cost.toLocaleString()}
+                        ₦{cost.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        ₦{product.price.toLocaleString()}
+                        ₦{price.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <span
@@ -448,7 +462,8 @@ export default function AdminInventoryClient({
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -480,6 +495,12 @@ export default function AdminInventoryClient({
 }
 
 function ProductDetailsModal({ product }: { product: ProductWithStock }) {
+  const productPrice = product.productPrices.find(
+    (p) => p.currency === product.currency
+  );
+  const price = productPrice?.price || 0;
+  const cost = productPrice?.cost || 0;
+
   return (
     <div className="space-y-6 w-full">
       {/* Product Info */}
@@ -494,11 +515,11 @@ function ProductDetailsModal({ product }: { product: ProductWithStock }) {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Unit Cost</p>
-          <p className="font-semibold">₦{product.cost.toLocaleString()}</p>
+          <p className="font-semibold">₦{cost.toLocaleString()}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Selling Price</p>
-          <p className="font-semibold">₦{product.price.toLocaleString()}</p>
+          <p className="font-semibold">₦{price.toLocaleString()}</p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Current Stock</p>

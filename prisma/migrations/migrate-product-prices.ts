@@ -43,6 +43,13 @@ async function migrateProductPrices() {
         continue;
       }
 
+      // Skip products without valid pricing data
+      if (product.price === null || product.cost === null) {
+        console.log(`⚠️  Skipping ${product.name} - no pricing data`);
+        skippedCount++;
+        continue;
+      }
+
       // Create ProductPrice from existing Product fields
       await prisma.productPrice.create({
         data: {

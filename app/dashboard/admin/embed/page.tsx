@@ -40,7 +40,6 @@ export default async function EmbedFormPage() {
     id: product.id,
     name: product.name,
     description: product.description,
-    price: product.price,
     packageCount: product.packages.length,
   }));
 

@@ -30,6 +30,7 @@ async function getInventoryData() {
           },
         },
       },
+      productPrices: true, // Include pricing from ProductPrice table
       _count: {
         select: {
           orders: true,
@@ -53,8 +54,8 @@ async function getInventoryData() {
             select: {
               id: true,
               name: true,
-              price: true,
-              cost: true,
+              currency: true,
+              productPrices: true, // Include pricing from ProductPrice table
             },
           },
         },
@@ -65,18 +66,24 @@ async function getInventoryData() {
     },
   });
 
-  // Calculate stats
-  const warehouseValue = products.reduce(
-    (sum, product) => sum + product.currentStock * product.price,
-    0,
-  );
+  // Calculate stats using ProductPrice table
+  const warehouseValue = products.reduce((sum, product) => {
+    const productPrice = product.productPrices.find(
+      (p) => p.currency === product.currency
+    );
+    const price = productPrice?.price || 0;
+    return sum + product.currentStock * price;
+  }, 0);
   const agentValue = agents.reduce(
     (sum, agent) =>
       sum +
-      agent.stock.reduce(
-        (stockSum, item) => stockSum + item.quantity * item.product.price,
-        0,
-      ),
+      agent.stock.reduce((stockSum, item) => {
+        const productPrice = item.product.productPrices.find(
+          (p) => p.currency === item.product.currency
+        );
+        const price = productPrice?.price || 0;
+        return stockSum + item.quantity * price;
+      }, 0),
     0,
   );
   const totalValue = warehouseValue + agentValue;

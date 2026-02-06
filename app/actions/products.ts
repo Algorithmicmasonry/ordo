@@ -47,14 +47,29 @@ export async function createProduct(data: {
       }
     }
 
-    // Create the product
-    const product = await db.product.create({
-      data: {
-        ...data,
-        currentStock: data.openingStock,
-        reorderPoint: data.reorderPoint ?? 0,
-        isActive: data.isActive ?? true,
-      },
+    // Create the product and its price entry in a transaction
+    const product = await db.$transaction(async (tx) => {
+      // Create the product
+      const newProduct = await tx.product.create({
+        data: {
+          ...data,
+          currentStock: data.openingStock,
+          reorderPoint: data.reorderPoint ?? 0,
+          isActive: data.isActive ?? true,
+        },
+      });
+
+      // Create the ProductPrice entry for the primary currency
+      await tx.productPrice.create({
+        data: {
+          productId: newProduct.id,
+          currency: data.currency || "NGN",
+          price: data.price,
+          cost: data.cost,
+        },
+      });
+
+      return newProduct;
     });
 
     revalidatePath("/admin/products");
@@ -123,14 +138,63 @@ export async function updateProduct(
       return { success: false, error: "Insufficient permissions" };
     }
 
-    const product = await db.product.update({
+    // Get current product to know the currency
+    const currentProduct = await db.product.findUnique({
       where: { id: productId },
-      data,
+      select: { currency: true },
+    });
+
+    if (!currentProduct) {
+      return { success: false, error: "Product not found" };
+    }
+
+    const product = await db.$transaction(async (tx) => {
+      // Update the product
+      const updatedProduct = await tx.product.update({
+        where: { id: productId },
+        data,
+      });
+
+      // If price, cost, or currency were updated, sync with ProductPrice table
+      if (data.price !== undefined || data.cost !== undefined || data.currency !== undefined) {
+        const targetCurrency = data.currency || currentProduct.currency;
+        const currentPrice = await tx.productPrice.findUnique({
+          where: {
+            productId_currency: {
+              productId: productId,
+              currency: targetCurrency,
+            },
+          },
+        });
+
+        // Upsert the ProductPrice entry
+        await tx.productPrice.upsert({
+          where: {
+            productId_currency: {
+              productId: productId,
+              currency: targetCurrency,
+            },
+          },
+          update: {
+            price: data.price ?? currentPrice?.price ?? updatedProduct.price,
+            cost: data.cost ?? currentPrice?.cost ?? updatedProduct.cost,
+          },
+          create: {
+            productId: productId,
+            currency: targetCurrency,
+            price: data.price ?? updatedProduct.price,
+            cost: data.cost ?? updatedProduct.cost,
+          },
+        });
+      }
+
+      return updatedProduct;
     });
 
     revalidatePath("/admin/products");
     revalidatePath("/dashboard/admin/inventory");
     revalidatePath("/dashboard/inventory");
+    revalidatePath(`/dashboard/admin/inventory/${productId}/pricing`);
 
     return { success: true, product };
   } catch (error) {

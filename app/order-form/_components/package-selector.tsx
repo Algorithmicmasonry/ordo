@@ -7,7 +7,7 @@ interface PackageSelectorProps {
   selectedPackageId: string;
   onSelect: (packageId: string) => void;
   currency?: Currency;
-  packageSelectorNote: string;
+  packageSelectorNote?: string;
 }
 
 export function PackageSelector({

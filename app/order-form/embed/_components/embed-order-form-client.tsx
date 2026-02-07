@@ -189,6 +189,22 @@ export function EmbedOrderFormClient({
             className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
           />
 
+          {/* City */}
+
+          <input
+            type="text"
+            placeholder="Your City *"
+            required
+            value={formData.city}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                city: e.target.value,
+              })
+            }
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
+          />
+
           {/* Delivery State */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">

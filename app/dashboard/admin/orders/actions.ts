@@ -515,8 +515,15 @@ export async function getUniqueLocations(): Promise<
       };
     }
 
-    // Get unique cities
     const orders = await db.order.findMany({
+      where: {
+        city: {
+          // This excludes both empty strings and (if nullable) nulls safely
+          not: "",
+        },
+        // If your schema allows nulls (String?), Prisma handles this automatically:
+        // NOT: [{ city: "" }, { city: null }]
+      },
       select: {
         city: true,
         state: true,
@@ -524,11 +531,16 @@ export async function getUniqueLocations(): Promise<
       distinct: ["city"],
     });
 
-    // Format as "City, State"
-    const locations = orders.map((order) => ({
-      value: order.city,
-      label: `${order.city}, ${order.state}`,
-    }));
+    // Map to the format expected by your Select component
+    const locations = orders.map((order) => {
+      // Ensure we have a string for the value to satisfy Radix UI
+      const cityValue = order.city.trim();
+
+      return {
+        value: cityValue,
+        label: order.state ? `${cityValue}, ${order.state}` : cityValue,
+      };
+    });
 
     return {
       success: true,

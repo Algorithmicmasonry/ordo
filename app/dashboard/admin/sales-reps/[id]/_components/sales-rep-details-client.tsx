@@ -27,12 +27,18 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import type { User, Order, OrderStatus, OrderSource } from "@prisma/client";
+import type {
+  User,
+  Order,
+  OrderStatus,
+  OrderSource,
+  Currency,
+} from "@prisma/client";
 import { PeriodFilter } from "../../../_components";
 import { TimePeriod } from "@/lib/types";
 import { EditSalesRepModal } from "../../_components";
 import toast from "react-hot-toast";
-import { getCurrencySymbol } from "@/lib/currency";
+import { formatCurrency } from "@/lib/currency";
 import {
   exportToCSV,
   generateFilename,
@@ -50,7 +56,9 @@ type SalesRepWithDetails = User & {
     totalOrders: number;
     deliveredOrders: number;
     revenue: number;
+    revenueByCurrency: Record<Currency, number>;
     profit: number;
+    profitByCurrency: Record<Currency, number>;
     conversionRate: number;
     ordersByStatus: {
       [key in OrderStatus]: number;
@@ -120,45 +128,78 @@ export default function SalesRepDetailsClient({
         ["Sales Representative", salesRep.name],
         ["Email", salesRep.email],
         ["Status", salesRep.isActive ? "Active" : "Inactive"],
-        ["Period", currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1)],
+        [
+          "Period",
+          currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1),
+        ],
         ["", ""], // Empty row for spacing
         ["PERFORMANCE METRICS", ""],
         ["Total Orders", salesRep.stats.totalOrders.toString()],
         ["Delivered Orders", salesRep.stats.deliveredOrders.toString()],
-        [
-          "Revenue",
-          formatCurrencyForExport(salesRep.stats.revenue),
-        ],
-        [
-          "Profit",
-          formatCurrencyForExport(salesRep.stats.profit),
-        ],
-        [
-          "Conversion Rate",
-          `${salesRep.stats.conversionRate.toFixed(1)}%`,
-        ],
+        ["", ""],
+        ["REVENUE BY CURRENCY", ""],
+        ...Object.entries(salesRep.stats.revenueByCurrency).map(
+          ([currency, amount]) => [
+            `Revenue (${currency})`,
+            formatCurrencyForExport(amount, currency as Currency),
+          ],
+        ),
+        ["", ""],
+        ["PROFIT BY CURRENCY", ""],
+        ...Object.entries(salesRep.stats.profitByCurrency).map(
+          ([currency, amount]) => [
+            `Profit (${currency})`,
+            formatCurrencyForExport(amount, currency as Currency),
+          ],
+        ),
+        ["", ""],
+        ["Conversion Rate", `${salesRep.stats.conversionRate.toFixed(1)}%`],
         ["", ""], // Empty row for spacing
         ["ORDERS BY STATUS", ""],
-        ...Object.entries(salesRep.stats.ordersByStatus).map(([status, count]) => [
-          status,
-          count.toString(),
-        ]),
+        ...Object.entries(salesRep.stats.ordersByStatus).map(
+          ([status, count]) => [status, count.toString()],
+        ),
         ["", ""], // Empty row for spacing
         ["ORDERS BY SOURCE", ""],
-        ...Object.entries(salesRep.stats.ordersBySource).map(([source, count]) => [
-          sourceNames[source as OrderSource] || source,
-          count.toString(),
-        ]),
+        ...Object.entries(salesRep.stats.ordersBySource).map(
+          ([source, count]) => [
+            sourceNames[source as OrderSource] || source,
+            count.toString(),
+          ],
+        ),
         ["", ""], // Empty row for spacing
         ["TRENDS (vs Previous Period)", ""],
-        ["Orders Change", `${salesRep.stats.trends.orders > 0 ? "+" : ""}${salesRep.stats.trends.orders.toFixed(1)}%`],
-        ["Delivered Change", `${salesRep.stats.trends.delivered > 0 ? "+" : ""}${salesRep.stats.trends.delivered.toFixed(1)}%`],
-        ["Revenue Change", `${salesRep.stats.trends.revenue > 0 ? "+" : ""}${salesRep.stats.trends.revenue.toFixed(1)}%`],
-        ["Profit Change", `${salesRep.stats.trends.profit > 0 ? "+" : ""}${salesRep.stats.trends.profit.toFixed(1)}%`],
-        ["Conversion Change", `${salesRep.stats.trends.conversion > 0 ? "+" : ""}${salesRep.stats.trends.conversion.toFixed(1)}%`],
+        [
+          "Orders Change",
+          `${salesRep.stats.trends.orders > 0 ? "+" : ""}${salesRep.stats.trends.orders.toFixed(1)}%`,
+        ],
+        [
+          "Delivered Change",
+          `${salesRep.stats.trends.delivered > 0 ? "+" : ""}${salesRep.stats.trends.delivered.toFixed(1)}%`,
+        ],
+        [
+          "Revenue Change",
+          `${salesRep.stats.trends.revenue > 0 ? "+" : ""}${salesRep.stats.trends.revenue.toFixed(1)}%`,
+        ],
+        [
+          "Profit Change",
+          `${salesRep.stats.trends.profit > 0 ? "+" : ""}${salesRep.stats.trends.profit.toFixed(1)}%`,
+        ],
+        [
+          "Conversion Change",
+          `${salesRep.stats.trends.conversion > 0 ? "+" : ""}${salesRep.stats.trends.conversion.toFixed(1)}%`,
+        ],
         ["", ""], // Empty row for spacing
         ["RECENT ORDERS", ""],
-        ["Order Number", "Customer", "Phone", "Status", "Source", "Total", "Date"],
+        [
+          "Order Number",
+          "Customer",
+          "Phone",
+          "Status",
+          "Source",
+          "Total",
+          "Date",
+        ],
         ...recentOrders.map((order) => [
           order.orderNumber,
           order.customerName,
@@ -170,7 +211,9 @@ export default function SalesRepDetailsClient({
         ]),
       ];
 
-      const filename = generateFilename(`sales_rep_${salesRep.name.replace(/\s+/g, "_")}_report`);
+      const filename = generateFilename(
+        `sales_rep_${salesRep.name.replace(/\s+/g, "_")}_report`,
+      );
       exportToCSV(headers, rows, filename);
 
       toast.success("Report exported successfully!");
@@ -178,6 +221,40 @@ export default function SalesRepDetailsClient({
       console.error("Export error:", error);
       toast.error("Failed to export report");
     }
+  };
+
+  // Component to display revenue/profit by currency
+  const CurrencyBreakdown = ({
+    data,
+    label,
+  }: {
+    data: Record<Currency, number>;
+    label: string;
+  }) => {
+    const currencies = Object.entries(data);
+
+    if (currencies.length === 0) {
+      return <p className="text-2xl font-bold text-muted-foreground">-</p>;
+    }
+
+    if (currencies.length === 1) {
+      const [currency, amount] = currencies[0];
+      return (
+        <p className="text-2xl font-bold">
+          {formatCurrency(amount, currency as Currency)}
+        </p>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-1">
+        {currencies.map(([currency, amount]) => (
+          <p key={currency} className="text-lg font-bold">
+            {formatCurrency(amount, currency as Currency)}
+          </p>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -313,9 +390,10 @@ export default function SalesRepDetailsClient({
               Revenue
             </p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold">
-                Mixed Currency
-              </p>
+              <CurrencyBreakdown
+                data={salesRep.stats.revenueByCurrency}
+                label="Revenue"
+              />
               {salesRep.stats.trends.revenue > 0 ? (
                 <p className="text-green-500 text-sm font-medium flex items-center">
                   <TrendingUp className="size-3" />+
@@ -337,9 +415,10 @@ export default function SalesRepDetailsClient({
               Gross Profit
             </p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold">
-                Mixed Currency
-              </p>
+              <CurrencyBreakdown
+                data={salesRep.stats.profitByCurrency}
+                label="Profit"
+              />
               {salesRep.stats.trends.profit > 0 ? (
                 <p className="text-green-500 text-sm font-medium flex items-center">
                   <TrendingUp className="size-3" />+
@@ -488,7 +567,7 @@ export default function SalesRepDetailsClient({
                         {format(new Date(order.createdAt), "MMM dd, HH:mm")}
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        {getCurrencySymbol(order.currency)}{order.totalAmount.toLocaleString()}
+                        {formatCurrency(order.totalAmount, order.currency)}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {sourceNames[order.source]}

@@ -3,7 +3,7 @@
 import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, parseCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 import { getInitials } from "@/lib/utils";
 import {
@@ -79,7 +79,11 @@ interface AgentCostAnalysisProps {
   currency?: import("@prisma/client").Currency;
 }
 
-export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
+export function AgentCostAnalysis({
+  data,
+  period,
+  currency,
+}: AgentCostAnalysisProps) {
   const { kpis, agentPerformance } = data;
   const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,7 +97,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
   const totalPages = Math.ceil(agentPerformance.length / itemsPerPage);
   const paginatedPerformance = agentPerformance.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   // Prepare chart data (top 8 agents by delivery count)
@@ -166,10 +170,10 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
         agent.location,
         agent.totalDeliveries.toString(),
         `${agent.successRate.toFixed(1)}%`,
-        formatCurrencyForExport(agent.stockValue),
-        formatCurrencyForExport(agent.profitContribution),
+        formatCurrencyForExport(agent.stockValue, currency),
+        formatCurrencyForExport(agent.profitContribution, currency),
         agent.totalStockIssues.toString(),
-        formatCurrencyForExport(agent.totalStockIssuesValue),
+        formatCurrencyForExport(agent.totalStockIssuesValue, currency),
         agent.defectiveCount.toString(),
         agent.missingCount.toString(),
       ]);
@@ -211,7 +215,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.totalDeliveryCosts.value)}
+              {formatCurrency(kpis.totalDeliveryCosts.value, currency)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               {kpis.totalDeliveryCosts.change >= 0 ? (
@@ -268,7 +272,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.totalStockValue.value)}
+              {formatCurrency(kpis.totalStockValue.value, currency)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-xs font-bold text-muted-foreground">
@@ -292,7 +296,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
               </div>
             </div>
             <p className="text-2xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.stockLoss.value)}
+              {formatCurrency(kpis.stockLoss.value, currency)}
             </p>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-xs font-bold text-red-600">
@@ -338,7 +342,11 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                   }}
                   formatter={(value: number) => `${value} deliveries`}
                 />
-                <Bar dataKey="deliveries" fill="#137fec" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="deliveries"
+                  fill="#137fec"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -397,60 +405,59 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
         <CardHeader>
           <h3 className="text-sm font-bold">Stock Loss Categories</h3>
         </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative w-40 h-40 mb-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stockLossData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {stockLossData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold">
-                    {formatCurrency(kpis.stockLoss.value / 1000)}{kpis.stockLoss.value >= 1000 ? 'k' : ''}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">
-                    Total Loss
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-full space-y-3">
-                {stockLossData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between text-xs"
+        <CardContent>
+          <div className="flex flex-col items-center justify-center">
+            <div className="relative w-40 h-40 mb-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stockLossData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
                   >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-muted-foreground">
-                        {item.name}
-                      </span>
-                    </div>
-                    <span className="font-bold">
-                      {formatCurrency(item.value)}
-                    </span>
-                  </div>
-                ))}
+                    {stockLossData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold">
+                  {formatCurrency(kpis.stockLoss.value / 1000, currency)}
+                  {kpis.stockLoss.value >= 1000 ? "k" : ""}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                  Total Loss
+                </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            <div className="w-full space-y-3">
+              {stockLossData.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-muted-foreground">{item.name}</span>
+                  </div>
+                  <span className="font-bold">
+                    {formatCurrency(item.value, currency)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Agent Performance & Profitability Table */}
       <Card>
@@ -512,14 +519,14 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                           <div className="flex-1 w-16 bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                             <div
                               className={`${getSuccessRateColor(
-                                agent.successRate
+                                agent.successRate,
                               )} h-full`}
                               style={{ width: `${agent.successRate}%` }}
                             />
                           </div>
                           <span
                             className={`text-xs font-bold ${getSuccessRateTextColor(
-                              agent.successRate
+                              agent.successRate,
                             )}`}
                           >
                             {agent.successRate.toFixed(0)}%
@@ -527,7 +534,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {formatCurrency(agent.stockValue)}
+                        {formatCurrency(agent.stockValue, currency)}
                       </td>
                       <td
                         className={`px-6 py-4 text-sm font-bold ${
@@ -536,7 +543,8 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                             : "text-red-600"
                         }`}
                       >
-                        {agent.profitContribution >= 0 ? "+" : ""}{formatCurrency(agent.profitContribution)}
+                        {agent.profitContribution >= 0 ? "+" : ""}
+                        {formatCurrency(agent.profitContribution, currency)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <Link href={`/dashboard/admin/agents/${agent.agentId}`}>
@@ -588,7 +596,7 @@ export function AgentCostAnalysis({ data, period }: AgentCostAnalysisProps) {
                     >
                       {page}
                     </Button>
-                  )
+                  ),
                 )}
                 <Button
                   variant="outline"

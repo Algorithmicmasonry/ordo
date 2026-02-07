@@ -7,13 +7,7 @@ import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/currency";
 import type { TimePeriod } from "@/lib/types";
 import { getInitials } from "@/lib/utils";
-import {
-  Award,
-  DollarSign,
-  Download,
-  Filter,
-  Search,
-} from "lucide-react";
+import { Award, DollarSign, Download, Filter, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
@@ -60,7 +54,11 @@ interface SalesRepFinanceProps {
   currency?: import("@prisma/client").Currency;
 }
 
-export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps) {
+export function SalesRepFinance({
+  data,
+  period,
+  currency = "NGN",
+}: SalesRepFinanceProps) {
   const { teamMetrics, repPerformance } = data;
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
@@ -179,7 +177,7 @@ export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps
               <DollarSign className="w-5 h-5 text-warning" />
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              {formatCurrency(teamMetrics.avgCPA)}
+              {formatCurrency(teamMetrics.avgCPA, currency)}
             </p>
             <div className="flex items-center gap-1">
               <span className="text-xs text-muted-foreground italic">
@@ -202,7 +200,10 @@ export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps
             </p>
             <div className="flex items-center gap-1">
               <span className="text-sm font-semibold text-green-600">
-                {formatCurrency(teamMetrics.topPerformer?.revenue || 0)}
+                {formatCurrency(
+                  teamMetrics.topPerformer?.revenue || 0,
+                  currency,
+                )}
               </span>
               <span className="text-xs text-muted-foreground">Net Revenue</span>
             </div>
@@ -258,7 +259,7 @@ export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps
                   border: "1px solid #e7edf3",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value: number) => formatCurrency(value, currency)}
               />
               <Bar dataKey="revenue" fill="#137fec" radius={[4, 4, 0, 0]} />
               <Bar dataKey="costs" fill="#94a3b8" radius={[4, 4, 0, 0]} />
@@ -332,7 +333,7 @@ export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-medium">
-                        {formatCurrency(rep.revenue)}
+                        {formatCurrency(rep.revenue, currency)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         {rep.deliveredCount}
@@ -342,10 +343,11 @@ export function SalesRepFinance({ data, period, currency }: SalesRepFinanceProps
                           rep.netProfit >= 0 ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        {rep.netProfit >= 0 ? "+" : ""}{formatCurrency(rep.netProfit)}
+                        {rep.netProfit >= 0 ? "+" : ""}
+                        {formatCurrency(rep.netProfit, currency)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {formatCurrency(rep.cpa)}
+                        {formatCurrency(rep.cpa, currency)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span

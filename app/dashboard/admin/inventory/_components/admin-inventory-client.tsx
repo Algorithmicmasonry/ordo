@@ -77,7 +77,7 @@ type ProductWithStock = Product & {
 
 interface InventoryPageProps {
   products: ProductWithStock[];
-  role: string;
+  role?: string;
   stats: {
     totalValue: number;
     totalUnits: number;
@@ -207,8 +207,7 @@ export default function AdminInventoryClient({
       toast.error("Failed to export inventory data");
     }
   };
-
-  console.log("This is the selected product: ", selectedProduct);
+  console.log("This is the selected product:", selectedProduct);
 
   return (
     <div className="space-y-8">

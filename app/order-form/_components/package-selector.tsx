@@ -1,5 +1,4 @@
 "use client";
-
 import type { ProductPackage, Currency } from "@prisma/client";
 import { getCurrencySymbol } from "@/lib/currency";
 
@@ -8,6 +7,7 @@ interface PackageSelectorProps {
   selectedPackageId: string;
   onSelect: (packageId: string) => void;
   currency?: Currency;
+  packageSelectorNote: string;
 }
 
 export function PackageSelector({
@@ -15,6 +15,7 @@ export function PackageSelector({
   selectedPackageId,
   onSelect,
   currency = "NGN",
+  packageSelectorNote,
 }: PackageSelectorProps) {
   // Filter packages by selected currency
   const filteredPackages = packages.filter((pkg) => pkg.currency === currency);
@@ -25,45 +26,42 @@ export function PackageSelector({
   }
 
   return (
-    <div className="space-y-3 pt-2">
-      <h3 className="text-base font-bold text-gray-900 uppercase tracking-wide">
+    <div className="mt-6">
+      <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide">
         SELECT YOUR PACKAGE *
       </h3>
-
-      <div className="border border-gray-300 rounded-lg overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[1fr,auto] bg-gray-50 border-b border-gray-300">
-          <div className="px-4 py-3 text-sm font-bold text-gray-900">
-            Product
-          </div>
-          <div className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-            Price
-          </div>
+      {packageSelectorNote && (
+        <p className="text-md  mb-4">{packageSelectorNote}</p>
+      )}
+      <div className="border-b border-gray-300 mb-4">
+        <div className="flex justify-between items-center pb-2 px-2">
+          <span className="text-sm font-bold text-gray-900">Product</span>
+          <span className="text-sm font-bold text-gray-900">Price</span>
         </div>
-
-        {/* Table Rows */}
-        {filteredPackages.map((pkg, index) => (
-          <label
-            key={pkg.id}
-            className={`grid grid-cols-[auto,1fr,auto] gap-3 px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-              index !== filteredPackages.length - 1 ? "border-b border-gray-200" : ""
-            }`}
-          >
+      </div>
+      <div className="space-y-3">
+        {filteredPackages.map((pkg) => (
+          <div key={pkg.id} className="flex items-center gap-3 px-2 py-1">
             <input
               type="radio"
+              id={pkg.id}
               name="package"
+              value={pkg.id}
               checked={selectedPackageId === pkg.id}
-              onChange={() => onSelect(pkg.id)}
-              className="mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500"
+              onChange={(e) => onSelect(e.target.value)}
+              className="w-4 h-4 text-green-600 cursor-pointer"
             />
-            <div className="text-sm font-semibold text-gray-900">
-              {pkg.name}
-            </div>
-            <div className="text-sm font-bold text-gray-900 whitespace-nowrap">
+            <label
+              htmlFor={pkg.id}
+              className="flex-1 text-sm font-bold text-gray-900 cursor-pointer"
+            >
+              {pkg.description || pkg.name}
+            </label>
+            <span className="text-sm font-bold text-gray-900">
               {currencySymbol}
               {pkg.price.toLocaleString()}
-            </div>
-          </label>
+            </span>
+          </div>
         ))}
       </div>
     </div>

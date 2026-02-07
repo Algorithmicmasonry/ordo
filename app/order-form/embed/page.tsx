@@ -32,6 +32,10 @@ export default async function EmbedOrderFormPage({
   }
 
   const result = await getProductWithPackages(productId);
+  // console.log(
+  //   "This is the result of the getProductWithPackages function: ",
+  //   result,
+  // );
 
   if (!result.success || !result.data) {
     return (

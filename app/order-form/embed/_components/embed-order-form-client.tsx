@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-
 import { useState, useEffect, useMemo } from "react";
 import { createOrderV2 } from "@/app/actions/orders";
 import { PackageSelector } from "@/app/order-form/_components/package-selector";
@@ -212,41 +211,15 @@ export function EmbedOrderFormClient({
             ))}
           </select>
 
-          {/* Package Selector */}
+          {/* Package Selector - NOW USING THE COMPONENT */}
           <div className="mt-6">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide">
-              SELECT YOUR PACKAGE *
-            </h3>
-            <div className="border-b border-gray-300 mb-4">
-              <div className="flex justify-between items-center pb-2 px-2">
-                <span className="text-sm font-bold text-gray-900">Product</span>
-                <span className="text-sm font-bold text-gray-900">Price</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {product.packages.map((pkg) => (
-                <div key={pkg.id} className="flex items-center gap-3 px-2 py-1">
-                  <input
-                    type="radio"
-                    id={pkg.id}
-                    name="package"
-                    value={pkg.id}
-                    checked={selectedPackageId === pkg.id}
-                    onChange={(e) => handlePackageSelect(e.target.value)}
-                    className="w-4 h-4 text-blue-600 cursor-pointer"
-                  />
-                  <label
-                    htmlFor={pkg.id}
-                    className="flex-1 text-sm font-bold text-gray-900 cursor-pointer"
-                  >
-                    {pkg.description}
-                  </label>
-                  <span className="text-sm font-bold text-gray-900">
-                    ₦{pkg.price.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <PackageSelector
+              packages={product.packages}
+              selectedPackageId={selectedPackageId}
+              onSelect={handlePackageSelect}
+              currency={currency}
+              packageSelectorNote={product.packageSelectorNote ?? ""}
+            />
           </div>
 
           {/* Payment Method */}

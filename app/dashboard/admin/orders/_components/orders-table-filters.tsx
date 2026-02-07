@@ -88,11 +88,13 @@ export function OrdersTableFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Locations</SelectItem>
-          {locations.map((location) => (
-            <SelectItem key={location.value} value={location.value}>
-              {location.label}
-            </SelectItem>
-          ))}
+          {locations
+            .filter((loc) => loc.value && loc.value.trim() !== "") // Safety filter
+            .map((loc) => (
+              <SelectItem key={loc.value} value={loc.value}>
+                {loc.label}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
     </div>

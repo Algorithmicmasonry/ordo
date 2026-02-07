@@ -48,6 +48,19 @@ type SalesRep = {
   name: string;
 };
 
+
+// Sort indicator component
+function SortIndicator({ field }: { field: SortField }) {
+  if (sortField !== field) {
+    return <ChevronsUpDown className="size-4 text-gray-400" />;
+  }
+  return sortDirection === "asc" ? (
+    <ChevronUp className="size-4 text-blue-600" />
+  ) : (
+    <ChevronDown className="size-4 text-blue-600" />
+  );
+}
+
 export default function OrdersPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
@@ -101,14 +114,6 @@ export default function OrdersPage() {
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  useEffect(() => {
-    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
-      router.push("/login");
-    } else if (session?.user) {
-      loadData();
-    }
-  }, [session, isPending, router]);
-
   async function loadData() {
     setLoading(true);
     const [ordersResult, agentsResult, salesRepsResult] = await Promise.all([
@@ -140,6 +145,14 @@ export default function OrdersPage() {
       setOrders(result.orders as OrderWithDetails[]);
     }
   }
+
+  useEffect(() => {
+    if (!isPending && (!session || (session.user as any).role !== "ADMIN")) {
+      router.push("/login");
+    } else if (session?.user) {
+      loadData();
+    }
+  }, [session, isPending, router]);
 
   async function handleStatusUpdate(orderId: string, status: OrderStatus) {
     if (!session?.user?.id) return;
@@ -578,17 +591,6 @@ export default function OrdersPage() {
     }
   }
 
-  // Sort indicator component
-  function SortIndicator({ field }: { field: SortField }) {
-    if (sortField !== field) {
-      return <ChevronsUpDown className="size-4 text-gray-400" />;
-    }
-    return sortDirection === "asc" ? (
-      <ChevronUp className="size-4 text-blue-600" />
-    ) : (
-      <ChevronDown className="size-4 text-blue-600" />
-    );
-  }
 
   if (isPending || loading) {
     return (
@@ -966,7 +968,8 @@ export default function OrdersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {getCurrencySymbol(order.currency)}{order.totalAmount.toLocaleString()}
+                        {getCurrencySymbol(order.currency)}
+                        {order.totalAmount.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -1275,13 +1278,16 @@ export default function OrdersPage() {
                                 {item.quantity}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100">
-                                {getCurrencySymbol(selectedOrder.currency)}{item.price.toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}
+                                {item.price.toLocaleString()}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
-                                {getCurrencySymbol(selectedOrder.currency)}{item.cost.toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}
+                                {item.cost.toLocaleString()}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-900 dark:text-gray-100 font-medium">
-                                {getCurrencySymbol(selectedOrder.currency)}{(item.price * item.quantity).toLocaleString()}
+                                {getCurrencySymbol(selectedOrder.currency)}
+                                {(item.price * item.quantity).toLocaleString()}
                               </td>
                             </tr>
                           ))}
@@ -1295,7 +1301,8 @@ export default function OrdersPage() {
                               Total
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">
-                              {getCurrencySymbol(selectedOrder.currency)}{selectedOrder.totalAmount.toLocaleString()}
+                              {getCurrencySymbol(selectedOrder.currency)}
+                              {selectedOrder.totalAmount.toLocaleString()}
                             </td>
                           </tr>
                         </tfoot>
@@ -1327,7 +1334,7 @@ export default function OrdersPage() {
                         }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="">Not assigned</option>
+                        <option value="none">Not assigned</option>
                         {agents.map((agent) => (
                           <option key={agent.id} value={agent.id}>
                             {agent.name}

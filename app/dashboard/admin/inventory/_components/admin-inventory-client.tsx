@@ -1,6 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { softDeleteProduct } from "@/app/actions/products";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,14 +30,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Agent, AgentStock, Product, ProductPrice, Currency } from "@prisma/client";
+import { formatCurrency } from "@/lib/currency";
+import {
+  exportToCSV,
+  formatCurrencyForExport,
+  generateFilename,
+} from "@/lib/export-utils";
+import type {
+  Agent,
+  AgentStock,
+  Currency,
+  Product,
+  ProductPrice,
+} from "@prisma/client";
 import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
   DollarSign,
   Download,
-  Filter,
   Loader2,
   Package,
   PackageOpen,
@@ -35,29 +57,13 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import { DashboardHeader, CurrencyFilter } from "../../_components";
+import toast from "react-hot-toast";
+import { CurrencyFilter, DashboardHeader } from "../../_components";
 import { AddProductModal } from "./add-product-modal";
 import { UpdateStockModal } from "./update-stock-modal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { softDeleteProduct } from "@/app/actions/products";
-import toast from "react-hot-toast";
-import {
-  exportToCSV,
-  generateFilename,
-  formatCurrencyForExport,
-} from "@/lib/export-utils";
-import { formatCurrency } from "@/lib/currency";
+import { authClient } from "@/lib/auth-client";
 
 type ProductWithStock = Product & {
   agentStock: (AgentStock & {
@@ -87,16 +93,24 @@ export default function AdminInventoryClient({
   lowStockProducts,
   currency,
 }: InventoryPageProps) {
+  const {
+    data: session,
+    isPending, //loading state
+    error, //error object
+    refetch, //refetch the session
+  } = authClient.useSession();
+
   // Helper function to get price/cost from ProductPrice table
   const getProductPricing = (product: ProductWithStock) => {
     const productPrice = product.productPrices.find(
-      (p) => p.currency === product.currency
+      (p) => p.currency === product.currency,
     );
     return {
       price: productPrice?.price || 0,
       cost: productPrice?.cost || 0,
     };
   };
+  const userRole = session?.user.role;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] =
@@ -171,7 +185,7 @@ export default function AdminInventoryClient({
         const { price, cost } = getProductPricing(product);
         const agentStock = product.agentStock.reduce(
           (sum, stock) => sum + stock.quantity,
-          0
+          0,
         );
 
         return [
@@ -370,7 +384,11 @@ export default function AdminInventoryClient({
               Global Inventory
             </CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" onClick={handleExportInventory}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleExportInventory}
+              >
                 <Download className="size-4" />
               </Button>
             </div>
@@ -404,127 +422,140 @@ export default function AdminInventoryClient({
                     const { price, cost } = getProductPricing(product);
                     return (
                       <TableRow key={product.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="size-10 rounded bg-muted flex items-center justify-center">
-                            <Package className="size-5 text-muted-foreground" />
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="size-10 rounded bg-muted flex items-center justify-center">
+                              <Package className="size-5 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-bold">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {product.description || "No description"}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {product.description || "No description"}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">
-                        {product.sku || "N/A"}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(cost, product.currency)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(price, product.currency)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span
-                          className={`text-lg font-bold ${
-                            product.currentStock <= product.reorderPoint
-                              ? "text-destructive"
-                              : ""
-                          }`}
-                        >
-                          {product.currentStock}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setSelectedProduct(product)}
-                              >
-                                Details
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-3xl">
-                              <DialogHeader>
-                                <DialogTitle>
-                                  Product Details - {product.name}
-                                </DialogTitle>
-                              </DialogHeader>
-                              <ProductDetailsModal product={product} />
-                            </DialogContent>
-                          </Dialog>
-
-                          <Link
-                            href={`/dashboard/admin/inventory/${product.id}/pricing`}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm text-muted-foreground">
+                          {product.sku || "N/A"}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(cost, product.currency)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(price, product.currency)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span
+                            className={`text-lg font-bold ${
+                              product.currentStock <= product.reorderPoint
+                                ? "text-destructive"
+                                : ""
+                            }`}
                           >
-                            <Button size="sm" variant="outline" className="gap-2">
-                              <DollarSign className="size-4" />
-                              Pricing
-                            </Button>
-                          </Link>
-
-                          <Link
-                            href={`/dashboard/admin/inventory/${product.id}/packages`}
-                          >
-                            <Button size="sm" variant="outline" className="gap-2">
-                              <PackageOpen className="size-4" />
-                              Packages
-                            </Button>
-                          </Link>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                disabled={deletingProductId === product.id}
-                              >
-                                {deletingProductId === product.id ? (
-                                  <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="size-4" />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Delete Product?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete{" "}
-                                  <strong className="text-semibold text-foreground">
-                                    {product.name}
-                                  </strong>
-                                  ? This action will mark the product as deleted
-                                  and it will no longer appear in the inventory.
-                                  This action cannot be easily undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDeleteProduct(
-                                      product.id,
-                                      product.name,
-                                    )
-                                  }
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            {product.currentStock}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setSelectedProduct(product)}
                                 >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                                  Details
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    Product Details - {product.name}
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <ProductDetailsModal product={product} />
+                              </DialogContent>
+                            </Dialog>
+
+                            {userRole == "admin" && (
+                              <Link
+                                href={`/dashboard/admin/inventory/${product.id}/pricing`}
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-2"
+                                >
+                                  <DollarSign className="size-4" />
+                                  Pricing
+                                </Button>
+                              </Link>
+                            )}
+
+                            {userRole === "admin" && (
+                              <Link
+                                href={`/dashboard/admin/inventory/${product.id}/packages`}
+                              >
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-2"
+                                >
+                                  <PackageOpen className="size-4" />
+                                  Packages
+                                </Button>
+                              </Link>
+                            )}
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={deletingProductId === product.id}
+                                >
+                                  {deletingProductId === product.id ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="size-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Product?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete{" "}
+                                    <strong className="text-semibold text-foreground">
+                                      {product.name}
+                                    </strong>
+                                    ? This action will mark the product as
+                                    deleted and it will no longer appear in the
+                                    inventory. This action cannot be easily
+                                    undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleDeleteProduct(
+                                        product.id,
+                                        product.name,
+                                      )
+                                    }
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
                 )}
@@ -559,7 +590,7 @@ export default function AdminInventoryClient({
 
 function ProductDetailsModal({ product }: { product: ProductWithStock }) {
   const productPrice = product.productPrices.find(
-    (p) => p.currency === product.currency
+    (p) => p.currency === product.currency,
   );
   const price = productPrice?.price || 0;
   const cost = productPrice?.cost || 0;
@@ -578,11 +609,15 @@ function ProductDetailsModal({ product }: { product: ProductWithStock }) {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Unit Cost</p>
-          <p className="font-semibold">{formatCurrency(cost, product.currency)}</p>
+          <p className="font-semibold">
+            {formatCurrency(cost, product.currency)}
+          </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Selling Price</p>
-          <p className="font-semibold">{formatCurrency(price, product.currency)}</p>
+          <p className="font-semibold">
+            {formatCurrency(price, product.currency)}
+          </p>
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Current Stock</p>

@@ -75,6 +75,7 @@ interface ProductProfitabilityProps {
 export function ProductProfitability({
   data,
   period,
+  currency,
 }: ProductProfitabilityProps) {
   const { products, summary, insights } = data;
   const searchParams = useSearchParams();
@@ -100,7 +101,7 @@ export function ProductProfitability({
     return products.filter(
       (product) =>
         product.productName.toLowerCase().includes(query) ||
-        product.sku.toLowerCase().includes(query)
+        product.sku.toLowerCase().includes(query),
     );
   }, [products, searchQuery]);
 
@@ -108,7 +109,7 @@ export function ProductProfitability({
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const getMarginColor = (margin: number) => {
@@ -169,7 +170,10 @@ export function ProductProfitability({
           <label className="text-sm font-semibold mb-2 block">
             Select Product for Detailed Analysis
           </label>
-          <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+          <Select
+            value={selectedProductId}
+            onValueChange={setSelectedProductId}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Choose a product..." />
             </SelectTrigger>
@@ -219,7 +223,7 @@ export function ProductProfitability({
                   Revenue
                 </p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(selectedProduct.revenue)}
+                  {formatCurrency(selectedProduct.revenue, currency)}
                 </p>
               </div>
               <div>
@@ -228,10 +232,10 @@ export function ProductProfitability({
                 </p>
                 <p
                   className={`text-2xl font-bold ${getProfitColor(
-                    selectedProduct.netProfit
+                    selectedProduct.netProfit,
                   )}`}
                 >
-                  {formatCurrency(selectedProduct.netProfit)}
+                  {formatCurrency(selectedProduct.netProfit, currency)}
                 </p>
               </div>
               <div>
@@ -252,7 +256,7 @@ export function ProductProfitability({
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-sm text-muted-foreground">COGS</span>
                     <span className="text-sm font-semibold">
-                      {formatCurrency(selectedProduct.cogs)}
+                      {formatCurrency(selectedProduct.cogs, currency)}
                     </span>
                   </div>
                   {Object.entries(selectedProduct.expensesByType).map(
@@ -265,15 +269,18 @@ export function ProductProfitability({
                           {EXPENSE_LABELS[type] || type}
                         </span>
                         <span className="text-sm font-semibold">
-                          {formatCurrency(amount)}
+                          {formatCurrency(amount, currency)}
                         </span>
                       </div>
-                    )
+                    ),
                   )}
                   <div className="flex justify-between items-center py-2 pt-4 border-t-2 border-primary/20">
                     <span className="text-sm font-bold">Total Costs</span>
                     <span className="text-sm font-bold">
-                      {formatCurrency(selectedProduct.cogs + selectedProduct.expenses)}
+                      {formatCurrency(
+                        selectedProduct.cogs + selectedProduct.expenses,
+                        currency,
+                      )}
                     </span>
                   </div>
                 </div>
@@ -299,7 +306,7 @@ export function ProductProfitability({
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedProduct.roi > 1
-                        ? `Earning ${selectedProduct.roi.toFixed(2)}x on every ${formatCurrency(1)} invested`
+                        ? `Earning ${selectedProduct.roi.toFixed(2)}x on every ${formatCurrency(1, currency)} invested`
                         : "Investment not yet profitable"}
                     </p>
                   </div>
@@ -318,7 +325,7 @@ export function ProductProfitability({
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedProduct.adSpend > 0
-                        ? `Generating ${formatCurrency(selectedProduct.roas)} for every ${formatCurrency(1)} spent on ads`
+                        ? `Generating ${formatCurrency(selectedProduct.roas, currency)} for every ${formatCurrency(1, currency)} spent on ads`
                         : "No ad spend recorded for this period"}
                     </p>
                   </div>
@@ -405,25 +412,25 @@ export function ProductProfitability({
                         {product.unitsSold.toLocaleString()}
                       </td>
                       <td className="p-4 text-right text-sm font-medium">
-                        {formatCurrency(product.revenue)}
+                        {formatCurrency(product.revenue, currency)}
                       </td>
                       <td className="p-4 text-right text-sm text-muted-foreground">
-                        {formatCurrency(product.cogs)}
+                        {formatCurrency(product.cogs, currency)}
                       </td>
                       <td className="p-4 text-right text-sm text-muted-foreground">
-                        {formatCurrency(product.expenses)}
+                        {formatCurrency(product.expenses, currency)}
                       </td>
                       <td
                         className={`p-4 text-right text-sm font-bold ${getProfitColor(
-                          product.netProfit
+                          product.netProfit,
                         )}`}
                       >
-                        {formatCurrency(product.netProfit)}
+                        {formatCurrency(product.netProfit, currency)}
                       </td>
                       <td className="p-4 text-right">
                         <span
                           className={`px-2.5 py-1 rounded-full text-xs font-bold ${getMarginColor(
-                            product.margin
+                            product.margin,
                           )}`}
                         >
                           {product.margin.toFixed(1)}%
@@ -482,9 +489,7 @@ export function ProductProfitability({
                   return (
                     <Button
                       key={pageNum}
-                      variant={
-                        currentPage === pageNum ? "default" : "outline"
-                      }
+                      variant={currentPage === pageNum ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -525,16 +530,19 @@ export function ProductProfitability({
                 <span className="text-foreground font-bold">
                   {insights.topPerformer.name}
                 </span>{" "}
-                has the highest net margin ({insights.topPerformer.margin.toFixed(1)}
+                has the highest net margin (
+                {insights.topPerformer.margin.toFixed(1)}
                 %) this period. Consider increasing marketing spend for this
                 product.
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-green-600">
-                  {formatCurrency(insights.topPerformer.netProfit)} profit
+                  {formatCurrency(insights.topPerformer.netProfit, currency)}{" "}
+                  profit
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {formatCurrency(insights.topPerformer.revenue)} revenue
+                  {formatCurrency(insights.topPerformer.revenue, currency)}{" "}
+                  revenue
                 </span>
               </div>
             </CardContent>
@@ -557,13 +565,18 @@ export function ProductProfitability({
                   {insights.worstPerformer.name}
                 </span>{" "}
                 is currently operating at a loss. COGS (
-                {formatCurrency(insights.worstPerformer.cogs)}) plus expenses
-                ({formatCurrency(insights.worstPerformer.expenses)}) exceed
-                revenue.
+                {formatCurrency(insights.worstPerformer.cogs, currency)}) plus
+                expenses (
+                {formatCurrency(insights.worstPerformer.expenses, currency)})
+                exceed revenue.
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-red-600">
-                  Losing {formatCurrency(Math.abs(insights.worstPerformer.netProfit))}{" "}
+                  Losing{" "}
+                  {formatCurrency(
+                    Math.abs(insights.worstPerformer.netProfit),
+                    currency,
+                  )}{" "}
                   this period
                 </span>
                 <span className="text-xs text-muted-foreground">

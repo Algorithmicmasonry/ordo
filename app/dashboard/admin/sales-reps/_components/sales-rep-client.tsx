@@ -85,8 +85,9 @@ export default function SalesRepsClient({
 }: SalesRepsPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState;
-  "all" | "active" | ("inactive" > "all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRep, setSelectedRep] = useState<SalesRepWithStats | null>(

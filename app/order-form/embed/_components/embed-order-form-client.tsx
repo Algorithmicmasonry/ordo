@@ -43,6 +43,21 @@ export function EmbedOrderFormClient({
 
   const stateLabel = currency === "GHS" ? "Region" : "State";
 
+  // Get country code based on currency
+  const countryCode = useMemo(() => {
+    switch (currency) {
+      case "GHS":
+        return "+233"; // Ghana
+      case "NGN":
+        return "+234"; // Nigeria
+      case "USD":
+      case "GBP":
+      case "EUR":
+      default:
+        return "+234"; // Default to Nigeria
+    }
+  }, [currency]);
+
   // Capture UTM params and referrer on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -139,9 +154,9 @@ export function EmbedOrderFormClient({
 
           {/* Phone Number */}
           <div className="flex gap-2">
-            <select className="px-3 py-2.5 border border-gray-400 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>+234</option>
-            </select>
+            <div className="px-3 py-2.5 border border-gray-400 rounded-lg bg-gray-100 text-gray-900 flex items-center font-medium">
+              {countryCode}
+            </div>
             <input
               type="tel"
               placeholder="Your Phone Number *"
@@ -156,9 +171,9 @@ export function EmbedOrderFormClient({
 
           {/* WhatsApp Number */}
           <div className="flex gap-2">
-            <select className="px-3 py-2.5 border border-gray-400 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>+234</option>
-            </select>
+            <div className="px-3 py-2.5 border border-gray-400 rounded-lg bg-gray-100 text-gray-900 flex items-center font-medium">
+              {countryCode}
+            </div>
             <input
               type="tel"
               placeholder="Your WhatsApp Number *"
@@ -190,7 +205,6 @@ export function EmbedOrderFormClient({
           />
 
           {/* City */}
-
           <input
             type="text"
             placeholder="Your City *"
@@ -208,7 +222,7 @@ export function EmbedOrderFormClient({
           {/* Delivery State */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">
-              Your Delivery State *
+              Your Delivery {stateLabel} *
             </label>
           </div>
           <select
@@ -227,7 +241,7 @@ export function EmbedOrderFormClient({
             ))}
           </select>
 
-          {/* Package Selector - NOW USING THE COMPONENT */}
+          {/* Package Selector */}
           <div className="mt-6">
             <PackageSelector
               packages={product.packages}

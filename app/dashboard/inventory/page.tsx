@@ -69,7 +69,7 @@ async function getInventoryData() {
   // Calculate stats using ProductPrice table
   const warehouseValue = products.reduce((sum, product) => {
     const productPrice = product.productPrices.find(
-      (p) => p.currency === product.currency
+      (p) => p.currency === product.currency,
     );
     const price = productPrice?.price || 0;
     return sum + product.currentStock * price;
@@ -79,7 +79,7 @@ async function getInventoryData() {
       sum +
       agent.stock.reduce((stockSum, item) => {
         const productPrice = item.product.productPrices.find(
-          (p) => p.currency === item.product.currency
+          (p) => p.currency === item.product.currency,
         );
         const price = productPrice?.price || 0;
         return stockSum + item.quantity * price;
@@ -139,7 +139,7 @@ export default async function InventoryManagerPage() {
   if (user?.role !== "INVENTORY_MANAGER") {
     redirect("/dashboard");
   }
-
+  const role = user.role;
   const data = await getInventoryData();
 
   return (
@@ -152,6 +152,7 @@ export default async function InventoryManagerPage() {
 
       <Suspense fallback={<InventoryPageSkeleton />}>
         <AdminInventoryClient
+          role={role}
           products={data.products}
           stats={data.stats}
           lowStockProducts={data.lowStockProducts}

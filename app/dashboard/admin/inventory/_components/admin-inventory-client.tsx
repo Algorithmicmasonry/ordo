@@ -77,6 +77,7 @@ type ProductWithStock = Product & {
 
 interface InventoryPageProps {
   products: ProductWithStock[];
+  role: string;
   stats: {
     totalValue: number;
     totalUnits: number;
@@ -92,14 +93,8 @@ export default function AdminInventoryClient({
   stats,
   lowStockProducts,
   currency,
+  role,
 }: InventoryPageProps) {
-  const {
-    data: session,
-    isPending, //loading state
-    error, //error object
-    refetch, //refetch the session
-  } = authClient.useSession();
-
   // Helper function to get price/cost from ProductPrice table
   const getProductPricing = (product: ProductWithStock) => {
     const productPrice = product.productPrices.find(
@@ -110,7 +105,6 @@ export default function AdminInventoryClient({
       cost: productPrice?.cost || 0,
     };
   };
-  const userRole = session?.user.role;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] =
@@ -477,7 +471,7 @@ export default function AdminInventoryClient({
                               </DialogContent>
                             </Dialog>
 
-                            {userRole == "admin" && (
+                            {role === "admin" && (
                               <Link
                                 href={`/dashboard/admin/inventory/${product.id}/pricing`}
                               >
@@ -492,7 +486,7 @@ export default function AdminInventoryClient({
                               </Link>
                             )}
 
-                            {userRole === "admin" && (
+                            {role === "admin" && (
                               <Link
                                 href={`/dashboard/admin/inventory/${product.id}/packages`}
                               >

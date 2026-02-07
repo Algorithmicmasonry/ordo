@@ -14,6 +14,7 @@ import Link from "next/link";
 import { getInitials } from "@/lib/utils";
 import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { CurrencyFilter } from "@/app/dashboard/admin/_components/currency-filter";
+import { useRouter } from "next/navigation";
 
 type TimePeriod = "week" | "month" | "year";
 
@@ -24,17 +25,25 @@ interface AgentProfileHeaderProps {
   onEdit?: () => void;
 }
 
-export function AgentProfileHeader({ agent, period, onAssignStock, onEdit }: AgentProfileHeaderProps) {
+export function AgentProfileHeader({
+  agent,
+  period,
+  onAssignStock,
+  onEdit,
+}: AgentProfileHeaderProps) {
+  const router = useRouter();
   return (
     <div className="space-y-4">
       {/* Back Button */}
       <div>
-        <Link href="/dashboard/admin/agents">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Agents
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()} // Triggers browser back navigation
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Agents
+        </Button>
       </div>
 
       {/* Profile Header */}

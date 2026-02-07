@@ -70,7 +70,7 @@ const EXPENSE_LABELS = {
 export function FinancialOverview({
   data,
   period,
-  currency,
+  currency = "NGN", // Add default value
 }: FinancialOverviewProps) {
   const { kpis, chartData, expensesByCategory } = data;
   console.log("These are the kpis:", kpis);
@@ -203,7 +203,7 @@ export function FinancialOverview({
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.revenue.value)}
+              {formatCurrency(kpis.revenue.value, currency)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -234,7 +234,7 @@ export function FinancialOverview({
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.grossProfit.value)}
+              {formatCurrency(kpis.grossProfit.value, currency)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -267,7 +267,7 @@ export function FinancialOverview({
               )}
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.netProfit.value)}
+              {formatCurrency(kpis.netProfit.value, currency)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -294,7 +294,7 @@ export function FinancialOverview({
               <DollarSign className="w-5 h-5 text-muted-foreground" />
             </div>
             <p className="text-3xl font-bold tracking-tight mb-2">
-              {formatCurrency(kpis.burnRate.value)}
+              {formatCurrency(kpis.burnRate.value, currency)}
             </p>
             <div className="flex items-center gap-1">
               <span
@@ -366,7 +366,7 @@ export function FinancialOverview({
                   border: "1px solid #e7edf3",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value: number) => formatCurrency(value, currency)}
               />
               <Area
                 type="monotone"
@@ -416,7 +416,7 @@ export function FinancialOverview({
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-xs text-muted-foreground">Total</span>
                   <span className="text-xl font-bold">
-                    {formatCurrency(totalExpenses)}
+                    {formatCurrency(totalExpenses, currency)}
                   </span>
                 </div>
               </div>
@@ -438,7 +438,7 @@ export function FinancialOverview({
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold">
-                        {formatCurrency(item.value)}
+                        {formatCurrency(item.value, currency)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {((item.value / totalExpenses) * 100).toFixed(1)}%

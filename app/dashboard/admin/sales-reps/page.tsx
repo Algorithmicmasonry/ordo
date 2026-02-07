@@ -3,6 +3,7 @@ import { SalesRepsClient } from "./_components";
 import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/lib/db";
 import { TimePeriod } from "@/lib/types";
+import type { Currency } from "@prisma/client";
 import {
   getDateRange,
   getPreviousPeriodRange,
@@ -59,18 +60,47 @@ async function getSalesRepsData(period: TimePeriod = "month") {
     ).length;
     const conversionRate =
       totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0;
-    const revenue = currentOrders
+
+    // Calculate revenue by currency for current period
+    const revenueByCurrency = currentOrders
       .filter((o) => o.status === "DELIVERED")
-      .reduce((sum, o) => sum + o.totalAmount, 0);
+      .reduce(
+        (acc, order) => {
+          const currency = order.currency || "NGN"; // Default to NGN if no currency
+          acc[currency] = (acc[currency] || 0) + order.totalAmount;
+          return acc;
+        },
+        {} as Record<Currency, number>,
+      );
+
+    // Calculate total revenue (sum of all currencies)
+    const totalRevenue = Object.values(revenueByCurrency).reduce(
+      (sum, amount) => sum + amount,
+      0,
+    );
 
     // Calculate previous period stats
     const prevTotalOrders = previousOrders.length;
     const prevDeliveredOrders = previousOrders.filter(
       (o) => o.status === "DELIVERED",
     ).length;
-    const prevRevenue = previousOrders
+
+    // Calculate previous revenue by currency
+    const prevRevenueByCurrency = previousOrders
       .filter((o) => o.status === "DELIVERED")
-      .reduce((sum, o) => sum + o.totalAmount, 0);
+      .reduce(
+        (acc, order) => {
+          const currency = order.currency || "NGN";
+          acc[currency] = (acc[currency] || 0) + order.totalAmount;
+          return acc;
+        },
+        {} as Record<Currency, number>,
+      );
+
+    const prevTotalRevenue = Object.values(prevRevenueByCurrency).reduce(
+      (sum, amount) => sum + amount,
+      0,
+    );
 
     // Calculate percentage changes
     const ordersChange = calculatePercentageChange(
@@ -81,7 +111,10 @@ async function getSalesRepsData(period: TimePeriod = "month") {
       deliveredOrders,
       prevDeliveredOrders,
     );
-    const revenueChange = calculatePercentageChange(revenue, prevRevenue);
+    const revenueChange = calculatePercentageChange(
+      totalRevenue,
+      prevTotalRevenue,
+    );
 
     return {
       ...rep,
@@ -89,7 +122,8 @@ async function getSalesRepsData(period: TimePeriod = "month") {
         totalOrders,
         deliveredOrders,
         conversionRate,
-        revenue,
+        revenue: totalRevenue,
+        revenueByCurrency,
         trends: {
           orders: ordersChange,
           delivered: deliveredChange,

@@ -22,8 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCurrency } from "@/lib/currency";
 import { TimePeriod } from "@/lib/types";
-import type { User } from "@prisma/client";
+import type { User, Currency } from "@prisma/client";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -51,13 +52,14 @@ type SalesRepWithStats = User & {
     deliveredOrders: number;
     conversionRate: number;
     revenue: number;
+    revenueByCurrency: Record<Currency, number>;
     trends: {
       orders: number;
       delivered: number;
       revenue: number;
     };
   };
-  orders: any[]; // Keep orders for previous period calculations
+  orders: any[];
 };
 
 interface SalesRepsPageProps {
@@ -81,13 +83,10 @@ export default function SalesRepsClient({
   stats,
   currentPeriod,
 }: SalesRepsPageProps) {
-  console.log("These are the sales reps:", salesReps);
-  console.log("These are the stats:", stats);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState;
+  "all" | "active" | ("inactive" > "all");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRep, setSelectedRep] = useState<SalesRepWithStats | null>(
@@ -132,6 +131,38 @@ export default function SalesRepsClient({
     return badges[index] || null;
   };
 
+  // Component to display revenue by currency
+  const RevenueByCurrency = ({
+    revenueByCurrency,
+  }: {
+    revenueByCurrency: Record<Currency, number>;
+  }) => {
+    const currencies = Object.entries(revenueByCurrency);
+
+    if (currencies.length === 0) {
+      return <span className="font-bold text-muted-foreground">-</span>;
+    }
+
+    if (currencies.length === 1) {
+      const [currency, amount] = currencies[0];
+      return (
+        <span className="font-bold">
+          {formatCurrency(amount, currency as Currency)}
+        </span>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-1">
+        {currencies.map(([currency, amount]) => (
+          <span key={currency} className="text-xs font-semibold">
+            {formatCurrency(amount, currency as Currency)}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
@@ -146,8 +177,6 @@ export default function SalesRepsClient({
           Add Sales Rep
         </Button>
       </div>
-
-      {/* Search Bar */}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -256,6 +285,8 @@ export default function SalesRepsClient({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {topPerformers.map((rep, index) => {
             const rankBadge = getRankBadge(index);
+            const currencies = Object.entries(rep.stats.revenueByCurrency);
+
             return (
               <Card
                 key={rep.id}
@@ -293,12 +324,20 @@ export default function SalesRepsClient({
                     {rep.email}
                   </p>
                   <div className="space-y-2">
-                    {/*<div className="flex justify-between text-xs">
+                    <div className="flex flex-col gap-1 text-xs">
                       <span className="text-muted-foreground">Revenue</span>
-                      <span className="font-bold">
-                        {rep.stats.revenue.toLocaleString()}
-                      </span>
-                    </div>*/}
+                      {currencies.length > 0 ? (
+                        currencies.map(([currency, amount]) => (
+                          <span key={currency} className="font-bold">
+                            {formatCurrency(amount, currency as Currency)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="font-bold text-muted-foreground">
+                          -
+                        </span>
+                      )}
+                    </div>
                     <Progress
                       value={rep.stats.conversionRate}
                       className="h-1.5"
@@ -429,8 +468,10 @@ export default function SalesRepsClient({
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="font-bold">
-                    ₦{rep.stats.revenue.toLocaleString()}
+                  <TableCell>
+                    <RevenueByCurrency
+                      revenueByCurrency={rep.stats.revenueByCurrency}
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-2">

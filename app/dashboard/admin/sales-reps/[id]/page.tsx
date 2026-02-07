@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import SalesRepDetailsClient from "./_components/sales-rep-details-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { db } from "@/lib/db";
-import type { OrderStatus, OrderSource } from "@prisma/client";
+import type { OrderStatus, OrderSource, Currency } from "@prisma/client";
 import type { Metadata } from "next";
 import { TimePeriod } from "@/lib/types";
 import {
@@ -64,30 +64,65 @@ async function getSalesRepDetails(repId: string, period: TimePeriod = "month") {
     (o) => o.status === "DELIVERED",
   ).length;
 
-  // Calculate revenue (current period)
-  const revenue = currentOrders
+  // Calculate revenue by currency (current period)
+  const revenueByCurrency = currentOrders
     .filter((o) => o.status === "DELIVERED")
-    .reduce((sum, order) => {
-      const orderRevenue = order.items.reduce(
-        (itemSum, item) => itemSum + item.price * item.quantity,
-        0,
-      );
-      return sum + orderRevenue;
-    }, 0);
+    .reduce(
+      (acc, order) => {
+        const orderRevenue = order.items.reduce(
+          (itemSum, item) => itemSum + item.price * item.quantity,
+          0,
+        );
+        const currency = order.currency || "NGN";
+        acc[currency] = (acc[currency] || 0) + orderRevenue;
+        return acc;
+      },
+      {} as Record<Currency, number>,
+    );
 
-  // Calculate profit using real cost from order items
-  const cost = currentOrders
+  // Calculate total revenue (sum of all currencies)
+  const revenue = Object.values(revenueByCurrency).reduce(
+    (sum, amount) => sum + amount,
+    0,
+  );
+
+  // Calculate cost by currency (current period)
+  const costByCurrency = currentOrders
     .filter((o) => o.status === "DELIVERED")
-    .reduce((sum, order) => {
-      const orderCost = order.items.reduce(
-        (itemSum, item) => itemSum + item.cost * item.quantity,
-        0,
-      );
-      return sum + orderCost;
-    }, 0);
+    .reduce(
+      (acc, order) => {
+        const orderCost = order.items.reduce(
+          (itemSum, item) => itemSum + item.cost * item.quantity,
+          0,
+        );
+        const currency = order.currency || "NGN";
+        acc[currency] = (acc[currency] || 0) + orderCost;
+        return acc;
+      },
+      {} as Record<Currency, number>,
+    );
+
+  // Calculate total cost
+  const cost = Object.values(costByCurrency).reduce(
+    (sum, amount) => sum + amount,
+    0,
+  );
+
+  // Calculate profit by currency
+  const profitByCurrency = Object.keys({
+    ...revenueByCurrency,
+    ...costByCurrency,
+  }).reduce(
+    (acc, currency) => {
+      const rev = revenueByCurrency[currency as Currency] || 0;
+      const cst = costByCurrency[currency as Currency] || 0;
+      acc[currency as Currency] = rev - cst;
+      return acc;
+    },
+    {} as Record<Currency, number>,
+  );
 
   // For individual sales reps, show Gross Profit (Revenue - Cost)
-  // Company-wide expenses are tracked at the dashboard level, not per rep
   const profit = revenue - cost;
 
   const conversionRate =
@@ -99,25 +134,47 @@ async function getSalesRepDetails(repId: string, period: TimePeriod = "month") {
     (o) => o.status === "DELIVERED",
   ).length;
 
-  const prevRevenue = previousOrders
+  // Calculate previous revenue by currency
+  const prevRevenueByCurrency = previousOrders
     .filter((o) => o.status === "DELIVERED")
-    .reduce((sum, order) => {
-      const orderRevenue = order.items.reduce(
-        (itemSum, item) => itemSum + item.price * item.quantity,
-        0,
-      );
-      return sum + orderRevenue;
-    }, 0);
+    .reduce(
+      (acc, order) => {
+        const orderRevenue = order.items.reduce(
+          (itemSum, item) => itemSum + item.price * item.quantity,
+          0,
+        );
+        const currency = order.currency || "NGN";
+        acc[currency] = (acc[currency] || 0) + orderRevenue;
+        return acc;
+      },
+      {} as Record<Currency, number>,
+    );
 
-  const prevCost = previousOrders
+  const prevRevenue = Object.values(prevRevenueByCurrency).reduce(
+    (sum, amount) => sum + amount,
+    0,
+  );
+
+  // Calculate previous cost by currency
+  const prevCostByCurrency = previousOrders
     .filter((o) => o.status === "DELIVERED")
-    .reduce((sum, order) => {
-      const orderCost = order.items.reduce(
-        (itemSum, item) => itemSum + item.cost * item.quantity,
-        0,
-      );
-      return sum + orderCost;
-    }, 0);
+    .reduce(
+      (acc, order) => {
+        const orderCost = order.items.reduce(
+          (itemSum, item) => itemSum + item.cost * item.quantity,
+          0,
+        );
+        const currency = order.currency || "NGN";
+        acc[currency] = (acc[currency] || 0) + orderCost;
+        return acc;
+      },
+      {} as Record<Currency, number>,
+    );
+
+  const prevCost = Object.values(prevCostByCurrency).reduce(
+    (sum, amount) => sum + amount,
+    0,
+  );
 
   // Previous period gross profit (Revenue - Cost)
   const prevProfit = prevRevenue - prevCost;
@@ -161,7 +218,9 @@ async function getSalesRepDetails(repId: string, period: TimePeriod = "month") {
       totalOrders,
       deliveredOrders,
       revenue,
+      revenueByCurrency,
       profit,
+      profitByCurrency,
       conversionRate,
       ordersByStatus,
       ordersBySource,

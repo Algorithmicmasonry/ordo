@@ -67,9 +67,14 @@ const EXPENSE_LABELS = {
   other: "Other",
 };
 
-export function FinancialOverview({ data, period, currency }: FinancialOverviewProps) {
+export function FinancialOverview({
+  data,
+  period,
+  currency,
+}: FinancialOverviewProps) {
   const { kpis, chartData, expensesByCategory } = data;
-  console.log("This is the chart data: ", chartData);
+  console.log("These are the kpis:", kpis);
+
   const searchParams = useSearchParams();
 
   // Check if using custom date range

@@ -293,12 +293,12 @@ export default function SalesRepsClient({
                     {rep.email}
                   </p>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
+                    {/*<div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Revenue</span>
                       <span className="font-bold">
-                        ₦{rep.stats.revenue.toLocaleString()}
+                        {rep.stats.revenue.toLocaleString()}
                       </span>
-                    </div>
+                    </div>*/}
                     <Progress
                       value={rep.stats.conversionRate}
                       className="h-1.5"

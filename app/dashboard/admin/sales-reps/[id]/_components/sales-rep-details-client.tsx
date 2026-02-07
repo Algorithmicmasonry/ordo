@@ -97,6 +97,38 @@ const sourceNames = {
   WEBSITE: "Website",
 };
 
+const CurrencyBreakdown = ({
+  data,
+  label,
+}: {
+  data: Record<Currency, number>;
+  label: string;
+}) => {
+  const currencies = Object.entries(data);
+
+  if (currencies.length === 0) {
+    return <p className="text-2xl font-bold text-muted-foreground">-</p>;
+  }
+
+  if (currencies.length === 1) {
+    const [currency, amount] = currencies[0];
+    return (
+      <p className="text-2xl font-bold">
+        {formatCurrency(amount, currency as Currency)}
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {currencies.map(([currency, amount]) => (
+        <p key={currency} className="text-lg font-bold">
+          {formatCurrency(amount, currency as Currency)}
+        </p>
+      ))}
+    </div>
+  );
+};
 export default function SalesRepDetailsClient({
   salesRep,
   currentPeriod,
@@ -224,38 +256,6 @@ export default function SalesRepDetailsClient({
   };
 
   // Component to display revenue/profit by currency
-  const CurrencyBreakdown = ({
-    data,
-    label,
-  }: {
-    data: Record<Currency, number>;
-    label: string;
-  }) => {
-    const currencies = Object.entries(data);
-
-    if (currencies.length === 0) {
-      return <p className="text-2xl font-bold text-muted-foreground">-</p>;
-    }
-
-    if (currencies.length === 1) {
-      const [currency, amount] = currencies[0];
-      return (
-        <p className="text-2xl font-bold">
-          {formatCurrency(amount, currency as Currency)}
-        </p>
-      );
-    }
-
-    return (
-      <div className="flex flex-col gap-1">
-        {currencies.map(([currency, amount]) => (
-          <p key={currency} className="text-lg font-bold">
-            {formatCurrency(amount, currency as Currency)}
-          </p>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-8">

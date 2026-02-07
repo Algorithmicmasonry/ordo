@@ -81,6 +81,8 @@ export default function SalesRepsClient({
   stats,
   currentPeriod,
 }: SalesRepsPageProps) {
+  console.log("These are the sales reps:", salesReps);
+  console.log("These are the stats:", stats);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<

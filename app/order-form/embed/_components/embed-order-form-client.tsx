@@ -90,8 +90,8 @@ export function EmbedOrderFormClient({
 
     const result = await createOrderV2({
       customerName: formData.customerName,
-      customerPhone: formData.customerPhone,
-      customerWhatsapp: formData.customerWhatsapp || undefined,
+      customerPhone: countryCode + formData.customerPhone,
+      customerWhatsapp: countryCode + formData.customerWhatsapp || undefined,
       deliveryAddress: formData.deliveryAddress,
       state: formData.state,
       city: formData.city,

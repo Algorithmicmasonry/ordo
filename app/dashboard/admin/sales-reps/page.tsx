@@ -30,6 +30,7 @@ async function getSalesRepsData(period: TimePeriod = "month") {
           id: true,
           status: true,
           totalAmount: true,
+          currency: true,
           createdAt: true,
         },
       },
@@ -72,7 +73,10 @@ async function getSalesRepsData(period: TimePeriod = "month") {
       .reduce((sum, o) => sum + o.totalAmount, 0);
 
     // Calculate percentage changes
-    const ordersChange = calculatePercentageChange(totalOrders, prevTotalOrders);
+    const ordersChange = calculatePercentageChange(
+      totalOrders,
+      prevTotalOrders,
+    );
     const deliveredChange = calculatePercentageChange(
       deliveredOrders,
       prevDeliveredOrders,
@@ -155,7 +159,10 @@ async function getSalesRepsData(period: TimePeriod = "month") {
       trends: {
         totalReps: 0, // Rep count doesn't change with period
         orders: calculatePercentageChange(totalOrders, prevTotalOrders),
-        avgConversion: calculatePercentageChange(avgConversion, prevAvgConversion),
+        avgConversion: calculatePercentageChange(
+          avgConversion,
+          prevAvgConversion,
+        ),
       },
     },
   };

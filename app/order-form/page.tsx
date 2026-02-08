@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createOrderV2 } from "@/app/actions/orders";
-import { getActiveProducts, getProductWithPackages } from "@/app/actions/products";
+import {
+  getActiveProducts,
+  getProductWithPackages,
+} from "@/app/actions/products";
 import { PackageSelector } from "./_components/package-selector";
 import { PayOnDeliveryBadge } from "./_components/pay-on-delivery-badge";
 import { NIGERIA_STATES } from "@/lib/nigeria-states";
@@ -161,7 +164,7 @@ export default function OrderFormPage() {
           {success && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 font-medium">
-                Order submitted successfully! We'll contact you shortly.
+                Order submitted successfully! We&apos;ll contact you shortly.
               </p>
             </div>
           )}
@@ -218,7 +221,10 @@ export default function OrderFormPage() {
               <select
                 value={formData.whatsappCountryCode}
                 onChange={(e) =>
-                  setFormData({ ...formData, whatsappCountryCode: e.target.value })
+                  setFormData({
+                    ...formData,
+                    whatsappCountryCode: e.target.value,
+                  })
                 }
                 className="w-24 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
               >

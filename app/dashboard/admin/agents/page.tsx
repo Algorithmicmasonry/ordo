@@ -37,6 +37,7 @@ export default async function AdminAgentsPage({
     getUniqueZones(),
   ]);
 
+  // TODO: Rewrite reconciliation logic to handle numbers as numbers instead of strings
   // Handle errors
   if (!statsResponse.success || !agentsResponse.success) {
     return (

@@ -470,35 +470,31 @@ export default function AdminInventoryClient({
                               </DialogContent>
                             </Dialog>
 
-                            {role === "admin" && (
-                              <Link
-                                href={`/dashboard/admin/inventory/${product.id}/pricing`}
+                            <Link
+                              href={`/dashboard/admin/inventory/${product.id}/pricing`}
+                            >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-2"
                               >
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="gap-2"
-                                >
-                                  <DollarSign className="size-4" />
-                                  Pricing
-                                </Button>
-                              </Link>
-                            )}
+                                <DollarSign className="size-4" />
+                                Pricing
+                              </Button>
+                            </Link>
 
-                            {role === "admin" && (
-                              <Link
-                                href={`/dashboard/admin/inventory/${product.id}/packages`}
+                            <Link
+                              href={`/dashboard/admin/inventory/${product.id}/packages`}
+                            >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-2"
                               >
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="gap-2"
-                                >
-                                  <PackageOpen className="size-4" />
-                                  Packages
-                                </Button>
-                              </Link>
-                            )}
+                                <PackageOpen className="size-4" />
+                                Packages
+                              </Button>
+                            </Link>
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>

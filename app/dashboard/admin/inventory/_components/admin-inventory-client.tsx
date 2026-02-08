@@ -106,6 +106,8 @@ export default function AdminInventoryClient({
     };
   };
 
+  console.log("This is the user role: ", role);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] =
     useState<ProductWithStock | null>(null);

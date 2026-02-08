@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,36 +35,40 @@ export function CreatePackageButton({
           Create Package
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Package</DialogTitle>
           <DialogDescription>
             Create a new package option for customers to select during checkout.
           </DialogDescription>
         </DialogHeader>
-
-        {!hasPricing ? (
-          <Alert variant="destructive">
-            <AlertCircle className="size-4" />
-            <AlertDescription>
-              <p className="font-semibold mb-2">No Pricing Configured</p>
-              <p className="text-sm mb-3">
-                You must add pricing in at least one currency before creating packages.
-              </p>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/dashboard/admin/inventory/${productId}/pricing`}>
-                  Add Pricing First
-                </Link>
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <PackageForm
-            productId={productId}
-            availableCurrencies={availableCurrencies}
-            onSuccess={() => setOpen(false)}
-          />
-        )}
+        <div className="overflow-y-auto flex-1 px-1">
+          {!hasPricing ? (
+            <Alert variant="destructive">
+              <AlertCircle className="size-4" />
+              <AlertDescription>
+                <p className="font-semibold mb-2">No Pricing Configured</p>
+                <p className="text-sm mb-3">
+                  You must add pricing in at least one currency before creating
+                  packages.
+                </p>
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    href={`/dashboard/admin/inventory/${productId}/pricing`}
+                  >
+                    Add Pricing First
+                  </Link>
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <PackageForm
+              productId={productId}
+              availableCurrencies={availableCurrencies}
+              onSuccess={() => setOpen(false)}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

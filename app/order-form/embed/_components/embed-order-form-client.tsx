@@ -1,15 +1,14 @@
 "use client";
 
-import React from "react";
-import { useState, useEffect, useMemo } from "react";
 import { createOrderV2 } from "@/app/actions/orders";
 import { PackageSelector } from "@/app/order-form/_components/package-selector";
-import { PayOnDeliveryBadge } from "@/app/order-form/_components/pay-on-delivery-badge";
-import { NIGERIA_STATES } from "@/lib/nigeria-states";
 import { GHANA_REGIONS } from "@/lib/ghana-regions";
-import type { ProductWithPackages, Currency } from "@/lib/types";
+import { NIGERIA_STATES } from "@/lib/nigeria-states";
+import type { Currency, ProductWithPackages } from "@/lib/types";
 import type { UTMParams } from "@/lib/utm-parser";
-import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
+import { extractReferrerDomain, parseUTMParams } from "@/lib/utm-parser";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
 
 interface EmbedOrderFormClientProps {
   product: ProductWithPackages;
@@ -26,6 +25,10 @@ export function EmbedOrderFormClient({
   const [error, setError] = useState("");
   const [utmParams, setUtmParams] = useState<UTMParams | undefined>();
   const [referrer, setReferrer] = useState<string | undefined>();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const redirectUrl = searchParams.get("redirectUrl");
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -105,6 +108,7 @@ export function EmbedOrderFormClient({
     setLoading(false);
 
     if (result.success) {
+      router.push(redirectUrl);
       setSuccess(true);
       setFormData({
         customerName: "",

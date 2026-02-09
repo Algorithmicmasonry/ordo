@@ -1,6 +1,7 @@
 import { getProductWithPackages } from "@/app/actions/products";
 import { EmbedOrderFormClient } from "./_components/embed-order-form-client";
 import { parseCurrency } from "@/lib/currency";
+import { Suspense } from "react";
 
 interface EmbedOrderFormPageProps {
   searchParams: Promise<{ product?: string; currency?: string }>;
@@ -55,5 +56,11 @@ export default async function EmbedOrderFormPage({
     );
   }
 
-  return <EmbedOrderFormClient product={result.data} currency={currency} />;
+  return (
+    <Suspense
+      fallback={<div className="p-6 text-center">Loading order form…</div>}
+    >
+      <EmbedOrderFormClient product={result.data} currency={currency} />)
+    </Suspense>
+  );
 }

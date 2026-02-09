@@ -13,12 +13,13 @@ export function EmbedCodeGenerator() {
   const [copied, setCopied] = useState(false);
   const [width, setWidth] = useState("100%");
   const [height, setHeight] = useState("800");
+  const [redirectUrl, setRedirectUrl] = useState("");
 
   const baseUrl = typeof window !== "undefined"
     ? window.location.origin
     : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  const embedUrl = `${baseUrl}/order-form/embed`;
+  const embedUrl = `${baseUrl}/order-form/embed${redirectUrl ? `?redirectUrl=${encodeURIComponent(redirectUrl)}` : ""}`;
 
   // Generate iframe embed code
   const iframeCode = `<iframe
@@ -100,6 +101,19 @@ add_shortcode('ordo_order_form', 'ordo_order_form_shortcode');
                 Recommended: 800-1000px
               </p>
             </div>
+          </div>
+
+          <div className="pt-4">
+            <Label htmlFor="redirectUrl">Redirect URL (Optional)</Label>
+            <Input
+              id="redirectUrl"
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+              placeholder="https://yourwebsite.com/thank-you"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Optional URL to redirect the user to after a successful order.
+            </p>
           </div>
 
           <div className="pt-4">

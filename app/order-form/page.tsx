@@ -13,6 +13,7 @@ import type { ProductPackage, Currency } from "@prisma/client";
 import type { UTMParams } from "@/lib/utm-parser";
 import { parseUTMParams, extractReferrerDomain } from "@/lib/utm-parser";
 import { getAvailableCurrencies } from "@/lib/currency";
+import { useSearchParams } from "next/navigation"; // Import useSearchParams
 
 type Product = {
   id: string;
@@ -22,6 +23,9 @@ type Product = {
 };
 
 export default function OrderFormPage() {
+  const searchParams = useSearchParams(); // Get search params
+  const redirectUrl = searchParams.get("redirectUrl"); // Extract redirectUrl
+
   const [products, setProducts] = useState<Product[]>([]);
   const [packages, setPackages] = useState<ProductPackage[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Store full product with packages
@@ -136,22 +140,26 @@ export default function OrderFormPage() {
     setLoading(false);
 
     if (result.success) {
-      setSuccess(true);
-      setFormData({
-        customerName: "",
-        phoneCountryCode: "+234",
-        customerPhone: "",
-        whatsappCountryCode: "+234",
-        customerWhatsapp: "",
-        deliveryAddress: "",
-        state: "",
-        city: "",
-      });
-      setSelectedProductId("");
-      setSelectedPackageId("");
-      setPackages([]);
+      if (redirectUrl) {
+        window.location.href = redirectUrl; // Redirect to the specified URL
+      } else {
+        setSuccess(true);
+        setFormData({
+          customerName: "",
+          phoneCountryCode: "+234",
+          customerPhone: "",
+          whatsappCountryCode: "+234",
+          customerWhatsapp: "",
+          deliveryAddress: "",
+          state: "",
+          city: "",
+        });
+        setSelectedProductId("");
+        setSelectedPackageId("");
+        setPackages([]);
 
-      setTimeout(() => setSuccess(false), 5000);
+        setTimeout(() => setSuccess(false), 5000);
+      }
     } else {
       setError(result.error || "Failed to submit order");
     }
@@ -161,7 +169,7 @@ export default function OrderFormPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {success && (
+          {success && !redirectUrl && ( // Only show success message if no redirect is happening
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 font-medium">
                 Order submitted successfully! We&apos;ll contact you shortly.
@@ -293,6 +301,7 @@ export default function OrderFormPage() {
               </div>
             )}
 
+            {/*TODO: Implement redirect to*/}
             {packages.length > 0 && !loadingPackages && (
               <PackageSelector
                 packages={packages}

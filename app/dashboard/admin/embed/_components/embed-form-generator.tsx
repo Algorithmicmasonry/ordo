@@ -44,12 +44,15 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
   const [selectedCurrency, setSelectedCurrency] = useState<
     Record<string, Currency>
   >({});
-  const [redirectUrl, setRedirectUrl] = useState("");
+  const [productRedirectUrls, setProductRedirectUrls] = useState<
+    Record<string, string>
+  >({});
 
   const generateEmbedUrl = (productId: string) => {
     const baseUrl = window.location.origin;
     const currency = selectedCurrency[productId] || "NGN";
-    const redirectParam = redirectUrl ? `&redirectUrl=${encodeURIComponent(redirectUrl)}` : "";
+    const productRedirectUrl = productRedirectUrls[productId];
+    const redirectParam = productRedirectUrl ? `&redirectUrl=${encodeURIComponent(productRedirectUrl)}` : "";
     const embedUrl = `${baseUrl}/order-form/embed?product=${productId}&currency=${currency}${redirectParam}`;
     setGeneratedUrls((prev) => ({ ...prev, [productId]: embedUrl }));
     return embedUrl;
@@ -71,31 +74,6 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Global Embed Settings</CardTitle>
-          <CardDescription>
-            These settings will apply to all generated embed forms.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <label htmlFor="globalRedirectUrl" className="text-sm font-medium">
-              Redirect URL (Optional)
-            </label>
-            <Input
-              id="globalRedirectUrl"
-              value={redirectUrl}
-              onChange={(e) => setRedirectUrl(e.target.value)}
-              placeholder="https://yourwebsite.com/thank-you"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Optional URL to redirect the user to after a successful order.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Products with packages */}
       {productsWithPackages.length > 0 && (
         <div className="space-y-4">
@@ -150,6 +128,25 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
                   <CardContent className="space-y-3">
                     {!embedUrl ? (
                       <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium" htmlFor={`redirect-url-${product.id}`}>
+                            Redirect URL (Optional)
+                          </label>
+                          <Input
+                            id={`redirect-url-${product.id}`}
+                            value={productRedirectUrls[product.id] || ""}
+                            onChange={(e) =>
+                              setProductRedirectUrls((prev) => ({
+                                ...prev,
+                                [product.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="https://yourwebsite.com/thank-you"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Optional URL to redirect the user to after a successful order.
+                          </p>
+                        </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium">
                             Select Currency

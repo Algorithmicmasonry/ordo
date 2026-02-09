@@ -44,11 +44,13 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
   const [selectedCurrency, setSelectedCurrency] = useState<
     Record<string, Currency>
   >({});
+  const [redirectUrl, setRedirectUrl] = useState("");
 
   const generateEmbedUrl = (productId: string) => {
     const baseUrl = window.location.origin;
     const currency = selectedCurrency[productId] || "NGN";
-    const embedUrl = `${baseUrl}/order-form/embed?product=${productId}&currency=${currency}`;
+    const redirectParam = redirectUrl ? `&redirectUrl=${encodeURIComponent(redirectUrl)}` : "";
+    const embedUrl = `${baseUrl}/order-form/embed?product=${productId}&currency=${currency}${redirectParam}`;
     setGeneratedUrls((prev) => ({ ...prev, [productId]: embedUrl }));
     return embedUrl;
   };
@@ -69,6 +71,31 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Global Embed Settings</CardTitle>
+          <CardDescription>
+            These settings will apply to all generated embed forms.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <label htmlFor="globalRedirectUrl" className="text-sm font-medium">
+              Redirect URL (Optional)
+            </label>
+            <Input
+              id="globalRedirectUrl"
+              value={redirectUrl}
+              onChange={(e) => setRedirectUrl(e.target.value)}
+              placeholder="https://yourwebsite.com/thank-you"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Optional URL to redirect the user to after a successful order.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Products with packages */}
       {productsWithPackages.length > 0 && (
         <div className="space-y-4">
@@ -160,8 +187,12 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
                         <Tabs defaultValue="url" className="w-full">
                           <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="url">Direct Link</TabsTrigger>
-                            <TabsTrigger value="iframe">HTML/Iframe</TabsTrigger>
-                            <TabsTrigger value="elementor">Elementor</TabsTrigger>
+                            <TabsTrigger value="iframe">
+                              HTML/Iframe
+                            </TabsTrigger>
+                            <TabsTrigger value="elementor">
+                              Elementor
+                            </TabsTrigger>
                           </TabsList>
 
                           {/* Direct Link Tab */}
@@ -178,7 +209,9 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
                               <Button
                                 variant={isCopied ? "default" : "outline"}
                                 size="icon"
-                                onClick={() => copyToClipboard(product.id, embedUrl)}
+                                onClick={() =>
+                                  copyToClipboard(product.id, embedUrl)
+                                }
                               >
                                 {isCopied ? (
                                   <Check className="size-4" />
@@ -278,10 +311,21 @@ export function EmbedFormGenerator({ products }: EmbedFormGeneratorProps) {
                               </p>
                               <ol className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-decimal">
                                 <li>Open your page in Elementor editor</li>
-                                <li>Drag an "HTML" widget to your page</li>
-                                <li>Click "Copy" button above and paste the code into the HTML widget</li>
-                                <li>Set widget width to "Full Width (100%)" for best results</li>
-                                <li>Adjust height if needed (recommended: 800px minimum)</li>
+                                <li>
+                                  Drag an &quot;HTML&quot; widget to your page
+                                </li>
+                                <li>
+                                  Click &quot;Copy&quot; button above and paste
+                                  the code into the HTML widget
+                                </li>
+                                <li>
+                                  Set widget width to &quot;Full Width
+                                  (100%)&quot; for best results
+                                </li>
+                                <li>
+                                  Adjust height if needed (recommended: 800px
+                                  minimum)
+                                </li>
                                 <li>Update and preview your page</li>
                               </ol>
                             </div>

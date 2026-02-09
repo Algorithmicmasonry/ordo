@@ -108,19 +108,9 @@ export function EmbedOrderFormClient({
     setLoading(false);
 
     if (result.success) {
+      // Redirect immediately
       router.push(redirectUrl || "/order-success");
-      setSuccess(true);
-      setFormData({
-        customerName: "",
-        customerPhone: "",
-        customerWhatsapp: "",
-        deliveryAddress: "",
-        state: "",
-        city: "",
-      });
-      setSelectedPackageId("");
-
-      setTimeout(() => setSuccess(false), 5000);
+      return; // Stop execution here
     } else {
       setError(result.error || "Failed to submit order");
     }

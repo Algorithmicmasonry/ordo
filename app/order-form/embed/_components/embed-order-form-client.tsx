@@ -108,7 +108,7 @@ export function EmbedOrderFormClient({
     setLoading(false);
 
     if (result.success) {
-      router.push(redirectUrl);
+      router.push(redirectUrl || "/order-success");
       setSuccess(true);
       setFormData({
         customerName: "",

@@ -55,7 +55,7 @@ export function PackageSelector({
               value={pkg.id}
               checked={selectedPackageId === pkg.id}
               onChange={(e) => onSelect(e.target.value)}
-              className="w-4 h-4 text-green-600 dark:text-green-600 cursor-pointer accent-green-600"
+              className="w-4 h-4 text-blue-600 bg-white dark:bg-white cursor-pointer accent-blue-600 border-gray-300 dark:border-gray-300"
             />
             <label
               htmlFor={pkg.id}

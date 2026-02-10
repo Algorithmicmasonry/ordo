@@ -76,7 +76,7 @@ export function ReconcileStockModal({
 
   const currentQuantity = agentStock?.quantity || 0;
   const totalReconciled = returnedQuantity + defective + missing;
-  const remaining = currentQuantity - totalReconciled;
+  const remaining = Number(currentQuantity) - Number(totalReconciled);
   const isValid = totalReconciled <= currentQuantity;
 
   async function onSubmit(values: ReconcileStockFormValues) {

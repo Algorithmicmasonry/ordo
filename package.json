@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "prebuild": "tsx prisma/delete-orders-script.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

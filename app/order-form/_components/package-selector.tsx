@@ -27,16 +27,22 @@ export function PackageSelector({
 
   return (
     <div className="mt-6">
-      <h3 className="text-sm font-bold text-gray-900 mb-4 tracking-wide">
+      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-900 mb-4 tracking-wide">
         SELECT YOUR PACKAGE *
       </h3>
       {packageSelectorNote && (
-        <p className="text-md  mb-4">{packageSelectorNote}</p>
+        <p className="text-md text-gray-900 dark:text-gray-900 mb-4">
+          {packageSelectorNote}
+        </p>
       )}
-      <div className="border-b border-gray-300 mb-4">
+      <div className="border-b border-gray-300 dark:border-gray-300 mb-4">
         <div className="flex justify-between items-center pb-2 px-2">
-          <span className="text-sm font-bold text-gray-900">Product</span>
-          <span className="text-sm font-bold text-gray-900">Price</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-gray-900">
+            Product
+          </span>
+          <span className="text-sm font-bold text-gray-900 dark:text-gray-900">
+            Price
+          </span>
         </div>
       </div>
       <div className="space-y-3">
@@ -49,15 +55,15 @@ export function PackageSelector({
               value={pkg.id}
               checked={selectedPackageId === pkg.id}
               onChange={(e) => onSelect(e.target.value)}
-              className="w-4 h-4 text-green-600 cursor-pointer"
+              className="w-4 h-4 text-green-600 dark:text-green-600 cursor-pointer accent-green-600"
             />
             <label
               htmlFor={pkg.id}
-              className="flex-1 text-sm font-bold text-gray-900 cursor-pointer"
+              className="flex-1 text-sm font-bold text-gray-900 dark:text-gray-900 cursor-pointer"
             >
               {pkg.description || pkg.name}
             </label>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-bold text-gray-900 dark:text-gray-900">
               {currencySymbol}
               {pkg.price.toLocaleString()}
             </span>

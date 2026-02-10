@@ -2,11 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn, getInitials, formatRole } from "@/lib/utils";
 import {
+  Bell,
   BookUser,
   ChartPie,
   Code2,
@@ -95,6 +92,11 @@ const routes = [
     label: "Embed Form",
     icon: Code2,
     href: "/dashboard/admin/embed",
+  },
+  {
+    label: "Notifications",
+    icon: Bell,
+    href: "/dashboard/admin/notifications",
   },
   {
     label: "Settings",

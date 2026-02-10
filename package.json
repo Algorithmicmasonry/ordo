@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
+    "prebuild": "tsx prisma/delete-orders-script.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:delete": "tsx prisma/delete-orders-script.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

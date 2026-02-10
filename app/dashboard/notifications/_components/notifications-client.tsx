@@ -47,25 +47,37 @@ export function NotificationsClient({
     totalPages: 1,
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Move fetchNotifications inside useEffect to avoid the warning
   useEffect(() => {
-    fetchNotifications();
-  }, [page, filter]);
+    let isMounted = true;
 
-  async function fetchNotifications() {
-    setLoading(true);
-    const result = await getUserNotifications({
-      page,
-      limit: 20,
-      unreadOnly: filter === "unread",
-    });
+    async function fetchNotifications() {
+      if (!isMounted) return;
 
-    if (result.success && result.data) {
-      setNotifications(result.data.notifications);
-      setPagination(result.data.pagination);
+      setLoading(true);
+      const result = await getUserNotifications({
+        page,
+        limit: 20,
+        unreadOnly: filter === "unread",
+      });
+
+      if (!isMounted) return;
+
+      if (result.success && result.data) {
+        setNotifications(result.data.notifications);
+        setPagination(result.data.pagination);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }
+
+    fetchNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page, filter, refreshTrigger]);
 
   const handleFilterChange = (newFilter: string) => {
     setFilter(newFilter);
@@ -83,7 +95,7 @@ export function NotificationsClient({
     const result = await markAllAsRead();
     if (result.success) {
       toast.success("All notifications marked as read");
-      fetchNotifications();
+      setRefreshTrigger((prev) => prev + 1); // Trigger refresh
     } else {
       toast.error(result.error || "Failed to mark all as read");
     }
@@ -95,11 +107,15 @@ export function NotificationsClient({
     const result = await deleteAllRead();
     if (result.success) {
       toast.success(`Deleted ${result.count || 0} read notifications`);
-      fetchNotifications();
+      setRefreshTrigger((prev) => prev + 1); // Trigger refresh
     } else {
       toast.error(result.error || "Failed to delete notifications");
     }
     setActionLoading(null);
+  };
+
+  const handleNotificationUpdate = () => {
+    setRefreshTrigger((prev) => prev + 1); // Trigger refresh
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -155,10 +171,12 @@ export function NotificationsClient({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete read notifications?</AlertDialogTitle>
+                  <AlertDialogTitle>
+                    Delete read notifications?
+                  </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all notifications you've already
-                    read. This action cannot be undone.
+                    This will permanently delete all notifications you've
+                    already read. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -199,7 +217,7 @@ export function NotificationsClient({
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onUpdate={fetchNotifications}
+                onUpdate={handleNotificationUpdate}
               />
             ))}
           </div>
@@ -210,8 +228,8 @@ export function NotificationsClient({
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Page {pagination.page} of {pagination.totalPages} ({pagination.total}{" "}
-            total)
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.total} total)
           </p>
           <div className="flex items-center gap-2">
             <Button

@@ -38,7 +38,9 @@ type ReconcileStockFormValues = z.infer<typeof reconcileStockSchema>;
 interface ReconcileStockModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  agentStock: (AgentStock & { product: Product; agent: { name: string } }) | null;
+  agentStock:
+    | (AgentStock & { product: Product; agent: { name: string } })
+    | null;
   onReconcile: (data: {
     agentId: string;
     productId: string;
@@ -108,146 +110,150 @@ export function ReconcileStockModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Reconcile Stock</DialogTitle>
         </DialogHeader>
 
-        {agentStock && (
-          <div className="rounded-lg border bg-muted/50 p-4 mb-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Agent</p>
-                <p className="font-semibold">{agentStock.agent.name}</p>
+        <div className="overflow-y-auto flex-1 px-1">
+          {agentStock && (
+            <div className="rounded-lg border bg-muted/50 p-4 mb-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Agent</p>
+                  <p className="font-semibold">{agentStock.agent.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Product</p>
+                  <p className="font-semibold">{agentStock.product.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Current Quantity
+                  </p>
+                  <p className="text-2xl font-bold">{currentQuantity}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    After Reconciliation
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      !isValid ? "text-destructive" : "text-muted-foreground"
+                    }`}
+                  >
+                    {remaining}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Product</p>
-                <p className="font-semibold">{agentStock.product.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Current Quantity</p>
-                <p className="text-2xl font-bold">{currentQuantity}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">After Reconciliation</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    !isValid ? "text-destructive" : "text-muted-foreground"
-                  }`}
+            </div>
+          )}
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Returned Quantity */}
+              <FormField
+                control={form.control}
+                name="returnedQuantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Returned to Warehouse</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Good stock returned to warehouse
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Defective Count */}
+              <FormField
+                control={form.control}
+                name="defective"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Defective Items</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Damaged or defective items
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Missing Count */}
+              <FormField
+                control={form.control}
+                name="missing"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Missing Items</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormDescription>Lost or unaccounted items</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Notes */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional notes about this reconciliation..."
+                        className="resize-none"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Validation Error */}
+              {!isValid && (
+                <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
+                  <p className="text-sm text-destructive font-medium">
+                    Total reconciled ({totalReconciled}) exceeds current
+                    quantity ({currentQuantity})
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-background pb-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                  className="flex-1"
                 >
-                  {remaining}
-                </p>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || !isValid}
+                  className="flex-1"
+                >
+                  {isSubmitting ? "Reconciling..." : "Reconcile Stock"}
+                </Button>
               </div>
-            </div>
-          </div>
-        )}
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Returned Quantity */}
-            <FormField
-              control={form.control}
-              name="returnedQuantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Returned to Warehouse</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Good stock returned to warehouse
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Defective Count */}
-            <FormField
-              control={form.control}
-              name="defective"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Defective Items</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Damaged or defective items
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Missing Count */}
-            <FormField
-              control={form.control}
-              name="missing"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Missing Items</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Lost or unaccounted items
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Notes */}
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Additional notes about this reconciliation..."
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Validation Error */}
-            {!isValid && (
-              <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
-                <p className="text-sm text-destructive font-medium">
-                  Total reconciled ({totalReconciled}) exceeds current quantity (
-                  {currentQuantity})
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !isValid}
-                className="flex-1"
-              >
-                {isSubmitting ? "Reconciling..." : "Reconcile Stock"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -27,8 +27,8 @@ export default function OrderSuccessPage() {
         </CardHeader>
         <CardContent className="mt-6 space-y-4">
           <p className="text-md text-gray-700 dark:text-gray-300">
-            Thank you for your purchase! A confirmation email with details of
-            your order has been sent.
+            Thank you for your purchase! A Sales rep will reach out to you
+            shortly.
           </p>
         </CardContent>
       </Card>

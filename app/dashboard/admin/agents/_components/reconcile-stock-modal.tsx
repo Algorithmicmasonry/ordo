@@ -70,13 +70,13 @@ export function ReconcileStockModal({
     },
   });
 
-  const returnedQuantity = form.watch("returnedQuantity") || 0;
-  const defective = form.watch("defective") || 0;
-  const missing = form.watch("missing") || 0;
+  const returnedQuantity = Number(form.watch("returnedQuantity")) || 0;
+  const defective = Number(form.watch("defective")) || 0;
+  const missing = Number(form.watch("missing")) || 0;
 
   const currentQuantity = agentStock?.quantity || 0;
   const totalReconciled = returnedQuantity + defective + missing;
-  const remaining = Number(currentQuantity) - Number(totalReconciled);
+  const remaining = currentQuantity - totalReconciled;
   const isValid = totalReconciled <= currentQuantity;
 
   async function onSubmit(values: ReconcileStockFormValues) {

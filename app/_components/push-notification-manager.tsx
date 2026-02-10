@@ -21,45 +21,13 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-async function forceServiceWorkerUpdate() {
-  try {
-    console.log("🔄 Forcing service worker update...");
-
-    // Unregister all service workers
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const registration of registrations) {
-      await registration.unregister();
-      console.log("Unregistered:", registration.scope);
-    }
-
-    console.log("⏳ Waiting 1 second...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Re-register
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
-      updateViaCache: "none",
-    });
-
-    console.log("✅ Service worker re-registered:", registration);
-
-    // Wait for it to be ready
-    await navigator.serviceWorker.ready;
-    console.log("✅ Service worker ready");
-
-    toast.success("Service worker updated! Please enable notifications again.");
-  } catch (error) {
-    console.error("❌ Failed to update service worker:", error);
-    toast.error("Failed to update service worker");
-  }
-}
-
 export function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [needsRenewal, setNeedsRenewal] = useState(false);
 
   useEffect(() => {
     console.log("🔔 Push Notification Manager - Initial Check");
@@ -71,8 +39,48 @@ export function PushNotificationManager() {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
       registerServiceWorker();
+
+      // Check subscription health periodically
+      const checkInterval = setInterval(checkSubscriptionHealth, 3600000); // Every hour
+
+      return () => clearInterval(checkInterval);
     }
   }, []);
+
+  // Check if notifications are enabled but not working
+  useEffect(() => {
+    const checkNotificationHealth = async () => {
+      if (!subscription) return;
+
+      const registration = await navigator.serviceWorker.ready;
+      const currentSub = await registration.pushManager.getSubscription();
+
+      // If we think we're subscribed but actually aren't
+      if (!currentSub) {
+        toast.custom(
+          (t) => (
+            <div className="flex items-center gap-3 bg-red-600 text-white px-4 py-3 rounded-md shadow">
+              <span>Notifications disconnected. Please re-enable them.</span>
+              <button
+                className="underline font-semibold"
+                onClick={() => {
+                  subscribeToPush();
+                  toast.dismiss(t.id);
+                }}
+              >
+                Re-enable
+              </button>
+            </div>
+          ),
+          { duration: 10000 },
+        );
+      }
+    };
+
+    // Check on app focus
+    window.addEventListener("focus", checkNotificationHealth);
+    return () => window.removeEventListener("focus", checkNotificationHealth);
+  }, [subscription]);
 
   async function registerServiceWorker() {
     try {
@@ -105,6 +113,43 @@ export function PushNotificationManager() {
       setSubscription(sub);
     } catch (error) {
       console.error("❌ Service worker registration failed:", error);
+    }
+  }
+
+  async function checkSubscriptionHealth() {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const sub = await registration.pushManager.getSubscription();
+
+      if (sub) {
+        // Check if subscription is expired or about to expire
+        if (sub.expirationTime && sub.expirationTime < Date.now() + 86400000) {
+          console.log("⚠️ Subscription expiring soon, renewing...");
+          setNeedsRenewal(true);
+          await sub.unsubscribe();
+          await subscribeToPush();
+          setNeedsRenewal(false);
+          return;
+        }
+
+        // Test if subscription actually works
+        const response = await fetch("/api/test-subscription", {
+          method: "POST",
+        });
+        const data = await response.json();
+
+        if (!data.hasWorking) {
+          console.log("⚠️ Subscription not working, needs renewal");
+          setNeedsRenewal(true);
+
+          // Auto-renew silently
+          await sub.unsubscribe();
+          await subscribeToPush();
+          setNeedsRenewal(false);
+        }
+      }
+    } catch (error) {
+      console.error("Health check failed:", error);
     }
   }
 
@@ -182,6 +227,81 @@ export function PushNotificationManager() {
     }
   }
 
+  async function forceServiceWorkerUpdate() {
+    try {
+      console.log("🔄 Forcing service worker update...");
+
+      // Unregister all service workers
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log("Unregistered:", registration.scope);
+      }
+
+      console.log("⏳ Waiting 1 second...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Re-register
+      await registerServiceWorker();
+
+      toast.success(
+        "Service worker updated! Please enable notifications again.",
+      );
+    } catch (error) {
+      console.error("❌ Failed to update service worker:", error);
+      toast.error("Failed to update service worker");
+    }
+  }
+
+  async function forceResubscribe() {
+    setIsLoading(true);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+
+      // Get existing subscription
+      const existingSub = await registration.pushManager.getSubscription();
+
+      if (existingSub) {
+        console.log("Unsubscribing old subscription...");
+        await existingSub.unsubscribe();
+        await unsubscribeUser(existingSub.endpoint);
+      }
+
+      // Wait a bit
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Subscribe fresh
+      await subscribeToPush();
+
+      toast.success("Re-subscribed successfully!");
+    } catch (error) {
+      console.error("Error re-subscribing:", error);
+      toast.error("Failed to re-subscribe");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function testNotification() {
+    try {
+      const response = await fetch("/api/test-subscription", {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.hasWorking) {
+        toast.success(
+          `Notifications working! (${data.workingCount}/${data.total})`,
+        );
+      } else {
+        toast.error(data.reason || "Notifications not working");
+      }
+    } catch (error) {
+      console.error("Test failed:", error);
+      toast.error("Failed to test notifications");
+    }
+  }
+
   if (!isSupported) {
     console.log("⚠️ Push notifications not supported");
     return null;
@@ -197,22 +317,35 @@ export function PushNotificationManager() {
             <BellOff className="size-4" />
           )}
           Push Notifications
+          {needsRenewal && (
+            <span className="text-xs text-yellow-600">⚠️ Renewing...</span>
+          )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         {subscription ? (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               You will receive notifications for order updates
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={unsubscribeFromPush}
-              disabled={isLoading}
-            >
-              Disable Notifications
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={unsubscribeFromPush}
+                disabled={isLoading}
+              >
+                Disable Notifications
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testNotification}
+                disabled={isLoading}
+              >
+                Test Notification
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -224,9 +357,28 @@ export function PushNotificationManager() {
             </Button>
           </div>
         )}
-        <Button variant="outline" size="sm" onClick={forceServiceWorkerUpdate}>
-          Update Service Worker
-        </Button>
+
+        <div className="pt-2 border-t">
+          <p className="text-xs text-muted-foreground mb-2">Troubleshooting:</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={forceServiceWorkerUpdate}
+              disabled={isLoading}
+            >
+              Update Service Worker
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={forceResubscribe}
+              disabled={isLoading}
+            >
+              Force Re-subscribe
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

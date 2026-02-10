@@ -2,6 +2,19 @@ const CACHE_VERSION = "v2"; // Increment this when you make changes
 
 console.log("Service Worker loading... Version:", CACHE_VERSION);
 
+// In your sw.js, add periodic sync to keep SW alive
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "keep-alive") {
+    event.waitUntil(Promise.resolve());
+  }
+});
+
+// Also add this to prevent SW from being killed
+self.addEventListener("fetch", (event) => {
+  // This ensures SW stays registered
+  event.respondWith(fetch(event.request));
+});
+
 self.addEventListener("install", function (event) {
   console.log("Service Worker installing... Version:", CACHE_VERSION);
   self.skipWaiting(); // Force activate immediately

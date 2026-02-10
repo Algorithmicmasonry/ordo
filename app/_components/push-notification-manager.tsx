@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, AlertCircle } from "lucide-react";
 import {
   subscribeUser,
   unsubscribeUser,
@@ -23,6 +23,8 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(
     null,
   );
@@ -31,10 +33,30 @@ export function PushNotificationManager() {
 
   useEffect(() => {
     console.log("🔔 Push Notification Manager - Initial Check");
+
+    // Check if iOS
+    const iOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(iOS);
+
+    // Check if running as standalone (installed PWA)
+    const standalone = window.matchMedia("(display-mode: standalone)").matches;
+    setIsStandalone(standalone);
+
+    console.log("Is iOS:", iOS);
+    console.log("Is Standalone:", standalone);
     console.log("Service Worker support:", "serviceWorker" in navigator);
     console.log("Push Manager support:", "PushManager" in window);
     console.log("Notification permission:", Notification.permission);
-    console.log("VAPID Public Key:", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+
+    // iOS Safari only supports push in standalone mode (installed PWA)
+    if (iOS && !standalone) {
+      console.log(
+        "⚠️ iOS detected but not in standalone mode. Push not supported.",
+      );
+      setIsSupported(false);
+      return;
+    }
 
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
@@ -300,6 +322,32 @@ export function PushNotificationManager() {
       console.error("Test failed:", error);
       toast.error("Failed to test notifications");
     }
+  }
+
+  // Show iOS-specific message if not installed
+  if (isIOS && !isStandalone) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <AlertCircle className="size-4 text-yellow-600" />
+            Push Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              To enable push notifications on iOS, you need to install this app
+              to your home screen first.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Tap the share button <span className="font-semibold">􀈂</span> and
+              select "Add to Home Screen"
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!isSupported) {

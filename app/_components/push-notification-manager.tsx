@@ -21,6 +21,39 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+async function forceServiceWorkerUpdate() {
+  try {
+    console.log("🔄 Forcing service worker update...");
+
+    // Unregister all service workers
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      await registration.unregister();
+      console.log("Unregistered:", registration.scope);
+    }
+
+    console.log("⏳ Waiting 1 second...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Re-register
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
+      updateViaCache: "none",
+    });
+
+    console.log("✅ Service worker re-registered:", registration);
+
+    // Wait for it to be ready
+    await navigator.serviceWorker.ready;
+    console.log("✅ Service worker ready");
+
+    toast.success("Service worker updated! Please enable notifications again.");
+  } catch (error) {
+    console.error("❌ Failed to update service worker:", error);
+    toast.error("Failed to update service worker");
+  }
+}
+
 export function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscription | null>(
@@ -191,6 +224,9 @@ export function PushNotificationManager() {
             </Button>
           </div>
         )}
+        <Button variant="outline" size="sm" onClick={forceServiceWorkerUpdate}>
+          Update Service Worker
+        </Button>
       </CardContent>
     </Card>
   );

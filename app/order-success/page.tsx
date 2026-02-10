@@ -11,7 +11,10 @@ import Link from "next/link"; // Assuming Next.js Link component
 
 export default function OrderSuccessPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div
+      className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900"
+      style={{ colorScheme: "light" }}
+    >
       <Card className="w-full max-w-md p-6 text-center shadow-lg">
         <CardHeader className="flex flex-col items-center justify-center space-y-4">
           <CheckCircle className="h-20 w-20 text-green-500 animate-bounce" />

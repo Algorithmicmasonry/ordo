@@ -117,7 +117,10 @@ export function EmbedOrderFormClient({
   }
 
   return (
-    <div className="w-full p-4 md:p-8 bg-white light">
+    <div
+      className="w-full p-4 md:p-8 bg-white"
+      style={{ colorScheme: "light" }}
+    >
       <div className="max-w-md mx-auto">
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">

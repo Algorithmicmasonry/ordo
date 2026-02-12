@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "tsx prisma/delete-orders-script.ts",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "build": "next build",

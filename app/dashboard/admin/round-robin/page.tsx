@@ -37,7 +37,8 @@ async function getRoundRobinData() {
   const excludedSalesReps = salesReps.filter((rep) => !rep.isActive);
 
   // Calculate next rep in line
-  const nextRepIndex = currentIndex % activeSalesReps.length;
+  const nextRepIndex = (currentIndex + 1) % activeSalesReps.length;
+
   const nextRep = activeSalesReps[nextRepIndex] || null;
 
   // Calculate stats for each rep

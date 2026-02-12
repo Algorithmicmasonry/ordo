@@ -42,9 +42,7 @@ export async function skipCurrentRep() {
         role: "SALES_REP",
         isActive: true,
       },
-      orderBy: {
-        name: "asc",
-      },
+      orderBy: { createdAt: "asc" },
     });
 
     if (salesReps.length === 0) {

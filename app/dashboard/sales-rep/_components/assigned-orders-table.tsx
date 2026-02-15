@@ -164,7 +164,6 @@ export function AssignedOrdersTable({
   const handleWhatsAppClick = (
     phone: string,
     customerName: string,
-    orderNumber: string,
     items: OrderWithDetails["items"],
   ) => {
     const itemsList = items
@@ -172,7 +171,7 @@ export function AssignedOrdersTable({
       .join(", ");
 
     const message = encodeURIComponent(
-      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nOrder #${orderNumber}\nItems: ${itemsList}\n\nHow can I assist you?`,
+      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nProduct: ${itemsList}\n\nHow can I assist you?`,
     );
     const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`;
     window.open(whatsappUrl, "_blank");
@@ -445,7 +444,6 @@ export function AssignedOrdersTable({
                                       order.customerWhatsapp ||
                                         order.customerPhone,
                                       order.customerName,
-                                      order.orderNumber,
                                       order.items,
                                     )
                                   }

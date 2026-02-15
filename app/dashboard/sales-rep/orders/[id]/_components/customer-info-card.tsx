@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Phone, MessageCircle, MapPin, User } from "lucide-react";
+import { Phone, MapPin, User } from "lucide-react";
 import type { Order } from "@prisma/client";
 
 interface CustomerInfoCardProps {
@@ -10,14 +9,6 @@ interface CustomerInfoCardProps {
 }
 
 export function CustomerInfoCard({ order }: CustomerInfoCardProps) {
-  const handleWhatsAppClick = () => {
-    const phone = order.customerWhatsapp || order.customerPhone;
-    const message = encodeURIComponent(
-      `Hi ${order.customerName}, this is regarding your order ${order.orderNumber}. How can I assist you?`
-    );
-    const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`;
-    window.open(whatsappUrl, "_blank");
-  };
 
   return (
     <Card className="shadow-sm">
@@ -46,21 +37,11 @@ export function CustomerInfoCard({ order }: CustomerInfoCardProps) {
             </div>
             {order.customerWhatsapp && order.customerWhatsapp !== order.customerPhone && (
               <div className="flex items-center gap-3">
-                <MessageCircle className="size-5 text-muted-foreground" />
+                <Phone className="size-5 text-muted-foreground" />
                 <span className="text-sm font-medium">{order.customerWhatsapp}</span>
               </div>
             )}
           </div>
-
-          {/* WhatsApp Button */}
-          <Button
-            onClick={handleWhatsAppClick}
-            className="w-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 font-bold"
-            variant="ghost"
-          >
-            <MessageCircle className="size-4 mr-2" />
-            WhatsApp Customer
-          </Button>
 
           {/* Shipping Address */}
           <div className="space-y-4 pt-4 border-t">

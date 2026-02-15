@@ -165,13 +165,14 @@ export function AssignedOrdersTable({
     phone: string,
     customerName: string,
     items: OrderWithDetails["items"],
+    currency: string,
   ) => {
     const itemsList = items
-      .map((item) => `${item.quantity}x ${item.product.name}`)
-      .join(", ");
+      .map((item, index) => `${index + 1}. ${item.product.name} (${item.quantity}) - ${currency === "NGN" ? "₦" : currency === "GHS" ? "GH₵" : "$"}${item.price.toFixed(2)}`)
+      .join("\n");
 
     const message = encodeURIComponent(
-      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nProduct: ${itemsList}\n\nHow can I assist you?`,
+      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nProducts:\n${itemsList}\n\nHow can I assist you?`,
     );
     const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`;
     window.open(whatsappUrl, "_blank");
@@ -445,6 +446,7 @@ export function AssignedOrdersTable({
                                         order.customerPhone,
                                       order.customerName,
                                       order.items,
+                                      order.currency,
                                     )
                                   }
                                 >

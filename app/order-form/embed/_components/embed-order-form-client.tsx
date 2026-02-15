@@ -217,26 +217,16 @@ export function EmbedOrderFormClient({
           />
 
           {/* Delivery State */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">
-              Your Delivery {stateLabel} *
-            </label>
-          </div>
-          <select
+          <input
+            type="text"
+            placeholder={`Your ${stateLabel} *`}
             required
             value={formData.state}
             onChange={(e) =>
               setFormData({ ...formData, state: e.target.value })
             }
-            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            <option value="">Select {stateLabel.toLowerCase()}</option>
-            {stateOptions.map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-600"
+          />
 
           {/* Package Selector */}
           <div className="mt-6">

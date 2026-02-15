@@ -108,9 +108,13 @@ export function EmbedOrderFormClient({
     setLoading(false);
 
     if (result.success) {
-      // Redirect immediately
-      router.push(redirectUrl || "/order-success");
-      return; // Stop execution here
+      // Open redirect URL in a new tab for Facebook tracking
+      if (redirectUrl) {
+        window.open(redirectUrl, "_blank");
+      } else {
+        router.push("/order-success");
+      }
+      return;
     } else {
       setError(result.error || "Failed to submit order");
     }

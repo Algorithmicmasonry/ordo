@@ -123,6 +123,13 @@ export default function OrderFormPageClient() {
       ? `${formData.whatsappCountryCode}${formData.customerWhatsapp}`
       : undefined;
 
+    // If there's a redirect URL, trigger it immediately (before server action)
+    // This ensures the redirect happens in direct response to user gesture
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+      // Server action still runs, but user is already being redirected
+    }
+
     const result = await createOrderV2({
       customerName: formData.customerName,
       customerPhone: fullPhone,
@@ -140,9 +147,7 @@ export default function OrderFormPageClient() {
     setLoading(false);
 
     if (result.success) {
-      if (redirectUrl) {
-        window.location.href = redirectUrl; // Redirect to the specified URL
-      } else {
+      if (!redirectUrl) {
         setSuccess(true);
         setFormData({
           customerName: "",

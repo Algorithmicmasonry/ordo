@@ -91,6 +91,12 @@ export function EmbedOrderFormClient({
       return;
     }
 
+    // If there's a redirect URL, open it immediately (before server action)
+    // This ensures the redirect happens in direct response to user gesture
+    if (redirectUrl) {
+      window.open(redirectUrl, "_blank");
+    }
+
     const result = await createOrderV2({
       customerName: formData.customerName,
       customerPhone: countryCode + formData.customerPhone,
@@ -108,10 +114,7 @@ export function EmbedOrderFormClient({
     setLoading(false);
 
     if (result.success) {
-      // Open redirect URL in a new tab for Facebook tracking
-      if (redirectUrl) {
-        window.open(redirectUrl, "_blank");
-      } else {
+      if (!redirectUrl) {
         router.push("/order-success");
       }
       return;

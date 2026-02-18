@@ -168,7 +168,13 @@ export function AssignedOrdersTable({
     currency: string,
   ) => {
     const itemsList = items
-      .map((item, index) => `${index + 1}. ${item.product.name} (${item.quantity}) - ${currency === "NGN" ? "₦" : currency === "GHS" ? "GH₵" : "$"}${item.price.toFixed(2)}`)
+      .map((item, index) => {
+        const total = item.price * item.quantity;
+
+        return `${index + 1}. ${item.product.name} (${item.quantity}) - ${
+          currency === "NGN" ? "₦" : currency === "GHS" ? "GH₵" : "$"
+        }${total.toFixed(2)}`;
+      })
       .join("\n");
 
     const message = encodeURIComponent(
@@ -238,291 +244,280 @@ export function AssignedOrdersTable({
 
   return (
     <Card className="shadow-sm overflow-hidden relative">
-        {/* Global Loading Overlay */}
-        {isPending && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-50 flex items-center justify-center rounded-lg">
-            <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-lg shadow-lg border">
-              <Loader2 className="size-4 animate-spin text-primary" />
-              <span className="text-sm font-medium">Loading orders...</span>
+      {/* Global Loading Overlay */}
+      {isPending && (
+        <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-50 flex items-center justify-center rounded-lg">
+          <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-lg shadow-lg border">
+            <Loader2 className="size-4 animate-spin text-primary" />
+            <span className="text-sm font-medium">Loading orders...</span>
+          </div>
+        </div>
+      )}
+
+      <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold">Assigned Orders</h2>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              disabled={isPending}
+            >
+              <Filter className="size-4 sm:mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isPending || orders.length === 0}
+            >
+              <Download className="size-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        {showFilters && (
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select
+                  value={currentStatus}
+                  onValueChange={handleStatusFilter}
+                  disabled={isPending}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Orders</SelectItem>
+                    <SelectItem value="NEW">Pending</SelectItem>
+                    <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                    <SelectItem value="DISPATCHED">Dispatched</SelectItem>
+                    <SelectItem value="DELIVERED">Delivered</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    <SelectItem value="POSTPONED">Postponed</SelectItem>
+                    <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         )}
 
-        <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-bold">Assigned Orders</h2>
+        {/* Tabs */}
+        <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+          <div className="flex border-b border-border gap-4 sm:gap-8 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => handleStatusFilter(tab.value)}
+                disabled={isPending}
+                className={cn(
+                  "border-b-2 pb-3 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap",
+                  currentStatus === tab.value
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                  isPending && "opacity-50 cursor-not-allowed",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order #</TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead className="text-center">Source</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Created Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-12 text-muted-foreground"
+                  >
+                    No orders found matching your filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                orders.map((order) => (
+                  <TableRow
+                    key={order.id}
+                    className={cn(
+                      "hover:bg-muted/50 transition-colors",
+                      order.hasPendingFollowUp &&
+                        "bg-blue-50/30 dark:bg-blue-900/5",
+                    )}
+                  >
+                    <TableCell className="font-bold text-primary">
+                      {order.orderNumber}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {order.customerName}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {order.customerPhone}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex justify-center cursor-pointer">
+                              {(() => {
+                                const SourceIcon = getSourceIcon(order.source);
+                                return (
+                                  <SourceIcon
+                                    className={cn(
+                                      "size-5",
+                                      SOURCE_COLORS[order.source],
+                                    )}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              {
+                                SOURCE_NAMES[
+                                  order.source as keyof typeof SOURCE_NAMES
+                                ]
+                              }
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs font-bold",
+                            STATUS_COLORS[order.status],
+                          )}
+                        >
+                          {order.status === "NEW" ? "Pending" : order.status}
+                        </Badge>
+                        {order.hasPendingFollowUp && (
+                          <span title="Priority Follow-up">
+                            <Star className="size-4 text-amber-500 fill-amber-500" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {order.city}, {order.state}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {format(new Date(order.createdAt), "MMM dd, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                className="bg-green-500 hover:bg-green-600 text-white size-9 sm:size-8"
+                                onClick={() =>
+                                  handleWhatsAppClick(
+                                    order.customerWhatsapp ||
+                                      order.customerPhone,
+                                    order.customerName,
+                                    order.items,
+                                    order.currency,
+                                  )
+                                }
+                              >
+                                <MessageCircle className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Chat on WhatsApp</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button size="sm" asChild className="h-9 sm:h-8">
+                          <Link
+                            href={`/dashboard/sales-rep/orders/${order.id}`}
+                          >
+                            <Eye className="size-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Details</span>
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        {orders.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t bg-muted/50">
+            <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+              Showing{" "}
+              <span className="font-medium text-foreground">
+                {(pagination.page - 1) * pagination.limit + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium text-foreground">
+                {Math.min(pagination.page * pagination.limit, pagination.total)}
+              </span>{" "}
+              of{" "}
+              <span className="font-medium text-foreground">
+                {pagination.total}
+              </span>{" "}
+              orders
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                disabled={isPending}
+                disabled={pagination.page === 1 || isPending}
+                onClick={() => handlePageChange(pagination.page - 1)}
               >
-                <Filter className="size-4 sm:mr-2" />
-                <span className="hidden sm:inline">Filter</span>
+                {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+                Previous
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleExport}
-                disabled={isPending || orders.length === 0}
+                disabled={pagination.page >= pagination.totalPages || isPending}
+                onClick={() => handlePageChange(pagination.page + 1)}
               >
-                <Download className="size-4 sm:mr-2" />
-                <span className="hidden sm:inline">Export</span>
+                {isPending && <Loader2 className="size-4 mr-2 animate-spin" />}
+                Next
               </Button>
             </div>
           </div>
-
-          {/* Filters */}
-          {showFilters && (
-            <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Status
-                  </label>
-                  <Select
-                    value={currentStatus}
-                    onValueChange={handleStatusFilter}
-                    disabled={isPending}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">All Orders</SelectItem>
-                      <SelectItem value="NEW">Pending</SelectItem>
-                      <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                      <SelectItem value="DISPATCHED">Dispatched</SelectItem>
-                      <SelectItem value="DELIVERED">Delivered</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      <SelectItem value="POSTPONED">Postponed</SelectItem>
-                      <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
-            <div className="flex border-b border-border gap-4 sm:gap-8 min-w-max">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => handleStatusFilter(tab.value)}
-                  disabled={isPending}
-                  className={cn(
-                    "border-b-2 pb-3 text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap",
-                    currentStatus === tab.value
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground",
-                    isPending && "opacity-50 cursor-not-allowed",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order #</TableHead>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead className="text-center">Source</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Created Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-12 text-muted-foreground"
-                    >
-                      No orders found matching your filters.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  orders.map((order) => (
-                    <TableRow
-                      key={order.id}
-                      className={cn(
-                        "hover:bg-muted/50 transition-colors",
-                        order.hasPendingFollowUp &&
-                          "bg-blue-50/30 dark:bg-blue-900/5",
-                      )}
-                    >
-                      <TableCell className="font-bold text-primary">
-                        {order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold">
-                            {order.customerName}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-medium">
-                            {order.customerPhone}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex justify-center cursor-pointer">
-                                {(() => {
-                                  const SourceIcon = getSourceIcon(
-                                    order.source,
-                                  );
-                                  return (
-                                    <SourceIcon
-                                      className={cn(
-                                        "size-5",
-                                        SOURCE_COLORS[order.source],
-                                      )}
-                                    />
-                                  );
-                                })()}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {
-                                  SOURCE_NAMES[
-                                    order.source as keyof typeof SOURCE_NAMES
-                                  ]
-                                }
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-xs font-bold",
-                              STATUS_COLORS[order.status],
-                            )}
-                          >
-                            {order.status === "NEW" ? "Pending" : order.status}
-                          </Badge>
-                          {order.hasPendingFollowUp && (
-                            <span title="Priority Follow-up">
-                              <Star className="size-4 text-amber-500 fill-amber-500" />
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {order.city}, {order.state}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {format(new Date(order.createdAt), "MMM dd, yyyy")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  className="bg-green-500 hover:bg-green-600 text-white size-9 sm:size-8"
-                                  onClick={() =>
-                                    handleWhatsAppClick(
-                                      order.customerWhatsapp ||
-                                        order.customerPhone,
-                                      order.customerName,
-                                      order.items,
-                                      order.currency,
-                                    )
-                                  }
-                                >
-                                  <MessageCircle className="size-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Chat on WhatsApp</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <Button size="sm" asChild className="h-9 sm:h-8">
-                            <Link href={`/dashboard/sales-rep/orders/${order.id}`}>
-                              <Eye className="size-4 sm:mr-2" />
-                              <span className="hidden sm:inline">Details</span>
-                            </Link>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          {orders.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 border-t bg-muted/50">
-              <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                Showing{" "}
-                <span className="font-medium text-foreground">
-                  {(pagination.page - 1) * pagination.limit + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-foreground">
-                  {Math.min(
-                    pagination.page * pagination.limit,
-                    pagination.total,
-                  )}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-foreground">
-                  {pagination.total}
-                </span>{" "}
-                orders
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.page === 1 || isPending}
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                >
-                  {isPending && (
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                  )}
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={
-                    pagination.page >= pagination.totalPages || isPending
-                  }
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                >
-                  {isPending && (
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                  )}
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </CardContent>
+    </Card>
   );
 }

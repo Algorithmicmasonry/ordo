@@ -342,7 +342,7 @@ export function PushNotificationManager() {
             </p>
             <p className="text-xs text-muted-foreground">
               Tap the share button <span className="font-semibold">􀈂</span> and
-              select "Add to Home Screen"
+              select &quot; Add to Home Screen &quot;
             </p>
           </div>
         </CardContent>

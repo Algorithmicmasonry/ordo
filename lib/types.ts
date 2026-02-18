@@ -133,7 +133,7 @@ export interface TopProduct {
 
 export interface RecentOrder {
   id: string;
-  orderNumber: string;
+  orderNumber: number;
   customerName: string;
   customerPhone: string;
   createdAt: Date;

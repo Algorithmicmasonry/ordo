@@ -258,8 +258,8 @@ export async function updateOrderStatus(orderId: string, status: string, reason?
     if (status === "DELIVERED" && previousStatus !== "DELIVERED") {
       // Send push notification
       await notifyAdmins({
-        title: "Order Delivered 🎉",
-        body: `Order ${updatedOrder.orderNumber} has been delivered to ${updatedOrder.customerName}`,
+        title: `Order #${updatedOrder.orderNumber}`,
+        body: `Order has been delivered to ${updatedOrder.customerName}`,
         url: `/dashboard/admin/orders/${updatedOrder.id}`,
         orderId: updatedOrder.id,
       });

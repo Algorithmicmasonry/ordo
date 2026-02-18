@@ -273,7 +273,7 @@ model Settlement {
 
 model Order {
   id          String @id @default(cuid())
-  orderNumber String @unique @default(cuid())
+  orderNumber Int @unique @default(autoincrement())
 
   // Customer Information
   customerName     String

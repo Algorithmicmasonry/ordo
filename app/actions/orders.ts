@@ -97,8 +97,8 @@ export async function createOrder(data: OrderFormData) {
 
     // Notify the assigned sales rep (push notification)
     await notifySalesRep(assignedToId, {
-      title: "New Order Assigned 📦",
-      body: `Order ${order.orderNumber} from ${order.customerName} has been assigned to you`,
+      title: `Order #${order.orderNumber}`,
+      body: `Order from ${order.customerName} has been assigned to you`,
       url: `/dashboard/sales-rep/orders/${order.id}`,
       orderId: order.id,
     });
@@ -243,8 +243,8 @@ export async function createOrderV2(data: OrderFormDataV2) {
 
     // Notify the assigned sales rep (push notification)
     await notifySalesRep(assignedToId, {
-      title: "New Order Assigned 📦",
-      body: `Order ${order.orderNumber} from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
+      title: `Order #${order.orderNumber}`,
+      body: `Order from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/sales-rep/orders/${order.id}`,
       orderId: order.id,
     });
@@ -277,7 +277,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
 
     // Send push notifications to admins
     await notifyAdmins({
-      title: "New Order Received 📦",
+      title: `Order #${order.orderNumber}`,
       body: `Order from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/admin/orders/${order.id}`,
       orderId: order.id,

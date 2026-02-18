@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 
 interface PostponeOrderDialogProps {
   orderId: string;
-  orderNumber: string;
+  orderNumber: number;
 }
 
 export function PostponeOrderDialog({ orderId, orderNumber }: PostponeOrderDialogProps) {

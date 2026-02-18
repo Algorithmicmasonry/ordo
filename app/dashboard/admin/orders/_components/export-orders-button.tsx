@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import type { Currency } from "@prisma/client";
 
 interface Order {
-  orderNumber: string;
+  orderNumber: number;
   customerName: string;
   customerPhone: string;
   deliveryAddress: string;

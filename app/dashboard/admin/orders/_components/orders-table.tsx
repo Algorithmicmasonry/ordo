@@ -493,7 +493,7 @@ export function OrdersTable({
   const handleWhatsAppClick = (
     phone: string,
     customerName: string,
-    orderNumber: string,
+    orderNumber: number,
     items: OrderWithRelations["items"],
   ) => {
     const itemsList = items

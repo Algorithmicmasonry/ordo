@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import type { OrderNote } from "@prisma/client";
 
 interface CommunicationLogNote extends OrderNote {
-  orderNumber: string;
+  orderNumber: number;
   orderId: string;
 }
 

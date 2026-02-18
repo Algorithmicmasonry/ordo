@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 
 interface CancelOrderDialogProps {
   orderId: string;
-  orderNumber: string;
+  orderNumber: number;
 }
 
 export function CancelOrderDialog({ orderId, orderNumber }: CancelOrderDialogProps) {

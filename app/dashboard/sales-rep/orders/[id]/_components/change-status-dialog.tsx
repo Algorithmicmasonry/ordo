@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 interface ChangeStatusDialogProps {
   orderId: string;
   currentStatus: OrderStatus;
-  orderNumber: string;
+  orderNumber: number;
 }
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string; description: string }[] = [

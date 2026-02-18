@@ -171,15 +171,24 @@ export function AssignedOrdersTable({
       .map((item, index) => {
         const total = item.price * item.quantity;
 
-        return `${index + 1}. ${item.product.name} (${item.quantity}) - ${
-          currency === "NGN" ? "₦" : currency === "GHS" ? "GH₵" : "$"
-        }${total.toFixed(2)}`;
+        const symbol =
+          currency === "NGN" ? "₦" : currency === "GHS" ? "GH₵" : "$";
+
+        return `${index + 1}. ${item.product.name} (${item.quantity}) - ${symbol}${total.toFixed(2)}`;
       })
       .join("\n");
 
     const message = encodeURIComponent(
-      `Hi ${customerName}, this is regarding your order with us at ${storeName}.\n\nProducts:\n${itemsList}\n\nHow can I assist you?`,
+      `Hi ${customerName}, this is regarding your order with us at ${storeName}.
+
+  Your order has been successfully created.
+
+  Products:
+  ${itemsList}
+
+  Our team will contact you shortly to complete your order.`,
     );
+
     const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, "")}?text=${message}`;
     window.open(whatsappUrl, "_blank");
   };

@@ -48,7 +48,7 @@ export async function createOrder(data: OrderFormData) {
 
       // Get pricing for the product's primary currency
       const productPrice = product.productPrices.find(
-        (p) => p.currency === product.currency
+        (p) => p.currency === product.currency,
       );
 
       if (!productPrice) {
@@ -277,7 +277,7 @@ export async function createOrderV2(data: OrderFormDataV2) {
 
     // Send push notifications to admins
     await notifyAdmins({
-      title: `Order #${order.orderNumber}`,
+      title: `New Order #${order.orderNumber}`,
       body: `Order from ${order.customerName} - ${formatCurrency(order.totalAmount, data.currency)}`,
       url: `/dashboard/admin/orders/${order.id}`,
       orderId: order.id,

@@ -23,6 +23,13 @@ async function deleteAllOrdersAndCustomerData() {
       const deletedOrders = await tx.order.deleteMany({});
       console.log(`   ✓ Deleted ${deletedOrders.count} orders\n`);
 
+      // 3.5. Reset auto-increment counter for orderNumber
+      console.log("🔢 Resetting orderNumber auto-increment counter...");
+      await tx.$executeRawUnsafe(
+        `ALTER SEQUENCE "orders_orderNumber_seq" RESTART WITH 1`
+      );
+      console.log("   ✓ Reset orderNumber counter to 1\n");
+
       // 4. Optional: Reset agent stock to zero (since orders are gone)
       console.log("📊 Resetting agent stock...");
       const updatedAgentStock = await tx.agentStock.updateMany({

@@ -153,15 +153,20 @@ export async function getOrders(
     }
 
     if (filters.search) {
+      const searchOrConditions: any[] = [
+        { customerName: { contains: filters.search, mode: "insensitive" } },
+        { customerPhone: { contains: filters.search, mode: "insensitive" } },
+      ];
+
+      // If search is a valid number, also search by orderNumber
+      const searchAsNumber = parseInt(filters.search, 10);
+      if (!isNaN(searchAsNumber)) {
+        searchOrConditions.push({ orderNumber: searchAsNumber });
+      }
+
       where.AND = [
         {
-          OR: [
-            { orderNumber: { contains: filters.search, mode: "insensitive" } },
-            { customerName: { contains: filters.search, mode: "insensitive" } },
-            {
-              customerPhone: { contains: filters.search, mode: "insensitive" },
-            },
-          ],
+          OR: searchOrConditions,
         },
       ];
     }

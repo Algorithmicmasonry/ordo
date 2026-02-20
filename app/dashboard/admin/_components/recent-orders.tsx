@@ -132,11 +132,11 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
     <>
       <Card>
         <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h3 className="text-base font-bold">Recent Transactions</h3>
             <Link
               href="/dashboard/admin/orders"
-              className="text-primary text-xs font-bold hover:underline"
+              className="text-primary text-xs font-bold hover:underline whitespace-nowrap"
             >
               View All Orders
             </Link>
@@ -144,15 +144,15 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-muted/50 text-muted-foreground font-medium">
                 <tr>
-                  <th className="px-6 py-4">Order ID</th>
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Action</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Order ID</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Customer</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Date</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Amount</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Status</th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -160,24 +160,24 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                   const statusInfo = statusConfig[order.status];
                   return (
                     <tr key={order.id}>
-                      <td className="px-6 py-4 font-semibold">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold whitespace-nowrap">
                         {order.orderNumber}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <div>
-                          <p className="font-medium">{order.customerName}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium text-xs sm:text-sm">{order.customerName}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">
                             {order.customerPhone}
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-muted-foreground whitespace-nowrap text-[10px] sm:text-xs">
                         {formatDateTime(new Date(order.createdAt))}
                       </td>
-                      <td className="px-6 py-4 font-bold">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold whitespace-nowrap">
                         {formatCurrency(order.totalAmount)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <Badge
                           variant="secondary"
                           className={statusInfo.className}
@@ -185,7 +185,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                           {statusInfo.label}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <Button
                           variant="ghost"
                           size="icon"

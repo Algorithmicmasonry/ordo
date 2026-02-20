@@ -55,7 +55,7 @@ export function RevenueChart({ data, className }: RevenueChartProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <CardTitle>Revenue Performance</CardTitle>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -70,12 +70,12 @@ export function RevenueChart({ data, className }: RevenueChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-64 w-full">
+        <ChartContainer config={chartConfig} className="h-48 sm:h-64 w-full">
           <AreaChart
             accessibilityLayer
             data={chartData}
             margin={{
-              left: 12,
+              left: 0,
               right: 12,
               top: 12,
             }}

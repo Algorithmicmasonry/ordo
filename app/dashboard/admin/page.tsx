@@ -67,18 +67,18 @@ export default async function AdminDashboardPage({
       />
 
       {/* PWA Components */}
-      <div className="grid gap-4 md:grid-cols-2 mb-6">
+      <div className="grid gap-4 grid-cols-1 mb-6">
         <InstallPrompt />
       </div>
 
       {/* Filters */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
           <PeriodFilter currentPeriod={currentPeriod} />
           <CurrencyFilter />
         </div>
 
-        <Button>
+        <Button className="w-full sm:w-auto">
           <Download className="size-4 mr-2" />
           Export Report
         </Button>
@@ -90,10 +90,10 @@ export default async function AdminDashboardPage({
           currency={currency}
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           <RevenueChart
             data={revenueResult.success ? revenueResult.data : null}
-            className="lg:col-span-2"
+            className="md:col-span-2"
           />
           <TopProducts
             products={productsResult.success ? productsResult.data : null}

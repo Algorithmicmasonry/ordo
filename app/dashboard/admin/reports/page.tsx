@@ -71,12 +71,12 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="overview">Financial Overview</TabsTrigger>
-          <TabsTrigger value="sales-rep">Sales Rep Finance</TabsTrigger>
-          <TabsTrigger value="agent-costs">Agent Costs</TabsTrigger>
-          <TabsTrigger value="profit-loss">Profit & Loss</TabsTrigger>
-          <TabsTrigger value="product">Product Profitability</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:w-auto lg:inline-grid gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Financial Overview</TabsTrigger>
+          <TabsTrigger value="sales-rep" className="text-xs sm:text-sm">Sales Rep Finance</TabsTrigger>
+          <TabsTrigger value="agent-costs" className="text-xs sm:text-sm">Agent Costs</TabsTrigger>
+          <TabsTrigger value="profit-loss" className="text-xs sm:text-sm">Profit & Loss</TabsTrigger>
+          <TabsTrigger value="product" className="text-xs sm:text-sm">Product Profitability</TabsTrigger>
         </TabsList>
 
         {/* Financial Overview Tab */}

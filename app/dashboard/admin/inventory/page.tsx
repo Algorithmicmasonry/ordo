@@ -145,7 +145,7 @@ export default async function InventoryManagementPage({
   const data = await getInventoryData(currency);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       <Suspense fallback={<InventoryPageSkeleton />}>
         <AdminInventoryClient
           products={data.products}

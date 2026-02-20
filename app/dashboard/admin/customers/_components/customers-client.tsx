@@ -215,7 +215,7 @@ export default function CustomersClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Dashboard Header */}
       <DashboardHeader
         heading="Customer Directory"
@@ -223,12 +223,12 @@ export default function CustomersClient({
       />
 
       {/* Period and Currency Filters with Actions */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <PeriodFilter currentPeriod={currentPeriod} />
           <CurrencyFilter />
         </div>
-        <Button onClick={handleExportData}>
+        <Button onClick={handleExportData} className="w-full sm:w-auto">
           <Download className="size-4 mr-2" />
           Export Data
         </Button>
@@ -245,7 +245,7 @@ export default function CustomersClient({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
@@ -370,8 +370,8 @@ export default function CustomersClient({
       {/* Toolbar */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="relative w-full md:w-96">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4">
+            <div className="relative w-full sm:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, email, or phone..."
@@ -381,10 +381,10 @@ export default function CustomersClient({
               />
             </div>
 
-            <div className="flex gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex-1 md:flex-none">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     <Filter className="size-4 mr-2" />
                     Source:{" "}
                     {sourceFilter === "all"

@@ -165,22 +165,22 @@ export default function SalesRepsClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Header Section */}
       <DashboardHeader
         heading="Sales Representative"
         text="Manage and monitor your sales team performance"
       />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <PeriodFilter currentPeriod={currentPeriod} />
-        <Button size="sm" onClick={() => setAddModalOpen(true)}>
+        <Button size="sm" onClick={() => setAddModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="size-4 mr-2" />
           Add Sales Rep
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
@@ -357,8 +357,8 @@ export default function SalesRepsClient({
         </div>
       </section>
 
-      <div className="flex items-center justify-between ">
-        <div className="relative max-w-md">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, email..."
@@ -368,10 +368,10 @@ export default function SalesRepsClient({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Filter className="size-4 mr-2" />
                 Filter by Status
               </Button>

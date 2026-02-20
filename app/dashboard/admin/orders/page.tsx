@@ -76,21 +76,22 @@ export default async function OrdersPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <DashboardHeader
         heading="Orders Management"
         text="Track and manage your assigned customer orders in real-time"
       />
 
       {/* Period and Currency Filters with Export Button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <PeriodFilter currentPeriod={currentPeriod} />
           <CurrencyFilter />
         </div>
         <ExportOrdersButton
           orders={ordersResponse.data.orders}
           currency={filters.currency}
+          className="w-full sm:w-auto"
         />
       </div>
 

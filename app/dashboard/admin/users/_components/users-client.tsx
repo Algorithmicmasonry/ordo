@@ -291,27 +291,25 @@ export default function UsersClient({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Header */}
       <DashboardHeader
         heading="User Management"
         text=" Manage company-wide user roles, permissions, and security settings."
       />
-      <div className="flex flex-wrap justify-end items-end gap-4">
-        <div className="flex gap-3 flex-end">
-          <Button variant="outline">
-            <Upload className="size-4 mr-2" />
-            Export Data
-          </Button>
-          <Button onClick={() => setAddModalOpen(true)}>
-            <UserPlus className="size-4 mr-2" />
-            Add User
-          </Button>
-        </div>
+      <div className="flex flex-col sm:flex-row gap-3 justify-end items-stretch sm:items-end">
+        <Button variant="outline" className="w-full sm:w-auto">
+          <Upload className="size-4 mr-2" />
+          Export Data
+        </Button>
+        <Button onClick={() => setAddModalOpen(true)} className="w-full sm:w-auto">
+          <UserPlus className="size-4 mr-2" />
+          Add User
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -385,7 +383,7 @@ export default function UsersClient({
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         {/* User Growth Chart */}
         <Card>
           <CardContent className="p-6">
@@ -471,9 +469,9 @@ export default function UsersClient({
       {/* Action Bar */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-1 min-w-[300px] gap-2">
-              <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+              <div className="relative flex-1 sm:flex-none sm:min-w-[250px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   placeholder="Search users by name, email..."
@@ -492,7 +490,7 @@ export default function UsersClient({
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
                 <SelectContent>
@@ -511,7 +509,7 @@ export default function UsersClient({
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>

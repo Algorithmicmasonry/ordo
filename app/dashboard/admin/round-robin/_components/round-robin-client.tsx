@@ -97,10 +97,10 @@ export default function RoundRobinClient({
   const currentReps = getCurrentReps();
 
   return (
-    <div className="flex flex-1 justify-center py-8">
+    <div className="flex flex-1 justify-center py-4 sm:py-8">
       <div className="flex flex-col max-w-[960px] flex-1 px-4">
         {/* Page Heading */}
-        <div className="flex flex-wrap justify-between gap-4 pb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-4 pb-4 sm:pb-6">
           <div className="flex min-w-72 flex-col gap-1">
             <h1 className="text-4xl font-black tracking-tight">
               Round-Robin Management
@@ -109,10 +109,10 @@ export default function RoundRobinClient({
               Configure the lead distribution sequence for your sales team.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="text-red-600 border-red-200 hover:bg-red-50"
+              className="text-red-600 border-red-200 hover:bg-red-50 w-full sm:w-auto"
               onClick={() => setResetModalOpen(true)}
             >
               <RotateCcw className="size-4 mr-2" />
@@ -197,8 +197,8 @@ export default function RoundRobinClient({
         </div>
 
         {/* Search */}
-        <div className="px-4 pb-4">
-          <div className="relative max-w-md">
+        <div className="px-0 sm:px-4 pb-4">
+          <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search reps..."

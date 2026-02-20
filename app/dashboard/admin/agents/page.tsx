@@ -58,17 +58,17 @@ export default async function AdminAgentsPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <DashboardHeader
         heading="Agent Logistics & Performance Directory"
         text="Manage and monitor external delivery agents and their performance metrics across regions"
       />
 
       {/* Currency Filter and Export Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CurrencyFilter />
         {agentsResponse.data && (
-          <ExportAgentsButton agents={agentsResponse.data} />
+          <ExportAgentsButton agents={agentsResponse.data} className="w-full sm:w-auto" />
         )}
       </div>
 

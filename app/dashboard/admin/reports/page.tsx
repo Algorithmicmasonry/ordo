@@ -57,7 +57,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header Section */}
       <DashboardHeader
         heading="Financial Reports"
@@ -65,7 +65,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       />
 
       {/* Currency Filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
         <CurrencyFilter />
       </div>
 

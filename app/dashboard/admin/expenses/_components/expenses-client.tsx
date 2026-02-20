@@ -363,7 +363,7 @@ export default function ExpensesClient({
     }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Dashboard Header */}
       <DashboardHeader
         heading="Expense Management"
@@ -371,17 +371,17 @@ export default function ExpensesClient({
       />
 
       {/* Action Bar */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <PeriodFilter currentPeriod={currentPeriod} />
           <CurrencyFilter />
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => router.refresh()}>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => router.refresh()} className="w-full sm:w-auto">
             <RefreshCw className="size-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={() => setAddModalOpen(true)}>
+          <Button onClick={() => setAddModalOpen(true)} className="w-full sm:w-auto">
             <Plus className="size-4 mr-2" />
             Add Expense
           </Button>

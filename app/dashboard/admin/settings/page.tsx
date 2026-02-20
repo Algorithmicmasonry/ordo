@@ -23,7 +23,7 @@ export default async function AdminSettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
         <Link
@@ -47,7 +47,7 @@ export default async function AdminSettingsPage() {
       </div>
 
       {/* Settings Grid */}
-      <div className="grid gap-6 max-w-4xl">
+      <div className="grid gap-4 sm:gap-6 max-w-4xl">
         {/* PWA Section */}
         <div className="space-y-4">
           <div>

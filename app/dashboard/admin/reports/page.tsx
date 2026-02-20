@@ -57,7 +57,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full min-w-0">
       {/* Header Section */}
       <DashboardHeader
         heading="Financial Reports"
@@ -65,13 +65,13 @@ export default async function ReportsPage({ searchParams }: PageProps) {
       />
 
       {/* Currency Filter */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
         <CurrencyFilter />
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:w-auto lg:inline-grid gap-1">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:w-auto lg:inline-grid gap-1 z-10 relative">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">Financial Overview</TabsTrigger>
           <TabsTrigger value="sales-rep" className="text-xs sm:text-sm">Sales Rep Finance</TabsTrigger>
           <TabsTrigger value="agent-costs" className="text-xs sm:text-sm">Agent Costs</TabsTrigger>
@@ -80,7 +80,7 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         </TabsList>
 
         {/* Financial Overview Tab */}
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-6 relative z-0">
           <FinancialOverview data={financialData.data} period={period} currency={currency} />
         </TabsContent>
 

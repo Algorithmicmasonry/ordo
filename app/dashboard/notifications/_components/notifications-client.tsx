@@ -175,7 +175,7 @@ export function NotificationsClient({
                     Delete read notifications?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all notifications you've
+                    This will permanently delete all notifications you&apos;ve
                     already read. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>

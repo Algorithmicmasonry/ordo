@@ -88,11 +88,12 @@ export default async function OrdersPage({
           <PeriodFilter currentPeriod={currentPeriod} />
           <CurrencyFilter />
         </div>
-        <ExportOrdersButton
-          orders={ordersResponse.data.orders}
-          currency={filters.currency}
-          className="w-full sm:w-auto"
-        />
+        <div className="w-full sm:w-auto">
+          <ExportOrdersButton
+            orders={ordersResponse.data.orders}
+            currency={filters.currency}
+          />
+        </div>
       </div>
 
       {statsResponse.success && statsResponse.data && (

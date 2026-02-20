@@ -24,7 +24,8 @@
       "Bash(npm run lint)",
       "Bash(done)",
       "Bash(npx tsc:*)",
-      "Bash(pnpm prisma migrate create:*)"
+      "Bash(pnpm prisma migrate create:*)",
+      "Bash(tee:*)"
     ]
   }
 }

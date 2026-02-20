@@ -68,7 +68,9 @@ export default async function AdminAgentsPage({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CurrencyFilter />
         {agentsResponse.data && (
-          <ExportAgentsButton agents={agentsResponse.data} className="w-full sm:w-auto" />
+          <div className="w-full sm:w-auto">
+            <ExportAgentsButton agents={agentsResponse.data} />
+          </div>
         )}
       </div>
 

@@ -1,0 +1,109 @@
+
+> ordo@0.1.0 build C:\Users\HP\Desktop\Coding Folders\ordo
+> next build
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 62s
+  Running TypeScript ...
+Failed to compile.
+
+./app/dashboard/admin/orders/page.tsx:94:11
+Type error: Type '{ orders: ({ assignedTo: { name: string; id: string; email: string; } | null; agent: { name: string; id: string; location: string; } | null; items: ({ product: { name: string; id: string; price: number | null; }; } & { ...; })[]; notes: { ...; }[]; } & { ...; })[]; currency: Currency | undefined; className: string; }' is not assignable to type 'IntrinsicAttributes & Props'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & Props'.
+
+[0m [90m 92 |[39m           orders[33m=[39m{ordersResponse[33m.[39mdata[33m.[39morders}
+ [90m 93 |[39m           currency[33m=[39m{filters[33m.[39mcurrency}
+[31m[1m>[22m[39m[90m 94 |[39m           className[33m=[39m[32m"w-full sm:w-auto"[39m
+ [90m    |[39m           [31m[1m^[22m[39m
+ [90m 95 |[39m         [33m/[39m[33m>[39m
+ [90m 96 |[39m       [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 97 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.
+
+> ordo@0.1.0 build C:\Users\HP\Desktop\Coding Folders\ordo
+> next build
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 83s
+  Running TypeScript ...
+  Collecting page data using 3 workers ...
+🔧 Initializing VAPID...
+VAPID Email: mailto:oamenemmanuel22@gmail.com
+VAPID Public Key: BCjQBd2k-hkU9Q8vzRBd...
+VAPID Private Key exists: true
+🔧 Initializing VAPID...
+VAPID Email: mailto:oamenemmanuel22@gmail.com
+VAPID Public Key: BCjQBd2k-hkU9Q8vzRBd...
+VAPID Private Key exists: true
+  Generating static pages using 3 workers (0/35) ...
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+  Generating static pages using 3 workers (8/35) 
+  Generating static pages using 3 workers (17/35) 
+  Generating static pages using 3 workers (26/35) 
+🔧 Initializing VAPID...
+VAPID Email: mailto:oamenemmanuel22@gmail.com
+VAPID Public Key: BCjQBd2k-hkU9Q8vzRBd...
+VAPID Private Key exists: true
+✓ Generating static pages using 3 workers (35/35) in 2.7s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/auth/[...all]
+├ ƒ /api/products/available
+├ ƒ /api/test-subscription
+├ ƒ /dashboard
+├ ƒ /dashboard/admin
+├ ƒ /dashboard/admin/agents
+├ ƒ /dashboard/admin/agents/[id]
+├ ƒ /dashboard/admin/customers
+├ ƒ /dashboard/admin/customers/[phone]
+├ ƒ /dashboard/admin/embed
+├ ƒ /dashboard/admin/embed-form
+├ ƒ /dashboard/admin/expenses
+├ ƒ /dashboard/admin/expenses/analytics/[productId]
+├ ƒ /dashboard/admin/inventory
+├ ƒ /dashboard/admin/inventory/[productId]/packages
+├ ƒ /dashboard/admin/inventory/[productId]/pricing
+├ ƒ /dashboard/admin/notifications
+├ ƒ /dashboard/admin/orders
+├ ƒ /dashboard/admin/orders/[id]
+├ ƒ /dashboard/admin/reports
+├ ƒ /dashboard/admin/round-robin
+├ ƒ /dashboard/admin/sales-reps
+├ ƒ /dashboard/admin/sales-reps/[id]
+├ ƒ /dashboard/admin/settings
+├ ƒ /dashboard/admin/users
+├ ƒ /dashboard/inventory
+├ ƒ /dashboard/inventory/[productId]/packages
+├ ƒ /dashboard/inventory/[productId]/pricing
+├ ƒ /dashboard/inventory/agents
+├ ƒ /dashboard/inventory/agents/[id]
+├ ƒ /dashboard/inventory/reports
+├ ƒ /dashboard/notifications
+├ ƒ /dashboard/sales-rep
+├ ƒ /dashboard/sales-rep/customers
+├ ƒ /dashboard/sales-rep/customers/[phone]
+├ ƒ /dashboard/sales-rep/orders
+├ ƒ /dashboard/sales-rep/orders/[id]
+├ ƒ /dashboard/sales-rep/products
+├ ○ /login
+├ ○ /manifest.webmanifest
+├ ○ /opengraph-image.png
+├ ○ /order-form
+├ ƒ /order-form/embed
+└ ○ /order-success
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

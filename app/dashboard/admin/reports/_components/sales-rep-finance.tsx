@@ -1,6 +1,5 @@
 "use client";
 
-import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DateRangePicker } from "./date-range-picker";
 import {
   exportToCSV,
   generateFilename,
@@ -133,18 +131,12 @@ export function SalesRepFinance({
 
   return (
     <div className="space-y-6">
-      {/* Header with Filters */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
-          <DateRangePicker />
-        </div>
-        <div className="flex gap-3">
-          <Button size="sm" onClick={handleExportPayout}>
-            <Download className="w-4 h-4 mr-2" />
-            Payout Report
-          </Button>
-        </div>
+      {/* Export Button */}
+      <div className="flex items-center justify-end">
+        <Button size="sm" onClick={handleExportPayout}>
+          <Download className="w-4 h-4 mr-2" />
+          Payout Report
+        </Button>
       </div>
 
       {/* KPI Cards */}

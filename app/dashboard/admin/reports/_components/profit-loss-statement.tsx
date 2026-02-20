@@ -1,12 +1,10 @@
 "use client";
 
-import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TimePeriod } from "@/lib/types";
 import { ArrowDown, ArrowUp, Download, TrendingUp } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { DateRangePicker } from "./date-range-picker";
 import { formatCurrency } from "@/lib/currency";
 import { exportToPDF, generateFilename } from "@/lib/export-utils";
 import toast from "react-hot-toast";
@@ -178,12 +176,8 @@ export function ProfitLossStatement({
 
   return (
     <div className="space-y-6">
-      {/* Header with Filters */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
-          <DateRangePicker />
-        </div>
+      {/* Export Button */}
+      <div className="flex items-center justify-end">
         <Button size="sm" onClick={handleExportPDF}>
           <Download className="w-4 h-4 mr-2" />
           Export PDF

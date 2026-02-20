@@ -1,6 +1,5 @@
 "use client";
 
-import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,6 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { DateRangePicker } from "./date-range-picker";
 
 interface ProductProfitabilityProps {
   data: {
@@ -136,31 +134,25 @@ export function ProductProfitability({
 
   return (
     <div className="space-y-6">
-      {/* Header with Filters */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
-          <DateRangePicker />
+      {/* Summary Cards */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-4 bg-primary/5 border border-primary/20 rounded-xl px-4 py-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Avg Margin:{" "}
+            <span className="font-bold text-primary">
+              {summary.averageMargin.toFixed(1)}%
+            </span>
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4 bg-primary/5 border border-primary/20 rounded-xl px-4 py-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Avg Margin:{" "}
-              <span className="font-bold text-primary">
-                {summary.averageMargin.toFixed(1)}%
-              </span>
-            </p>
-          </div>
-          <div className="flex items-center gap-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-xl px-4 py-2">
-            <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              ROAS:{" "}
-              <span className="font-bold text-green-600 dark:text-green-400">
-                {summary.overallRoas.toFixed(2)}x
-              </span>
-            </p>
-          </div>
+        <div className="flex items-center gap-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-xl px-4 py-2">
+          <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            ROAS:{" "}
+            <span className="font-bold text-green-600 dark:text-green-400">
+              {summary.overallRoas.toFixed(2)}x
+            </span>
+          </p>
         </div>
       </div>
 

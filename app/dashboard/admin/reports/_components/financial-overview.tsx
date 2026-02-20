@@ -1,6 +1,5 @@
 "use client";
 
-import { PeriodFilter } from "@/app/dashboard/admin/_components/period-filter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TimePeriod } from "@/lib/types";
@@ -20,7 +19,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DateRangePicker } from "./date-range-picker";
 import { useSearchParams } from "next/navigation";
 import {
   exportToCSV,
@@ -176,12 +174,8 @@ export function FinancialOverview({
 
   return (
     <div className="space-y-6">
-      {/* Period Filter, Date Range Picker and Export Button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {!hasCustomDateRange && <PeriodFilter currentPeriod={period} />}
-          <DateRangePicker />
-        </div>
+      {/* Export Button */}
+      <div className="flex items-center justify-end">
         <Button size="sm" onClick={handleExportCSV}>
           <Download className="w-4 h-4 mr-2" />
           Export Report

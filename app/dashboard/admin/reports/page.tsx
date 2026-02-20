@@ -4,8 +4,8 @@ import type { TimePeriod } from "@/lib/types";
 import type { Currency } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { DashboardHeader, CurrencyFilter } from "../_components";
-import { FinancialOverview, SalesRepFinance, AgentCostAnalysis, ProfitLossStatement, ProductProfitability } from "./_components";
+import { DashboardHeader, CurrencyFilter, PeriodFilter } from "../_components";
+import { FinancialOverview, SalesRepFinance, AgentCostAnalysis, ProfitLossStatement, ProductProfitability, DateRangePicker } from "./_components";
 import { getFinancialOverview, getSalesRepFinance, getAgentCostAnalysis, getProfitLossStatement, getProductProfitability } from "./actions";
 
 interface PageProps {
@@ -64,9 +64,16 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         text="Comprehensive financial analytics and performance tracking"
       />
 
-      {/* Currency Filter */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
-        <CurrencyFilter />
+      {/* Filters Row - Currency, Period, and Date Range */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          <CurrencyFilter />
+          {/* Period and Date Range Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+            <PeriodFilter currentPeriod={period} />
+            <DateRangePicker />
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}

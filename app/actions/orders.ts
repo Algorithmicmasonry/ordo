@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { getNextSalesRep } from "@/lib/round-robin";
-import { updateInventoryOnDelivery } from "@/lib/calculations";
+import { updateInventoryOnDelivery, checkAndNotifyLowStock } from "@/lib/calculations";
 import { OrderFormData, OrderFormDataV2 } from "@/lib/types";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -352,6 +352,13 @@ export async function updateOrderStatus(
         agent: true,
       },
     });
+
+    // Check for low stock on all products in the order when delivered
+    if (status === OrderStatus.DELIVERED) {
+      for (const item of updatedOrder.items) {
+        await checkAndNotifyLowStock(item.productId);
+      }
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/admin");

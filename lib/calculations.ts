@@ -1,5 +1,7 @@
 import { db } from './db'
 import { OrderStatus, Currency } from '@prisma/client'
+import { createBulkNotifications } from '@/app/actions/notifications'
+import { sendPushToUsers } from '@/app/actions/push-notifications'
 
 /**
  * Calculate revenue from delivered orders only
@@ -286,5 +288,82 @@ export async function restoreInventoryFromDelivery(orderId: string): Promise<voi
         })
       }
     }
+  }
+}
+
+/**
+ * Check if a product is low on stock and send notifications to admins/inventory managers
+ * Call this whenever inventory is updated (orders delivered, stock adjusted, etc.)
+ */
+export async function checkAndNotifyLowStock(productId: string): Promise<void> {
+  try {
+    // Get the product with current stock and reorder point
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        name: true,
+        currentStock: true,
+        reorderPoint: true,
+      },
+    })
+
+    if (!product) {
+      console.log(`Product ${productId} not found for low stock check`)
+      return
+    }
+
+    // Check if stock is at or below reorder point
+    if (product.currentStock <= product.reorderPoint) {
+      console.log(
+        `Low stock alert for ${product.name}: ${product.currentStock} <= ${product.reorderPoint}`
+      )
+
+      // Get all active admins and inventory managers
+      const recipients = await db.user.findMany({
+        where: {
+          role: {
+            in: ['ADMIN', 'INVENTORY_MANAGER'],
+          },
+          isActive: true,
+        },
+        select: { id: true },
+      })
+
+      if (recipients.length === 0) {
+        console.log('No active admins or inventory managers found')
+        return
+      }
+
+      const recipientIds = recipients.map((r) => r.id)
+      const title = `Low Stock Alert: ${product.name}`
+      const message = `${product.name} is running low on stock (Current: ${product.currentStock}, Reorder Point: ${product.reorderPoint})`
+
+      // Create in-app notifications
+      await createBulkNotifications({
+        userIds: recipientIds,
+        type: 'LOW_STOCK_ALERT',
+        title,
+        message,
+        link: `/dashboard/admin/inventory`,
+      })
+
+      // Send PWA push notifications
+      await sendPushToUsers(recipientIds, {
+        title,
+        body: message,
+        icon: '/icon.png',
+        url: '/dashboard/admin/inventory',
+        tag: `low-stock-${productId}`,
+        requireInteraction: true,
+      })
+
+      console.log(
+        `Sent low stock notifications to ${recipientIds.length} recipients for ${product.name}`
+      )
+    }
+  } catch (error) {
+    console.error('Error checking low stock:', error)
+    // Don't throw - this is a background check that shouldn't break other operations
   }
 }

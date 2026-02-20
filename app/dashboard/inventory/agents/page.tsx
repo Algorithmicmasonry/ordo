@@ -59,10 +59,10 @@ export default async function InventoryAgentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Agent Stock Management</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl sm:text-4xl font-bold">Agent Stock Management</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Monitor and manage inventory distributed to delivery agents
         </p>
       </div>

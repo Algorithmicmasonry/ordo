@@ -77,7 +77,7 @@ export default async function SalesRepDashboardPage({
   }
 
   return (
-    <div className="space-y-4 md:space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Dashboard Header */}
       <div>
         <DashboardHeader
@@ -87,15 +87,17 @@ export default async function SalesRepDashboardPage({
       </div>
 
       {/* PWA Components */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
         <InstallPrompt />
         <PushNotificationManager />
       </div>
 
       {/* Period Filter */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 sm:justify-between">
         <PeriodFilter currentPeriod={period} />
-        <CreateOrderDialog />
+        <div className="w-full sm:w-auto">
+          <CreateOrderDialog />
+        </div>
       </div>
 
       {/* Stats Cards */}

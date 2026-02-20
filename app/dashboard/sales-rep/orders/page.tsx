@@ -47,30 +47,32 @@ export default async function SalesRepOrdersPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm overflow-x-auto">
         <Link
           href="/dashboard/sales-rep"
-          className="text-muted-foreground hover:text-primary font-medium"
+          className="text-muted-foreground hover:text-primary font-medium whitespace-nowrap"
         >
           Dashboard
         </Link>
-        <ChevronRight className="size-4 text-muted-foreground" />
-        <span className="font-medium">Orders</span>
+        <ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+        <span className="font-medium whitespace-nowrap">Orders</span>
       </div>
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-4xl font-black leading-tight tracking-tight">
             My Orders
           </h1>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage and track all your assigned orders
           </p>
         </div>
-        <CreateOrderDialog />
+        <div className="w-full sm:w-auto">
+          <CreateOrderDialog />
+        </div>
       </div>
 
       {/* Orders Table */}

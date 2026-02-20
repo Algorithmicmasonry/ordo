@@ -56,17 +56,17 @@ export default async function SalesRepCustomersPage({
   const { customers, pagination, stats } = customersResult.data;
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm overflow-x-auto">
         <Link
           href="/dashboard/sales-rep"
-          className="text-muted-foreground hover:text-primary font-medium"
+          className="text-muted-foreground hover:text-primary font-medium whitespace-nowrap"
         >
           Dashboard
         </Link>
-        <ChevronRight className="size-4 text-muted-foreground" />
-        <span className="font-medium">Customers</span>
+        <ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+        <span className="font-medium whitespace-nowrap">Customers</span>
       </div>
 
       {/* Page Header */}
@@ -84,7 +84,7 @@ export default async function SalesRepCustomersPage({
 
       {/* Info Alert */}
       <Alert className="bg-primary/5 border-primary/20">
-        <Info className="size-4 text-primary" />
+        <Info className="size-4 text-primary flex-shrink-0" />
         <AlertDescription className="text-xs sm:text-sm">
           <strong className="font-bold text-primary">
             Data Policy Enforcement:

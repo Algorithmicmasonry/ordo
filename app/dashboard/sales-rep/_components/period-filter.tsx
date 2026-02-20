@@ -32,7 +32,7 @@ export function PeriodFilter({ currentPeriod }: PeriodFilterProps) {
   };
 
   return (
-    <div className="flex h-10 items-center justify-center rounded-lg bg-card border border-border p-1 min-w-75 gap-2 relative">
+    <div className="flex h-10 items-center justify-center rounded-lg bg-card border border-border p-1 gap-1 sm:gap-2 relative overflow-x-auto min-w-max sm:min-w-fit">
       {/* Loading Overlay */}
       {isPending && (
         <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] rounded-lg flex items-center justify-center z-10">
@@ -46,11 +46,11 @@ export function PeriodFilter({ currentPeriod }: PeriodFilterProps) {
           onClick={() => handlePeriodChange(period.value)}
           disabled={isPending}
           className={cn(
-            "flex h-full grow items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors cursor-pointer",
+            "flex h-full items-center justify-center rounded-lg px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap",
             isPending && "pointer-events-none opacity-50",
             currentPeriod === period.value
-              ? "bg-primary dark:bg-foreground shadow-sm text-primary-foreground dark:text-primary font-semibold"
-              : "text-foreground hover:bg-muted dark:hover:bg-foreground/80 dark:hover:text-primary hover:shadow-sm"
+              ? "bg-primary dark:bg-foreground shadow-sm text-primary-foreground dark:text-primary font-semibold grow sm:grow"
+              : "text-foreground hover:bg-muted dark:hover:bg-foreground/80 dark:hover:text-primary hover:shadow-sm grow sm:grow"
           )}
         >
           {period.label}

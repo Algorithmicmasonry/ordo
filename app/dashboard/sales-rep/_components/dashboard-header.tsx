@@ -61,26 +61,26 @@ export function DashboardHeader({
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-6">
+    <div className="flex flex-col gap-4 sm:gap-6 pb-4 sm:pb-6">
       {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-primary">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary">
             {heading}
           </h2>
           {text && (
-            <p className="text-sm text-muted-foreground mt-1">{text}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{text}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {/* Search */}
           {showSearch && (
-            <div className="relative w-full lg:w-80">
+            <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Search customer phone or name..."
-                className="pl-10"
+                className="pl-10 text-sm"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 disabled={isPending}
@@ -88,11 +88,11 @@ export function DashboardHeader({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <NotificationBell />
 
-            <Button variant="ghost" size="icon" title="Help">
-              <HelpCircle className="size-5" />
+            <Button variant="ghost" size="icon" title="Help" className="h-9 w-9 sm:h-10 sm:w-10">
+              <HelpCircle className="size-4 sm:size-5" />
               <span className="sr-only">Help</span>
             </Button>
 

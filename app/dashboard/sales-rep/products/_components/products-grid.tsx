@@ -75,8 +75,8 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between py-6 border-t">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 py-4 sm:py-6 border-t">
+          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
             Showing{" "}
             <span className="font-bold">
               {(pagination.page - 1) * pagination.limit + 1}
@@ -87,7 +87,7 @@ export function ProductsGrid({ products, pagination }: ProductsGridProps) {
             </span>{" "}
             of <span className="font-bold">{pagination.total}</span> products
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"

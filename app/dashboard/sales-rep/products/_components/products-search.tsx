@@ -74,10 +74,10 @@ export function ProductsSearch({
 
   return (
     <Card className="shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
+      <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+          <form onSubmit={handleSearch} className="flex-1 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -85,23 +85,23 @@ export function ProductsSearch({
                 placeholder="Search by product name, SKU, or keyword..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
                 disabled={isPending}
               />
             </div>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               Search
             </Button>
           </form>
 
           {/* Sort Dropdown */}
-          <div className="w-full md:w-48">
+          <div className="w-full sm:w-48">
             <Select
               value={currentSort}
               onValueChange={handleSortChange}
               disabled={isPending}
             >
-              <SelectTrigger>
+              <SelectTrigger className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -120,6 +120,7 @@ export function ProductsSearch({
             size="icon"
             onClick={() => setShowFilters(!showFilters)}
             disabled={isPending}
+            title="Toggle filters"
           >
             <SlidersHorizontal className="size-4" />
           </Button>
@@ -127,7 +128,7 @@ export function ProductsSearch({
 
         {/* Stock Filter Chips */}
         {showFilters && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t">
+          <div className="flex flex-wrap gap-2 pt-2 sm:pt-3 border-t">
             {STOCK_FILTERS.map((filter) => (
               <button
                 key={filter.value}

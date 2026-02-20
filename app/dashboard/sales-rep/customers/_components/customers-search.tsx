@@ -55,10 +55,10 @@ export function CustomersSearch({
 
   return (
     <Card className="shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+          <form onSubmit={handleSearch} className="flex-1 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -66,11 +66,11 @@ export function CustomersSearch({
                 placeholder="Search by name or phone number..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
                 disabled={isPending}
               />
             </div>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               Search
             </Button>
           </form>
@@ -78,8 +78,8 @@ export function CustomersSearch({
 
         {/* City Filter Chips */}
         {cities.length > 0 && (
-          <div className="flex flex-wrap gap-2 items-center pt-2 border-t">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-2">
+          <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 pt-2 xs:pt-3 border-t">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Quick Filters:
             </span>
             <button

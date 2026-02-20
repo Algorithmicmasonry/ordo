@@ -43,20 +43,20 @@ export default async function InventoryReportsPage() {
     ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Inventory Reports</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl sm:text-4xl font-bold">Inventory Reports</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Comprehensive inventory analytics and actionable insights
         </p>
       </div>
 
-      <Tabs defaultValue="low-stock" className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
-          <TabsTrigger value="distribution">Distribution</TabsTrigger>
-          <TabsTrigger value="movement">Movement</TabsTrigger>
-          <TabsTrigger value="reorder">Reorder</TabsTrigger>
+      <Tabs defaultValue="low-stock" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsTrigger value="low-stock" className="text-xs sm:text-sm">Low Stock</TabsTrigger>
+          <TabsTrigger value="distribution" className="text-xs sm:text-sm">Distribution</TabsTrigger>
+          <TabsTrigger value="movement" className="text-xs sm:text-sm">Movement</TabsTrigger>
+          <TabsTrigger value="reorder" className="text-xs sm:text-sm">Reorder</TabsTrigger>
         </TabsList>
 
         <TabsContent value="low-stock" className="space-y-4">

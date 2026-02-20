@@ -143,9 +143,9 @@ export default async function InventoryManagerPage() {
   const data = await getInventoryData();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* PWA Components */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
         <InstallPrompt />
         <PushNotificationManager />
       </div>

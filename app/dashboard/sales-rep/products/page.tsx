@@ -55,17 +55,17 @@ export default async function SalesRepProductsPage({ searchParams }: PageProps) 
   const { products, pagination, stats } = productsResult.data;
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm overflow-x-auto">
         <Link
           href="/dashboard/sales-rep"
-          className="text-muted-foreground hover:text-primary font-medium"
+          className="text-muted-foreground hover:text-primary font-medium whitespace-nowrap"
         >
           Dashboard
         </Link>
-        <ChevronRight className="size-4 text-muted-foreground" />
-        <span className="font-medium">Products</span>
+        <ChevronRight className="size-4 text-muted-foreground flex-shrink-0" />
+        <span className="font-medium whitespace-nowrap">Products</span>
       </div>
 
       {/* Page Header */}

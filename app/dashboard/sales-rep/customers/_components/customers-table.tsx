@@ -237,8 +237,8 @@ export function CustomersTable({ customers, pagination }: CustomersTableProps) {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 bg-muted/50 border-t">
-            <div className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-muted/50 border-t">
+            <div className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
               Showing{" "}
               <span className="font-bold text-foreground">
                 {(pagination.page - 1) * pagination.limit + 1}
@@ -253,12 +253,13 @@ export function CustomersTable({ customers, pagination }: CustomersTableProps) {
               </span>{" "}
               customers
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2 order-1 sm:order-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={pagination.page === 1 || isPending}
                 onClick={() => handlePageChange(pagination.page - 1)}
+                className="text-xs sm:text-sm"
               >
                 Previous
               </Button>
@@ -275,7 +276,7 @@ export function CustomersTable({ customers, pagination }: CustomersTableProps) {
                           pageNum === pagination.page ? "default" : "outline"
                         }
                         size="sm"
-                        className="w-9 h-9 p-0"
+                        className="w-8 h-8 sm:w-9 sm:h-9 p-0 text-xs"
                         disabled={isPending}
                         onClick={() => handlePageChange(pageNum)}
                       >
@@ -291,6 +292,7 @@ export function CustomersTable({ customers, pagination }: CustomersTableProps) {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages || isPending}
                 onClick={() => handlePageChange(pagination.page + 1)}
+                className="text-xs sm:text-sm"
               >
                 Next
               </Button>

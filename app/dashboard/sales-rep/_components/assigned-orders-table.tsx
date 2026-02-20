@@ -290,8 +290,8 @@ export function AssignedOrdersTable({
 
         {/* Filters */}
         {showFilters && (
-          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <Select

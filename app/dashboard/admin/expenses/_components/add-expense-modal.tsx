@@ -36,7 +36,7 @@ import { getAvailableCurrencies, getCurrencySymbol } from "@/lib/currency";
 import type { Currency } from "@prisma/client";
 
 const expenseSchema = z.object({
-  type: z.enum(["ad_spend", "delivery", "shipping", "clearing", "other"]),
+  type: z.enum(["ad_spend", "delivery", "shipping", "clearing", "waybill", "other"]),
   amount: z.number().positive("Amount must be greater than 0"),
   currency: z.enum(["NGN", "GHS", "USD", "GBP", "EUR"]),
   date: z.string(),
@@ -129,6 +129,7 @@ export function AddExpenseModal({
                       <SelectItem value="delivery">Delivery</SelectItem>
                       <SelectItem value="shipping">Shipping</SelectItem>
                       <SelectItem value="clearing">Clearing</SelectItem>
+                      <SelectItem value="waybill">Waybill</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>

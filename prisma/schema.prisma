@@ -364,7 +364,7 @@ model Expense {
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: Restrict)
 
-  type        String // "ad_spend", "delivery", "shipping", "clearing", "waybill", "other"
+  type        String // "ad_spend", "delivery", "clearing", "waybill", "other"
   amount      Float
   currency    Currency @default(NGN) // Currency for this expense
   description String?

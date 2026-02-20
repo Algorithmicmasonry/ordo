@@ -150,13 +150,8 @@ const expenseTypeConfig: Record<string, { label: string; color: string }> = {
     color:
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
   },
-  shipping: {
-    label: "Shipping",
-    color:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  },
   clearing: {
-    label: "Clearing",
+    label: "Clearing & Shipping",
     color:
       "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   },

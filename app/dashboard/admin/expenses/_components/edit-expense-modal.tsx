@@ -34,7 +34,7 @@ import { updateExpense } from "@/app/actions/expenses";
 import { useRouter } from "next/navigation";
 
 const expenseSchema = z.object({
-  type: z.enum(["ad_spend", "delivery", "shipping", "clearing", "waybill", "other"]),
+  type: z.enum(["ad_spend", "delivery", "clearing", "waybill", "other"]),
   amount: z.number().positive("Amount must be greater than 0"),
   date: z.string(),
   productId: z.string().optional(),
@@ -147,8 +147,7 @@ export function EditExpenseModal({
                     <SelectContent>
                       <SelectItem value="ad_spend">Ad Spend</SelectItem>
                       <SelectItem value="delivery">Delivery</SelectItem>
-                      <SelectItem value="shipping">Shipping</SelectItem>
-                      <SelectItem value="clearing">Clearing</SelectItem>
+                      <SelectItem value="clearing">Clearing & Shipping</SelectItem>
                       <SelectItem value="waybill">Waybill</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
